@@ -33,11 +33,6 @@ extern "C" {
 
 class AssRender {
 private:
-	struct logprivate {
-		int    loglevel;
-		FILE  *log;
-	} lp;
-
 	bool InitLibass(ASS_Hinting hints, double scale);
 
 	ASS_Library *al;
@@ -47,4 +42,11 @@ private:
 public:
 	AssRender(ASS_Hinting hints, double scale, const char *charset);
 	~AssRender();
+
+	ASS_Image* __stdcall RenderFrame(int64_t n);
+
+
+	ASS_Image* __stdcall RenderFrame(int n);
 };
+
+const char * SelectAssFile(void);

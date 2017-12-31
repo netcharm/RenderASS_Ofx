@@ -19,7 +19,7 @@ char cur_dll_path[MAX_PATH]; // hack
 AssRender::AssRender(ASS_Hinting hints, double scale, const char *charset) {
 	if (!InitLibass(hints, scale))
 	{
-		//ThrowError("AssRender: failed to initialize libass");
+		//throw("AssRender: failed to initialize libass");
 	}		
 }
 
@@ -27,8 +27,38 @@ AssRender::~AssRender() {
 	ass_free_track(t);
 	ass_renderer_done(ar);
 	ass_library_done(al);
-	if (lp.log)
-		fclose(lp.log);
+}
+
+ASS_Image* AssRender::RenderFrame(int64_t n)
+{
+	ASS_Image *img = ass_render_frame(ar, t, n, NULL);
+
+	// this here loop shamelessly stolen from aegisub's subtitles_provider_libass.cpp
+	// and slightly modified to render upside-down
+	while (img) {
+		if (img->w == 0 || img->h == 0)
+			continue;
+
+	}
+	return img;
+}
+
+ASS_Image* AssRender::RenderFrame(int n)
+{
+	//// it's a casting party!
+	//int64_t ts = (int64_t)n * (int64_t)1000 * (int64_t)vi.fps_denominator / (int64_t)vi.fps_numerator;
+
+	//ASS_Image *img = ass_render_frame(ar, t, ts, NULL);
+
+	//// this here loop shamelessly stolen from aegisub's subtitles_provider_libass.cpp
+	//// and slightly modified to render upside-down
+	//while (img) {
+	//	if (img->w == 0 || img->h == 0)
+	//		continue;
+
+	//}
+	//return img;
+	return NULL;
 }
 
 
@@ -63,3 +93,17 @@ bool AssRender::InitLibass(ASS_Hinting hints, double scale) {
 
 	return true;
 }
+
+
+const char * SelectAssFile(void)
+{
+	int msgboxID = MessageBox(
+		NULL,
+		(LPCWSTR)L"Select ASS File",
+		(LPCWSTR)L"ASS Selected",
+		MB_ICONINFORMATION | MB_OK | MB_DEFBUTTON1
+	);
+
+	return("");
+}
+

@@ -29,24 +29,39 @@ extern "C" {
 #  include <ass_types.h>
 }
 
+#define _R(c)  ((c)>>24)
+#define _G(c)  (((c)>>16)&0xFF)
+#define _B(c)  (((c)>>8)&0xFF)
+#define _A(c)  ((c)&0xFF)
 
+extern TCHAR cur_dll_path[MAX_PATH];
+
+DWORD GetModulePath(HMODULE hModule, LPTSTR pszBuffer, DWORD dwSize);
 
 class AssRender {
 private:
-	bool InitLibass(ASS_Hinting hints, double scale);
+	bool InitLibass(ASS_Hinting hints, double scale, int width, int height);
 
 	ASS_Library *al;
 	ASS_Renderer *ar;
 	ASS_Track *t;
 
+	double fps = 29.970;
+	char ass_file[MAX_PATH];
+
 public:
 	AssRender(ASS_Hinting hints, double scale, const char *charset);
 	~AssRender();
 
-	ASS_Image* __stdcall RenderFrame(int64_t n);
+	bool __stdcall LoadAss(const char* assfile, const char *_charset);
+	bool __stdcall Resize(double scale, int width, int height);
+	bool __stdcall SetFrameRate(double fr);
 
-
+	ASS_Image* __stdcall RenderFrame(double n, int width, int height);
+	ASS_Image* __stdcall RenderFrame(double n, ASS_Image* src);
+	ASS_Image* __stdcall RenderFrame(int64_t n, ASS_Image* src);
 	ASS_Image* __stdcall RenderFrame(int n);
 };
 
-const char * SelectAssFile(void);
+char* w2c(const wchar_t* wsp);
+char* w2c(const std::wstring ws);

@@ -1,4 +1,27 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <PropertyGroup />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LocalDebuggerAttach>false</LocalDebuggerAttach>
+    <LocalDebuggerDebuggerType>Mixed</LocalDebuggerDebuggerType>
+    <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
+    <LocalDebuggerCommand>D:\Games\Steam\Softs\steamapps\common\MovieStudioPlatinum130\Movie Studio Platinum 13.0\MovieStudioPlatinum130.exe</LocalDebuggerCommand>
+    <LocalDebuggerWorkingDirectory>D:\Games\Steam\Softs\steamapps\common\MovieStudioPlatinum130\Movie Studio Platinum 13.0</LocalDebuggerWorkingDirectory>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <LocalDebuggerAttach>true</LocalDebuggerAttach>
+    <LocalDebuggerDebuggerType>Mixed</LocalDebuggerDebuggerType>
+    <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
+    <LocalDebuggerCommand>D:\Games\Steam\Softs\steamapps\common\MovieStudioPlatinum130\Movie Studio Platinum 13.0\MovieStudioPlatinum130.exe</LocalDebuggerCommand>
+    <LocalDebuggerWorkingDirectory>D:\Games\Steam\Softs\steamapps\common\MovieStudioPlatinum130\Movie Studio Platinum 13.0</LocalDebuggerWorkingDirectory>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LocalDebuggerCommand>D:\Games\Steam\Softs\steamapps\common\MovieStudioPlatinum130\Movie Studio Platinum 13.0\MovieStudioPlatinum130.exe</LocalDebuggerCommand>
+    <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
+    <LocalDebuggerWorkingDirectory>D:\Games\Steam\Softs\steamapps\common\MovieStudioPlatinum130\Movie Studio Platinum 13.0</LocalDebuggerWorkingDirectory>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LocalDebuggerCommand>D:\Games\Steam\Softs\steamapps\common\MovieStudioPlatinum130\Movie Studio Platinum 13.0\MovieStudioPlatinum130.exe</LocalDebuggerCommand>
+    <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
+    <LocalDebuggerWorkingDirectory>D:\Games\Steam\Softs\steamapps\common\MovieStudioPlatinum130\Movie Studio Platinum 13.0</LocalDebuggerWorkingDirectory>
+  </PropertyGroup>
 </Project>

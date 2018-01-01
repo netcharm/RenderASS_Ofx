@@ -5,19 +5,19 @@
 #include <tchar.h>
 #include <time.h>
 #include <string>
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdarg.h>
+#include <string.h>
+
+#include <png.h>
 
 #include "libass_helper.h"
 
-
-#define _R(c)  ((c)>>24)
-#define _G(c)  (((c)>>16)&0xFF)
-#define _B(c)  (((c)>>8)&0xFF)
-#define _A(c)  ((c)&0xFF)
-
-char cur_dll_path[MAX_PATH]; // hack
-
-AssRender::AssRender(ASS_Hinting hints, double scale, const char *charset) {
-	if (!InitLibass(hints, scale))
+AssRender::AssRender(ASS_Hinting hints, double scale, const char *charset) {	
+	memset(ass_file, 0, MAX_PATH);
+	//if (!InitLibass(ASS_HINTING_LIGHT, scale, 1280, 720))
+	if (!InitLibass(ASS_HINTING_NATIVE, scale, 1280, 720))
 	{
 		//throw("AssRender: failed to initialize libass");
 	}		
@@ -29,7 +29,74 @@ AssRender::~AssRender() {
 	ass_library_done(al);
 }
 
-ASS_Image* AssRender::RenderFrame(int64_t n)
+bool AssRender::LoadAss(const char * assfile, const char *_charset)
+{
+	strcpy_s(ass_file, assfile);
+
+	char charset[128]; // 128 bytes ought to be enough for anyone
+	strcpy_s(charset, _charset);
+
+	t = ass_read_file(al, ass_file, charset);
+	if (!t) {
+		throw("AssRender: could not read %s", ass_file);
+		return false;
+	}
+	else { return true; }
+}
+
+bool AssRender::Resize(double scale, int width, int height)
+{
+	//InitLibass(ASS_HINTING_LIGHT, scale, width, height);
+	ass_set_frame_size(ar, width, height);
+	return true;
+}
+
+bool AssRender::SetFrameRate(double fr)
+{
+	//fps = fr;
+	return false;
+}
+
+ASS_Image* AssRender::RenderFrame(double n, ASS_Image* src)
+{
+	if (src != NULL) {
+		ass_set_frame_size(ar, src->w, src->h);
+	}		
+	//int64_t now = (int64_t)(n * 1000);
+	int64_t ts = (int64_t)(n / fps * 1000);
+	int detChange = 0;
+	ASS_Image *img = ass_render_frame(ar, t, ts, &detChange);
+
+	// this here loop shamelessly stolen from aegisub's subtitles_provider_libass.cpp
+	// and slightly modified to render upside-down
+	//while (img) {
+	//	if (img->w == 0 || img->h == 0)
+	//		continue;
+
+	//}
+	return img;
+}
+
+ASS_Image* AssRender::RenderFrame(double n, int width, int height)
+{
+	ass_set_frame_size(ar, width, height);
+	//int64_t now = (int64_t)(n * 1000);
+	int64_t ts = (int64_t)(n / fps * 1000);
+	if (!t) return NULL;
+	int detChange = 0;
+	ASS_Image *img = ass_render_frame(ar, t, ts, &detChange);
+
+	// this here loop shamelessly stolen from aegisub's subtitles_provider_libass.cpp
+	// and slightly modified to render upside-down
+	//while (img) {
+	//	if (img->w == 0 || img->h == 0)
+	//		continue;
+
+	//}
+	return img;
+}
+
+ASS_Image* AssRender::RenderFrame(int64_t n, ASS_Image* src)
 {
 	ASS_Image *img = ass_render_frame(ar, t, n, NULL);
 
@@ -61,8 +128,7 @@ ASS_Image* AssRender::RenderFrame(int n)
 	return NULL;
 }
 
-
-bool AssRender::InitLibass(ASS_Hinting hints, double scale) {
+bool AssRender::InitLibass(ASS_Hinting hints, double scale, int width, int height) {
 	al = ass_library_init();
 	if (!al)
 		return false;
@@ -79,31 +145,35 @@ bool AssRender::InitLibass(ASS_Hinting hints, double scale) {
 	if (!ar)
 		return false;
 
-	//ass_set_frame_size(ar, vi.width, vi.height);
-	ass_set_frame_size(ar, 1280, 720);
+	ass_set_frame_size(ar, width, height);
 	//ass_set_margins(ar, 0, 0, 0, 0);
 	//ass_set_use_margins(ar, 0);
 	//ass_set_aspect_ratio(ar,);  // todo: implement this
 	ass_set_font_scale(ar, scale);
 	ass_set_hinting(ar, hints);
 
-	std::string path(cur_dll_path);
-	path.append("fontconfig\\fonts.conf");
-	ass_set_fonts(ar, "Arial", "Sans", 1, path.c_str(), 1);
+	ass_set_fonts_dir(al, "C:\\Windows\\Fonts");
+
+	std::wstring path(cur_dll_path);
+	path.append(_T("fontconfig\\fonts.conf"));
+	ass_set_fonts(ar, "Arial", "Sans", 1, w2c(path), 1);
 
 	return true;
 }
 
-
-const char * SelectAssFile(void)
-{
-	int msgboxID = MessageBox(
-		NULL,
-		(LPCWSTR)L"Select ASS File",
-		(LPCWSTR)L"ASS Selected",
-		MB_ICONINFORMATION | MB_OK | MB_DEFBUTTON1
-	);
-
-	return("");
+char* w2c(const wchar_t* wsp) {
+	size_t size = wcslen(wsp) * 2 + 2;
+	char * csp = new char[size];
+	size_t c_size;
+	wcstombs_s(&c_size, csp, size, wsp, size);
+	return(csp);
 }
 
+char* w2c(const std::wstring ws) {
+	const wchar_t *wsp = ws.c_str();
+	size_t size = wcslen(wsp) * 2 + 2;
+	char * csp = new char[size];
+	size_t c_size;
+	wcstombs_s(&c_size, csp, size, wsp, size);
+	return(csp);
+}

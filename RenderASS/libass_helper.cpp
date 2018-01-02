@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
+#include <mbstring.h>
 
 #include <png.h>
 
@@ -31,6 +32,14 @@ char* w2c(const std::wstring ws) {
 	return(csp);
 }
 
+bool s2c(const std::string s, char* c) {
+	memset(c, 0, sizeof(c));
+	for (int i = 0; i < s.length(); i++) {
+		c[i] = s[i];
+	}
+	return true;
+}
+
 AssRender::AssRender(ASS_Hinting hints, double scale, const char *charset) {	
 	memset(ass_file, 0, MAX_PATH);
 	//if (!InitLibass(ASS_HINTING_LIGHT, scale, 1280, 720))
@@ -48,7 +57,15 @@ AssRender::~AssRender() {
 
 bool AssRender::LoadAss(const char * assfile, const char *_charset)
 {
+	char ass_path[MAX_PATH];
+
 	strcpy_s(ass_file, assfile);
+	strcpy_s(ass_path, assfile);
+
+	char* ap = strrchr(ass_path, '\\');
+	if (ap) ap[0] = 0;
+
+	ass_set_fonts_dir(al, ass_path);
 
 	char charset[128]; // 128 bytes ought to be enough for anyone
 	strcpy_s(charset, _charset);
@@ -58,7 +75,9 @@ bool AssRender::LoadAss(const char * assfile, const char *_charset)
 		throw("AssRender: could not read %s", ass_file);
 		return false;
 	}
-	else { return true; }
+	else { 
+		return true; 
+	}
 }
 
 bool AssRender::Resize(double scale, int width, int height)
@@ -70,28 +89,21 @@ bool AssRender::Resize(double scale, int width, int height)
 
 bool AssRender::SetFrameRate(double fr)
 {
-	//fps = fr;
+	if(fr>0) fps = fr;
 	return false;
 }
 
-ASS_Image* AssRender::RenderFrame(double n, ASS_Image* src)
+bool AssRender::SetDefaultFont(char * fontname, int fontsize)
 {
-	if (src != NULL) {
-		ass_set_frame_size(ar, src->w, src->h);
-	}		
-	//int64_t now = (int64_t)(n * 1000);
-	int64_t ts = (int64_t)(n / fps * 1000);
-	int detChange = 0;
-	ASS_Image *img = ass_render_frame(ar, t, ts, &detChange);
+	ass_set_fonts(ar, fontname, "Sans", 1, fontconf, 1);
+	return true;
+}
 
-	// this here loop shamelessly stolen from aegisub's subtitles_provider_libass.cpp
-	// and slightly modified to render upside-down
-	//while (img) {
-	//	if (img->w == 0 || img->h == 0)
-	//		continue;
+ASS_Image_List* AssRender::RenderFrame(double n, int width, int height, bool ass_type){
 
-	//}
-	return img;
+	ASS_Image* img = RenderFrame(n, width, height);
+	ASS_Image_List* imglist = new ASS_Image_List(img);
+	return(imglist);
 }
 
 ASS_Image* AssRender::RenderFrame(double n, int width, int height)
@@ -100,8 +112,9 @@ ASS_Image* AssRender::RenderFrame(double n, int width, int height)
 	//int64_t now = (int64_t)(n * 1000);
 	int64_t ts = (int64_t)(n / fps * 1000);
 	if (!t) return NULL;
-	int detChange = 0;
+	int detChange = 2;
 	ASS_Image *img = ass_render_frame(ar, t, ts, &detChange);
+	//ASS_Image *img = ass_render_frame(ar, t, ts, NULL);
 
 	// this here loop shamelessly stolen from aegisub's subtitles_provider_libass.cpp
 	// and slightly modified to render upside-down
@@ -113,17 +126,22 @@ ASS_Image* AssRender::RenderFrame(double n, int width, int height)
 	return img;
 }
 
+ASS_Image* AssRender::RenderFrame(double n, ASS_Image* src)
+{
+	if (src != NULL) {
+		ass_set_frame_size(ar, src->w, src->h);
+	}
+	//int64_t now = (int64_t)(n * 1000);
+	int64_t ts = (int64_t)(n / fps * 1000);
+	int detChange = 0;
+	ASS_Image *img = ass_render_frame(ar, t, ts, &detChange);
+
+	return img;
+}
+
 ASS_Image* AssRender::RenderFrame(int64_t n, ASS_Image* src)
 {
 	ASS_Image *img = ass_render_frame(ar, t, n, NULL);
-
-	// this here loop shamelessly stolen from aegisub's subtitles_provider_libass.cpp
-	// and slightly modified to render upside-down
-	while (img) {
-		if (img->w == 0 || img->h == 0)
-			continue;
-
-	}
 	return img;
 }
 
@@ -133,12 +151,6 @@ ASS_Image* AssRender::RenderFrame(int n)
 	//int64_t ts = (int64_t)n * (int64_t)1000 * (int64_t)vi.fps_denominator / (int64_t)vi.fps_numerator;
 
 	//ASS_Image *img = ass_render_frame(ar, t, ts, NULL);
-
-	//// this here loop shamelessly stolen from aegisub's subtitles_provider_libass.cpp
-	//// and slightly modified to render upside-down
-	//while (img) {
-	//	if (img->w == 0 || img->h == 0)
-	//		continue;
 
 	//}
 	//return img;
@@ -155,7 +167,8 @@ bool AssRender::InitLibass(ASS_Hinting hints, double scale, int width, int heigh
 
 	// not needed?
 	//ass_set_fonts_dir(al, tmp);
-	ass_set_extract_fonts(al, 0);
+	//ass_set_fonts_dir(al, "C:\\Windows\\Fonts");
+	ass_set_extract_fonts(al, 2);
 	ass_set_style_overrides(al, NULL);
 
 	ar = ass_renderer_init(al);
@@ -166,15 +179,18 @@ bool AssRender::InitLibass(ASS_Hinting hints, double scale, int width, int heigh
 	//ass_set_margins(ar, 0, 0, 0, 0);
 	//ass_set_use_margins(ar, 0);
 	//ass_set_aspect_ratio(ar,);  // todo: implement this
-	ass_set_font_scale(ar, scale);
 	ass_set_hinting(ar, hints);
-
-	//ass_set_fonts_dir(al, "C:\\Windows\\Fonts");
+	ass_set_font_scale(ar, scale);
+	ass_set_line_position(ar, 5);
+	ass_set_line_spacing(ar, 16);
+	//ass_set_shaper(ar, ASS_SHAPING_COMPLEX);
 
 	std::string path(&cur_dll_path[0]);
 	path.append(_T("fontconfig\\fonts.conf"));
+	s2c(path, fontconf);
 	//ass_set_fonts(ar, "Arial", "Sans", 1, w2c(path), 1);
-	ass_set_fonts(ar, "Arial", "Sans", 1, path.c_str(), 1);
+	//ass_set_fonts(ar, "C:\\Windows\\Fonts\\Arial.ttf", "Sans", 1, fontconf, 1);
+	ass_set_fonts(ar, "Arial", "Sans", 1, fontconf, 1);
 	//ass_set_fonts(ar, "Arial", "Sans", 0, NULL, 0);
 
 	return true;
@@ -208,7 +224,9 @@ ASS_Image_List::ASS_Image_List(ASS_Image * img)
 				break;
 			}
 
-			if (img->next->w <= 0 || img->next->h <= 0 || img->next->type <= 0) break;
+			unsigned long uia = (unsigned long)(&img->next);
+			if (uia <= 0 && uia > 0x00FFFFFFFFFFL) break;
+			if (!img->next || img->next->w <= 0 || img->next->h <= 0 || img->next->type < 0) break;
 			img = img->next;
 		}
 		catch (const std::exception&)

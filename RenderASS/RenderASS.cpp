@@ -83,6 +83,17 @@ getMyInstanceData(OfxImageEffectHandle effect)
 	return myData;
 }
 
+
+static double 
+getFrameRate(OfxImageEffectHandle effect, OfxImageClipHandle clip)
+{
+	OfxPropertySetHandle props;
+	gEffectHost->clipGetPropertySet(clip, &props);
+	double fps = 30.000;
+	gPropHost->propGetDouble(props, kOfxImageEffectPropFrameRate, 0, &fps);
+	if(ass) ass->SetFrameRate(fps);
+	return(fps);
+}
 /** @brief Called at load */
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -121,17 +132,18 @@ describeInContext(OfxImageEffectHandle  effect, OfxPropertySetHandle inArgs)
 
 	// set the component types we can handle on out output
 	gPropHost->propSetString(props, kOfxImageEffectPropSupportedComponents, 0, kOfxImageComponentRGBA);
+	gPropHost->propSetString(props, kOfxImageEffectPropSupportedComponents, 1, kOfxImageComponentRGB);
 	//gPropHost->propSetString(props, kOfxImageEffectPropSupportedComponents, 1, kOfxImageComponentRGB);
 	//gPropHost->propSetString(props, kOfxImageEffectPropSupportedComponents, 2, kOfxImageComponentNone);
 	
-
 	// define the single source clip in both contexts
 	gEffectHost->clipDefine(effect, kOfxImageEffectSimpleSourceClipName, &props);
 
 	// set the component types we can handle on our main input
 	gPropHost->propSetString(props, kOfxImageEffectPropSupportedComponents, 0, kOfxImageComponentRGBA);
 	gPropHost->propSetString(props, kOfxImageEffectPropSupportedComponents, 1, kOfxImageComponentRGB);
-	//gPropHost->propSetString(props, kOfxImageEffectPropSupportedComponents, 2, kOfxImageComponentNone);
+	gPropHost->propSetString(props, kOfxImageEffectPropSupportedComponents, 2, kOfxImageComponentAlpha);
+	gPropHost->propSetString(props, kOfxImageEffectPropSupportedComponents, 3, kOfxImageComponentNone);
 
 	// get the context from the inArgs handle
 	char *context;
@@ -329,6 +341,22 @@ createInstance(OfxImageEffectHandle effect)
 	// set my private instance data
 	gPropHost->propSetPointer(effectProps, kOfxPropInstanceData, 0, (void *)myData);
 
+	char* boundle;
+	gPropHost->propGetString(effectProps, kOfxPluginPropFilePath, 0, &boundle);
+
+	int fps = 0;
+	gPropHost->propGetInt(effectProps, kOfxImageEffectPropFrameRate, 0, &fps);
+
+	int ufps = 0;
+	gPropHost->propGetInt(effectProps, kOfxImageEffectPropUnmappedFrameRate, 0, &ufps);
+
+	int sfps = 0;
+	gPropHost->propGetInt(effectProps, kOfxImageEffectPropSetableFrameRate, 0, &sfps);
+
+	if (ass == NULL) {
+		ass = new AssRender(ASS_HINTING_NATIVE, 1.0, "UTF-8");
+	}
+
 	return kOfxStatOK;
 }
 
@@ -342,10 +370,6 @@ instanceChanged(OfxImageEffectHandle effect,
 	// see why it changed
 	char *changeReason;
 	gPropHost->propGetString(inArgs, kOfxPropChangeReason, 0, &changeReason);
-
-	if (ass == NULL) {
-		ass = new AssRender(ASS_HINTING_LIGHT, 1.0, "UTF-8");
-	}
 
 	MyInstanceData *myData = new MyInstanceData;
 	myData = getMyInstanceData(effect);
@@ -362,6 +386,13 @@ instanceChanged(OfxImageEffectHandle effect,
 		gParamHost->paramGetValue(myData->assFileName, &fn);
 		if (ass != NULL && fn[0] != 0) {
 			ass->LoadAss(fn, "UTF-8");
+		}
+	}
+	else if (strcmp(propName, "assDefaultFontName") == 0) {
+		char* fontname = NULL;
+		gParamHost->paramGetValue(myData->assDefaultFontName, &fontname);
+		if (ass != NULL) {
+			ass->SetDefaultFont(fontname, 24);
 		}
 	}
 	else if (strcmp(propName, "assDefaultFontSize") == 0) {
@@ -400,6 +431,11 @@ getClipPreferences(OfxImageEffectHandle effect, OfxPropertySetHandle inArgs, Ofx
 		//gEffectHost->clipGetHandle(effect, kOfxImageEffectOutputClipName, &clipHandle, &props);
 		gEffectHost->getPropertySet(effect, &props);
 		
+		// fetch output clip
+		OfxImageClipHandle outputClip;
+		gEffectHost->clipGetHandle(effect, kOfxImageEffectOutputClipName, &outputClip, 0);
+		gEffectHost->clipGetPropertySet(outputClip, &props);
+
 		//double fps = 29.970;
 		double fps = 30.000;
 		//gPropHost->propGetDouble(props, kOfxImageEffectPropFrameRate, 0, &fps);
@@ -501,6 +537,8 @@ blend_frame(OfxImageEffectHandle instance,
 	void *srcPtr, OfxRectI srcRect, int srcRowBytes,
 	void *dstPtr, OfxRectI dstRect, int dstRowBytes) {
 
+	if (!img || img->w <= 0 || img->h <= 0) return;
+
 	// cast data pointers to 8 bit RGBA
 	OfxRGBAColourB *src = (OfxRGBAColourB *)srcPtr;
 	OfxRGBAColourB *dst = (OfxRGBAColourB *)dstPtr;
@@ -513,47 +551,67 @@ blend_frame(OfxImageEffectHandle instance,
 	//dstRectAss.y1 = img->dst_y;
 	//dstRectAss.y2 = (img->dst_y + img->h);
 
-	unsigned int a = 255 - ((unsigned int)_A(img->color));
+	unsigned int stride = (unsigned int)img->stride;
+	unsigned int imglen = (unsigned int)(stride*img->h);
+	unsigned int a = 255 - (_A(img->color));
 	unsigned int r = (unsigned int)_R(img->color);
 	unsigned int g = (unsigned int)_G(img->color);
 	unsigned int b = (unsigned int)_B(img->color);
 
 	const unsigned char *src_map = img->bitmap;
-	unsigned int k, ck, t;
+	unsigned int k, ck;
 
-	for (int y = dstRect.y1; y < dstRect.y2; y++) {
+	for (int y = renderWindow.y1; y < renderWindow.y2; y++) {
 		if (gEffectHost->abort(instance)) break;
+				
+		if (!img || img->w <= 0 || img->h <= 0) break;
 
 		//OfxRGBAColourB *dstPix = pixelAddress(dst, dstRect, renderWindow.x1, renderWindow.y2 - y - 1, dstRowBytes);
 		OfxRGBAColourB *dstPix = pixelAddress(dst, dstRect, renderWindow.x1, y, dstRowBytes);
 		for (int x = renderWindow.x1; x < renderWindow.x2; x++) {
-			if (x >= dstRectAss.x1 && x < dstRectAss.x2 && y >= dstRectAss.y1 && y < dstRectAss.y2)
+			try
 			{
-				k = ((unsigned)src_map[x]) * a / 255;
-				ck = 255 - k;
-				dstPix->a = (unsigned char)k;
-				t = dstPix->b;
-				dstPix->b = (unsigned char)((k*b + ck*t) / 255);
-				t = dstPix->g;
-				dstPix->g = (unsigned char)((k*g + ck*t) / 255);
-				t = dstPix->r;
-				dstPix->r = (unsigned char)((k*r + ck*t) / 255);
+				if (!img || img->w <= 0 || img->h <= 0) break;
 
-				//dstPix->a = 255 - ((unsigned)src_map[x]);
-				//dstPix->b = b;
-				//dstPix->g = g;
-				//dstPix->r = r;
-			}
-			else
-			{
+				long idx_x = x - dstRectAss.x1;
+				long idx_y = img->h - (y - dstRectAss.y1) - 1;
+
 				//OfxRGBAColourB *srcPix = pixelAddress(src, srcRect, x, renderWindow.y2 - y - 1, srcRowBytes);
 				OfxRGBAColourB *srcPix = pixelAddress(src, srcRect, x, y, srcRowBytes);
-				if (srcPix) {
-					dstPix->a = srcPix->a;
-					dstPix->b = srcPix->b;
-					dstPix->g = srcPix->g;
-					dstPix->r = srcPix->r;
+				if (dst && dstPix && x >= dstRectAss.x1 && x < dstRectAss.x2 && y >= dstRectAss.y1 && y < dstRectAss.y2)
+				{
+					long idx = idx_x + idx_y*stride;
+					if (idx >= imglen) break;
+					k = ((unsigned)src_map[idx]) * a / 255;
+					ck = 255 - k;
+					if (k == 0 && src && srcPix)
+					{
+						dstPix->a = srcPix->a;
+						dstPix->b = srcPix->b;
+						dstPix->g = srcPix->g;
+						dstPix->r = srcPix->r;
+					}
+					else
+					{
+						dstPix->a = (unsigned char)ck;
+						dstPix->b = (unsigned char)((k*b + ck*dstPix->b) / 255);
+						dstPix->g = (unsigned char)((k*g + ck*dstPix->g) / 255);
+						dstPix->r = (unsigned char)((k*r + ck*dstPix->r) / 255);
+					}
 				}
+				else
+				{
+					if (dst && dstPix) {
+						dstPix->a = srcPix->a;
+						dstPix->b = srcPix->b;
+						dstPix->g = srcPix->g;
+						dstPix->r = srcPix->r;
+					}
+				}
+			}
+			catch (const std::exception&)
+			{
+
 			}
 			dstPix++;
 		}
@@ -576,6 +634,7 @@ static OfxStatus render(OfxImageEffectHandle instance,
 	// fetch output clip
 	OfxImageClipHandle outputClip;
 	gEffectHost->clipGetHandle(instance, kOfxImageEffectOutputClipName, &outputClip, 0);
+	getFrameRate(instance, outputClip);
 
 	OfxPropertySetHandle outputImg = NULL, sourceImg = NULL;
 	try {
@@ -597,8 +656,9 @@ static OfxStatus render(OfxImageEffectHandle instance,
 		MyInstanceData *myData = getMyInstanceData(instance);
 
 		ASS_Image *img = NULL;
-		img = ass->RenderFrame((double)time, renderWindow.x2 - renderWindow.x1, renderWindow.y2 - renderWindow.y1);
-		ASS_Image_List* imglist = new ASS_Image_List(img);
+		//img = ass->RenderFrame((double)time, renderWindow.x2 - renderWindow.x1, renderWindow.y2 - renderWindow.y1);
+		//ASS_Image_List* imglist = new ASS_Image_List(img);
+		ASS_Image_List* imglist = ass->RenderFrame((double)time, renderWindow.x2 - renderWindow.x1, renderWindow.y2 - renderWindow.y1, true);
 
 		if (myData->context != eIsGenerator) {
 			// fetch main input clip
@@ -619,49 +679,26 @@ static OfxStatus render(OfxImageEffectHandle instance,
 			gPropHost->propGetInt(sourceImg, kOfxImagePropRowBytes, 0, &srcRowBytes);
 			gPropHost->propGetPointer(sourceImg, kOfxImagePropData, 0, &srcPtr);
 
-			if (imglist->img_shadow)
-			{
-				blend_frame(instance, imglist->img_shadow, renderWindow, srcPtr, srcRect, srcRowBytes, dstPtr, dstRect, dstRowBytes);
-			}
 			if (imglist->img_outline)
 			{
 				blend_frame(instance, imglist->img_outline, renderWindow, srcPtr, srcRect, srcRowBytes, dstPtr, dstRect, dstRowBytes);
+			}
+			if (imglist->img_shadow)
+			{
+				blend_frame(instance, imglist->img_shadow, renderWindow, srcPtr, srcRect, srcRowBytes, dstPtr, dstRect, dstRowBytes);
 			}
 			if (imglist->img_text)
 			{
 				blend_frame(instance, imglist->img_text, renderWindow, srcPtr, srcRect, srcRowBytes, dstPtr, dstRect, dstRowBytes);
 			}
-
-			// and do some inverting
-			//for (int y = renderWindow.y1; y < renderWindow.y2; y++) {
-			//	if (gEffectHost->abort(instance)) break;
-			//	OfxRGBAColourB *dstPix = pixelAddress(dst, dstRect, renderWindow.x1, y, dstRowBytes);
-			//	for (int x = renderWindow.x1; x < renderWindow.x2; x++) {
-			//		OfxRGBAColourB *srcPix = pixelAddress(src, srcRect, x, y, srcRowBytes);
-			//		if (srcPix) {
-			//			dstPix->r = 255 - srcPix->r;
-			//			dstPix->g = 255 - srcPix->g;
-			//			dstPix->b = 255 - srcPix->b;
-			//			dstPix->a = 255 - srcPix->a;
-			//		}
-			//		else {
-			//			dstPix->r = 0;
-			//			dstPix->g = 0;
-			//			dstPix->b = 0;
-			//			dstPix->a = 0;
-			//		}
-			//		dstPix++;
-			//	}
-			//}
-
-		} else {	
+		} else {
+			if (imglist->img_outline)
+			{
+				//blend_frame(instance, imglist->img_outline, renderWindow, NULL, dstRect, 0, dstPtr, dstRect, dstRowBytes);
+			}
 			if (imglist->img_shadow)
 			{
 				blend_frame(instance, imglist->img_shadow, renderWindow, NULL, dstRect, 0, dstPtr, dstRect, dstRowBytes);
-			}
-			if (imglist->img_outline)
-			{
-				blend_frame(instance, imglist->img_outline, renderWindow, NULL, dstRect, 0, dstPtr, dstRect, dstRowBytes);
 			}
 			if (imglist->img_text)
 			{
@@ -669,6 +706,8 @@ static OfxStatus render(OfxImageEffectHandle instance,
 			}
 			// we are finished with the source images so release them
 		}
+		if (img) delete img;
+		if (imglist) delete imglist;
 	}
 	catch (NoImageEx &) {
 		// if we were interrupted, the failed fetch is fine, just return kOfxStatOK

@@ -62,6 +62,7 @@ private:
 
 	double fps = 29.970;
 	char ass_file[MAX_PATH];
+	char fontconf[MAX_PATH];
 
 public:
 	AssRender(ASS_Hinting hints, double scale, const char *charset);
@@ -71,6 +72,9 @@ public:
 	bool __stdcall Resize(double scale, int width, int height);
 	bool __stdcall SetFrameRate(double fr);
 
+	bool __stdcall SetDefaultFont(char * fontname, int fontsize);
+
+	ASS_Image_List* __stdcall RenderFrame(double n, int width, int height, bool ass_type);
 	ASS_Image* __stdcall RenderFrame(double n, int width, int height);
 	ASS_Image* __stdcall RenderFrame(double n, ASS_Image* src);
 	ASS_Image* __stdcall RenderFrame(int64_t n, ASS_Image* src);

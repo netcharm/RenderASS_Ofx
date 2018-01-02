@@ -26,8 +26,11 @@
 #include <stdio.h>
 extern "C" {
 #  include <ass.h>
+//#  include <ass_outline.h>
 #  include <ass_types.h>
 }
+
+#define M_PI       3.14159265358979323846   // pi
 
 #define _R(c)  ((c)>>24)
 #define _G(c)  (((c)>>16)&0xFF)
@@ -37,6 +40,17 @@ extern "C" {
 extern TCHAR cur_dll_path[MAX_PATH];
 
 DWORD GetModulePath(HMODULE hModule, LPTSTR pszBuffer, DWORD dwSize);
+
+
+class ASS_Image_List {
+public:
+	ASS_Image_List(ASS_Image* img);
+	~ASS_Image_List();
+
+	ASS_Image *img_text = NULL;
+	ASS_Image *img_outline = NULL;
+	ASS_Image *img_shadow = NULL;
+};
 
 class AssRender {
 private:

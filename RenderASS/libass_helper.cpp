@@ -14,6 +14,23 @@
 
 #include "libass_helper.h"
 
+char* w2c(const wchar_t* wsp) {
+	size_t size = wcslen(wsp) * 2 + 2;
+	char * csp = new char[size];
+	size_t c_size;
+	wcstombs_s(&c_size, csp, size, wsp, size);
+	return(csp);
+}
+
+char* w2c(const std::wstring ws) {
+	const wchar_t *wsp = ws.c_str();
+	size_t size = wcslen(wsp) * 2 + 2;
+	char * csp = new char[size];
+	size_t c_size;
+	wcstombs_s(&c_size, csp, size, wsp, size);
+	return(csp);
+}
+
 AssRender::AssRender(ASS_Hinting hints, double scale, const char *charset) {	
 	memset(ass_file, 0, MAX_PATH);
 	//if (!InitLibass(ASS_HINTING_LIGHT, scale, 1280, 720))
@@ -152,28 +169,53 @@ bool AssRender::InitLibass(ASS_Hinting hints, double scale, int width, int heigh
 	ass_set_font_scale(ar, scale);
 	ass_set_hinting(ar, hints);
 
-	ass_set_fonts_dir(al, "C:\\Windows\\Fonts");
+	//ass_set_fonts_dir(al, "C:\\Windows\\Fonts");
 
-	std::wstring path(cur_dll_path);
+	std::string path(&cur_dll_path[0]);
 	path.append(_T("fontconfig\\fonts.conf"));
-	ass_set_fonts(ar, "Arial", "Sans", 1, w2c(path), 1);
+	//ass_set_fonts(ar, "Arial", "Sans", 1, w2c(path), 1);
+	ass_set_fonts(ar, "Arial", "Sans", 1, path.c_str(), 1);
+	//ass_set_fonts(ar, "Arial", "Sans", 0, NULL, 0);
 
 	return true;
 }
 
-char* w2c(const wchar_t* wsp) {
-	size_t size = wcslen(wsp) * 2 + 2;
-	char * csp = new char[size];
-	size_t c_size;
-	wcstombs_s(&c_size, csp, size, wsp, size);
-	return(csp);
+ASS_Image_List::ASS_Image_List(ASS_Image * img)
+{
+	ASS_Image_List* imglist = new ASS_Image_List();
+	int img_count = 0;
+	while (img && img_count < 3) {
+		img_count++;
+		if (img->w <= 0 || img->h <= 0)
+		{
+			img = img->next;
+			continue;
+		}
+		switch (img->type)
+		{
+		case ASS_Image::IMAGE_TYPE_CHARACTER:
+			imglist->img_text = img;
+			break;
+		case ASS_Image::IMAGE_TYPE_OUTLINE:
+			imglist->img_outline = img;
+			break;
+		case ASS_Image::IMAGE_TYPE_SHADOW:
+			imglist->img_shadow = img;
+			break;
+		default:
+			break;
+		}
+		if (img->next->w <= 0 || img->next->h <= 0 || img->next->type <= 0) break;
+		img = img->next;
+	}
 }
 
-char* w2c(const std::wstring ws) {
-	const wchar_t *wsp = ws.c_str();
-	size_t size = wcslen(wsp) * 2 + 2;
-	char * csp = new char[size];
-	size_t c_size;
-	wcstombs_s(&c_size, csp, size, wsp, size);
-	return(csp);
+ASS_Image_List::~ASS_Image_List()
+{
+	img_text = NULL;
+	img_outline = NULL;
+	img_shadow = NULL;
+	//if (img_text) delete img_text;
+	//if (img_outline) delete img_outline;
+	//if (img_shadow) delete img_shadow;
 }

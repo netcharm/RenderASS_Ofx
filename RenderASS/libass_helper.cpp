@@ -182,31 +182,39 @@ bool AssRender::InitLibass(ASS_Hinting hints, double scale, int width, int heigh
 
 ASS_Image_List::ASS_Image_List(ASS_Image * img)
 {
-	ASS_Image_List* imglist = new ASS_Image_List();
 	int img_count = 0;
 	while (img && img_count < 3) {
 		img_count++;
-		if (img->w <= 0 || img->h <= 0)
+		try
 		{
+			if (img->w <= 0 || img->h <= 0)
+			{
+				img = img->next;
+				continue;
+			}
+
+			switch (img->type)
+			{
+			case ASS_Image::IMAGE_TYPE_CHARACTER:
+				img_text = img;
+				break;
+			case ASS_Image::IMAGE_TYPE_OUTLINE:
+				img_outline = img;
+				break;
+			case ASS_Image::IMAGE_TYPE_SHADOW:
+				img_shadow = img;
+				break;
+			default:
+				break;
+			}
+
+			if (img->next->w <= 0 || img->next->h <= 0 || img->next->type <= 0) break;
 			img = img->next;
-			continue;
 		}
-		switch (img->type)
+		catch (const std::exception&)
 		{
-		case ASS_Image::IMAGE_TYPE_CHARACTER:
-			imglist->img_text = img;
-			break;
-		case ASS_Image::IMAGE_TYPE_OUTLINE:
-			imglist->img_outline = img;
-			break;
-		case ASS_Image::IMAGE_TYPE_SHADOW:
-			imglist->img_shadow = img;
-			break;
-		default:
-			break;
-		}
-		if (img->next->w <= 0 || img->next->h <= 0 || img->next->type <= 0) break;
-		img = img->next;
+
+		} {}
 	}
 }
 

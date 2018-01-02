@@ -494,7 +494,8 @@ pixelAddress(OfxRGBAColourB *img, OfxRectI rect, int x, int y, int bytesPerLine)
 // throws this if it can't fetch an image
 class NoImageEx {};
 
-inline void blend_frame(OfxImageEffectHandle instance, 
+inline void 
+blend_frame(OfxImageEffectHandle instance, 
 	ASS_Image* img,
 	OfxRectI renderWindow,
 	void *srcPtr, OfxRectI srcRect, int srcRowBytes,
@@ -526,9 +527,6 @@ inline void blend_frame(OfxImageEffectHandle instance,
 		//OfxRGBAColourB *dstPix = pixelAddress(dst, dstRect, renderWindow.x1, renderWindow.y2 - y - 1, dstRowBytes);
 		OfxRGBAColourB *dstPix = pixelAddress(dst, dstRect, renderWindow.x1, y, dstRowBytes);
 		for (int x = renderWindow.x1; x < renderWindow.x2; x++) {
-			//OfxRGBAColourB *srcPix = pixelAddress(src, srcRect, x, renderWindow.y2 - y - 1, srcRowBytes);
-			OfxRGBAColourB *srcPix = pixelAddress(src, srcRect, x, y, srcRowBytes);
-
 			if (x >= dstRectAss.x1 && x < dstRectAss.x2 && y >= dstRectAss.y1 && y < dstRectAss.y2)
 			{
 				k = ((unsigned)src_map[x]) * a / 255;
@@ -548,14 +546,17 @@ inline void blend_frame(OfxImageEffectHandle instance,
 			}
 			else
 			{
-				dstPix->a = srcPix->a;
-				dstPix->b = srcPix->b;
-				dstPix->g = srcPix->g;
-				dstPix->r = srcPix->r;
+				//OfxRGBAColourB *srcPix = pixelAddress(src, srcRect, x, renderWindow.y2 - y - 1, srcRowBytes);
+				OfxRGBAColourB *srcPix = pixelAddress(src, srcRect, x, y, srcRowBytes);
+				if (srcPix) {
+					dstPix->a = srcPix->a;
+					dstPix->b = srcPix->b;
+					dstPix->g = srcPix->g;
+					dstPix->r = srcPix->r;
+				}
 			}
 			dstPix++;
 		}
-
 	}
 }
 
@@ -595,6 +596,10 @@ static OfxStatus render(OfxImageEffectHandle instance,
 
 		MyInstanceData *myData = getMyInstanceData(instance);
 
+		ASS_Image *img = NULL;
+		img = ass->RenderFrame((double)time, renderWindow.x2 - renderWindow.x1, renderWindow.y2 - renderWindow.y1);
+		ASS_Image_List* imglist = new ASS_Image_List(img);
+
 		if (myData->context != eIsGenerator) {
 			// fetch main input clip
 			OfxImageClipHandle sourceClip;
@@ -614,6 +619,18 @@ static OfxStatus render(OfxImageEffectHandle instance,
 			gPropHost->propGetInt(sourceImg, kOfxImagePropRowBytes, 0, &srcRowBytes);
 			gPropHost->propGetPointer(sourceImg, kOfxImagePropData, 0, &srcPtr);
 
+			if (imglist->img_shadow)
+			{
+				blend_frame(instance, imglist->img_shadow, renderWindow, srcPtr, srcRect, srcRowBytes, dstPtr, dstRect, dstRowBytes);
+			}
+			if (imglist->img_outline)
+			{
+				blend_frame(instance, imglist->img_outline, renderWindow, srcPtr, srcRect, srcRowBytes, dstPtr, dstRect, dstRowBytes);
+			}
+			if (imglist->img_text)
+			{
+				blend_frame(instance, imglist->img_text, renderWindow, srcPtr, srcRect, srcRowBytes, dstPtr, dstRect, dstRowBytes);
+			}
 
 			// and do some inverting
 			//for (int y = renderWindow.y1; y < renderWindow.y2; y++) {
@@ -637,89 +654,18 @@ static OfxStatus render(OfxImageEffectHandle instance,
 			//	}
 			//}
 
-			ASS_Image *img = NULL;
-			img = ass->RenderFrame((double)time, renderWindow.x2 - renderWindow.x1, renderWindow.y2 - renderWindow.y1);
-
-			ASS_Image_List* imglist = new ASS_Image_List(img);
+		} else {	
 			if (imglist->img_shadow)
 			{
-				blend_frame(instance, imglist->img_shadow, renderWindow, srcPtr, srcRect, srcRowBytes, dstPtr, dstRect, dstRowBytes);
+				blend_frame(instance, imglist->img_shadow, renderWindow, NULL, dstRect, 0, dstPtr, dstRect, dstRowBytes);
 			}
 			if (imglist->img_outline)
 			{
-				blend_frame(instance, imglist->img_outline, renderWindow, srcPtr, srcRect, srcRowBytes, dstPtr, dstRect, dstRowBytes);
+				blend_frame(instance, imglist->img_outline, renderWindow, NULL, dstRect, 0, dstPtr, dstRect, dstRowBytes);
 			}
 			if (imglist->img_text)
 			{
-				blend_frame(instance, imglist->img_text, renderWindow, srcPtr, srcRect, srcRowBytes, dstPtr, dstRect, dstRowBytes);
-			}
-
-			// this here loop shamelessly stolen from aegisub's subtitles_provider_libass.cpp
-			// and slightly modified to render upside-down
-			while (img && img_count<3) {
-				if (img->w <= 0 || img->h <= 0)
-				{
-					img = img->next;
-					continue;
-				}
-
-
-				//last_img = img;
-				if (img->next->w <= 0 || img->next->h <= 0 || img->next->type <= 0) break;
-				img = img->next;
-			}
-		} else {
-		
-			//ASS_Image *img = ass->RenderFrame((double)time, renderWindow.x2 - renderWindow.x1, renderWindow.y2 - renderWindow.y1);
-			ASS_Image *img = NULL;
-			// this here loop shamelessly stolen from aegisub's subtitles_provider_libass.cpp
-			// and slightly modified to render upside-down
-			OfxRGBAColourB *dst = (OfxRGBAColourB *)dstPtr;
-			while (img) {
-				if (img->w == 0 || img->h == 0)
-					continue;
-
-				OfxRectI dstRectAss;
-				dstRectAss.x1 = img->dst_x;
-				dstRectAss.x2 = img->dst_x + img->w;
-				dstRectAss.y1 = renderWindow.y2 - img->dst_y;
-				dstRectAss.y2 = renderWindow.y2 - (img->dst_y + img->h);
-
-				unsigned int a = 255 - ((unsigned int)_A(img->color));
-				unsigned int r = (unsigned int)_R(img->color);
-				unsigned int g = (unsigned int)_G(img->color);
-				unsigned int b = (unsigned int)_B(img->color);
-
-				const unsigned char *src_map = img->bitmap;
-				//unsigned int k, ck, t;
-
-				for (int y = 0; y < img->h; y++) {
-					if (gEffectHost->abort(instance)) break;
-
-					OfxRGBAColourB *dstPix = pixelAddress(dst, dstRect, renderWindow.x1, renderWindow.y2 - y - img->dst_y, dstRowBytes);
-					//OfxRGBAColourB *dstPix = pixelAddress(dst, dstRectAss, renderWindow.x1, y, dstRowBytes);
-
-					dstPix += img->dst_x;
-					for (int x = 0; x < img->w; ++x) {
-						//k = ((unsigned)src_map[x]) * a / 255;
-						//ck = 255 - k;
-						//dstPix->a = (unsigned char)ck;
-						//t = dstPix->b;
-						//dstPix->b = (unsigned char)((k*b + ck*t) / 255);
-						//t = dstPix->g;
-						//dstPix->g = (unsigned char)((k*g + ck*t) / 255);
-						//t = dstPix->r;
-						//dstPix->r = (unsigned char)((k*r + ck*t) / 255);
-
-						dstPix->a = 255-((unsigned)src_map[x]);
-						dstPix->b = b;
-						dstPix->g = g;
-						dstPix->r = r;
-
-						dstPix++;
-					}
-				}
-				img = img->next;
+				blend_frame(instance, imglist->img_text, renderWindow, NULL, dstRect, 0, dstPtr, dstRect, dstRowBytes);
 			}
 			// we are finished with the source images so release them
 		}

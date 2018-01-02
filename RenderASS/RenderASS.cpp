@@ -580,20 +580,20 @@ blend_frame(OfxImageEffectHandle instance,
 				OfxRGBAColourB *srcPix = pixelAddress(src, srcRect, x, y, srcRowBytes);
 				if (dst && dstPix && x >= dstRectAss.x1 && x < dstRectAss.x2 && y >= dstRectAss.y1 && y < dstRectAss.y2)
 				{
-					long idx = idx_x + idx_y*stride;
+					unsigned long idx = idx_x + idx_y*stride;
 					if (idx >= imglen) break;
 					k = ((unsigned)src_map[idx]) * a / 255;
 					ck = 255 - k;
-					if (k == 0 && src && srcPix)
+					//if (k == 0 && src && srcPix)
+					//{
+					//	dstPix->a = srcPix->a;
+					//	//dstPix->b = srcPix->b;
+					//	//dstPix->g = srcPix->g;
+					//	//dstPix->r = srcPix->r;
+					//}
+					//else
 					{
-						dstPix->a = srcPix->a;
-						dstPix->b = srcPix->b;
-						dstPix->g = srcPix->g;
-						dstPix->r = srcPix->r;
-					}
-					else
-					{
-						dstPix->a = (unsigned char)ck;
+						dstPix->a = (unsigned char)k;
 						dstPix->b = (unsigned char)((k*b + ck*dstPix->b) / 255);
 						dstPix->g = (unsigned char)((k*g + ck*dstPix->g) / 255);
 						dstPix->r = (unsigned char)((k*r + ck*dstPix->r) / 255);
@@ -656,9 +656,9 @@ static OfxStatus render(OfxImageEffectHandle instance,
 		MyInstanceData *myData = getMyInstanceData(instance);
 
 		ASS_Image *img = NULL;
-		//img = ass->RenderFrame((double)time, renderWindow.x2 - renderWindow.x1, renderWindow.y2 - renderWindow.y1);
+		img = ass->RenderFrame((double)time, renderWindow.x2 - renderWindow.x1, renderWindow.y2 - renderWindow.y1);
 		//ASS_Image_List* imglist = new ASS_Image_List(img);
-		ASS_Image_List* imglist = ass->RenderFrame((double)time, renderWindow.x2 - renderWindow.x1, renderWindow.y2 - renderWindow.y1, true);
+		//ASS_Image_List* imglist = ass->RenderFrame((double)time, renderWindow.x2 - renderWindow.x1, renderWindow.y2 - renderWindow.y1, true);
 
 		if (myData->context != eIsGenerator) {
 			// fetch main input clip
@@ -679,35 +679,79 @@ static OfxStatus render(OfxImageEffectHandle instance,
 			gPropHost->propGetInt(sourceImg, kOfxImagePropRowBytes, 0, &srcRowBytes);
 			gPropHost->propGetPointer(sourceImg, kOfxImagePropData, 0, &srcPtr);
 
-			if (imglist->img_outline)
-			{
-				blend_frame(instance, imglist->img_outline, renderWindow, srcPtr, srcRect, srcRowBytes, dstPtr, dstRect, dstRowBytes);
+			while (img) {
+				try
+				{
+					if (img->w <= 0 || img->h <= 0)
+					{
+						img = img->next;
+						continue;
+					}
+
+					blend_frame(instance, img, renderWindow, srcPtr, srcRect, srcRowBytes, dstPtr, dstRect, dstRowBytes);
+
+					unsigned long uia = (unsigned long)(img->next);
+					if (uia <= 0 || uia > 0xcc000000) break;
+					if (!img->next || img->next->w <= 0 || img->next->h <= 0 || img->next->type < 0) break;
+					img = img->next;
+				}
+				catch (const std::exception&)
+				{
+
+				} {}
 			}
-			if (imglist->img_shadow)
-			{
-				blend_frame(instance, imglist->img_shadow, renderWindow, srcPtr, srcRect, srcRowBytes, dstPtr, dstRect, dstRowBytes);
-			}
-			if (imglist->img_text)
-			{
-				blend_frame(instance, imglist->img_text, renderWindow, srcPtr, srcRect, srcRowBytes, dstPtr, dstRect, dstRowBytes);
-			}
-		} else {
-			if (imglist->img_outline)
-			{
-				//blend_frame(instance, imglist->img_outline, renderWindow, NULL, dstRect, 0, dstPtr, dstRect, dstRowBytes);
-			}
-			if (imglist->img_shadow)
-			{
-				blend_frame(instance, imglist->img_shadow, renderWindow, NULL, dstRect, 0, dstPtr, dstRect, dstRowBytes);
-			}
-			if (imglist->img_text)
-			{
-				blend_frame(instance, imglist->img_text, renderWindow, NULL, dstRect, 0, dstPtr, dstRect, dstRowBytes);
-			}
-			// we are finished with the source images so release them
+
+			//if (imglist->img_shadow)
+			//{
+			//	blend_frame(instance, imglist->img_shadow, renderWindow, srcPtr, srcRect, srcRowBytes, dstPtr, dstRect, dstRowBytes);
+			//}
+			//if (imglist->img_outline)
+			//{
+			//	blend_frame(instance, imglist->img_outline, renderWindow, srcPtr, srcRect, srcRowBytes, dstPtr, dstRect, dstRowBytes);
+			//}
+			//if (imglist->img_text)
+			//{
+			//	blend_frame(instance, imglist->img_text, renderWindow, srcPtr, srcRect, srcRowBytes, dstPtr, dstRect, dstRowBytes);
+			//}
 		}
-		if (img) delete img;
-		if (imglist) delete imglist;
+		else {
+			//if (imglist->img_outline)
+			//{
+			//	//blend_frame(instance, imglist->img_outline, renderWindow, NULL, dstRect, 0, dstPtr, dstRect, dstRowBytes);
+			//}
+			//if (imglist->img_shadow)
+			//{
+			//	blend_frame(instance, imglist->img_shadow, renderWindow, NULL, dstRect, 0, dstPtr, dstRect, dstRowBytes);
+			//}
+			//if (imglist->img_text)
+			//{
+			//	blend_frame(instance, imglist->img_text, renderWindow, NULL, dstRect, 0, dstPtr, dstRect, dstRowBytes);
+			//}
+			// we are finished with the source images so release them
+			while (img) {
+				try
+				{
+					if (img->w <= 0 || img->h <= 0)
+					{
+						img = img->next;
+						continue;
+					}
+
+					blend_frame(instance, img, renderWindow, NULL, dstRect, 0, dstPtr, dstRect, dstRowBytes);
+
+					unsigned long uia = (unsigned long)(img->next);
+					if (uia <= 0 || uia > 0xcc000000) break;
+					if (!img->next || img->next->w <= 0 || img->next->h <= 0 || img->next->type < 0) break;
+					img = img->next;
+				}
+				catch (const std::exception&)
+				{
+
+				} {}
+			}
+		}
+		//if (img) delete img;
+		//if (imglist) delete imglist;
 	}
 	catch (NoImageEx &) {
 		// if we were interrupted, the failed fetch is fine, just return kOfxStatOK

@@ -224,8 +224,8 @@ ASS_Image_List::ASS_Image_List(ASS_Image * img)
 				break;
 			}
 
-			unsigned long uia = (unsigned long)(&img->next);
-			if (uia <= 0 && uia > 0x00FFFFFFFFFFL) break;
+			unsigned long uia = (unsigned long)(img->next);
+			if (uia <= 0 || uia > 0xcc000000) break;
 			if (!img->next || img->next->w <= 0 || img->next->h <= 0 || img->next->type < 0) break;
 			img = img->next;
 		}

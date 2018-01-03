@@ -73,12 +73,12 @@ public:
 
 	bool __stdcall LoadAss(const char* assfile, const char *_charset);
 	bool __stdcall Resize(double scale, int width, int height);
-	bool __stdcall SetFrameRate(double fr);
+	bool __stdcall SetFPS(double fr);
 
-	ASS_Image* __stdcall RenderFrame(double n, int width, int height);
-	ASS_Image* __stdcall RenderFrame(double n, ASS_Image* src);
-	ASS_Image* __stdcall RenderFrame(int64_t n, ASS_Image* src);
-	ASS_Image* __stdcall RenderFrame(int n);
+	ASS_Image* __stdcall GetAss(double n, int width, int height);
+	ASS_Image* __stdcall GetAss(double n, ASS_Image* src);
+	ASS_Image* __stdcall GetAss(int64_t n, ASS_Image* src);
+	ASS_Image* __stdcall GetAss(int n);
 };
 
 char* w2c(const wchar_t* wsp);

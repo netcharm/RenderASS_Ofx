@@ -59,17 +59,28 @@ enum ContextEnum {
 struct MyInstanceData {
 	ContextEnum context;
 
-// handles to the clips we deal with
-OfxImageClipHandle sourceClip;
-OfxImageClipHandle outputClip;
+	// handles to the clips we deal with
+	OfxImageClipHandle sourceClip;
+	OfxImageClipHandle outputClip;
 
-// handles to a our parameters
-OfxParamHandle assFileName;
-OfxParamHandle assDefaultFontName;
-OfxParamHandle assDefaultFontSize;
-OfxParamHandle assDefaultFontColor;
-OfxParamHandle assDefaultFontOutline;
-OfxParamHandle assDefaultBackground;
+	// handles to a our parameters
+	OfxParamHandle assFileName;
+
+	OfxParamHandle assUseMargin;
+	OfxParamHandle assMarginT;
+	OfxParamHandle assMarginB;
+	OfxParamHandle assMarginL;
+	OfxParamHandle assMarginR;
+	OfxParamHandle assSpace;
+	OfxParamHandle assPosition;
+	OfxParamHandle assFontScale;
+	OfxParamHandle assFontHints;
+
+	OfxParamHandle assDefaultFontName;
+	OfxParamHandle assDefaultFontSize;
+	OfxParamHandle assDefaultFontColor;
+	OfxParamHandle assDefaultFontOutline;
+	OfxParamHandle assDefaultBackground;
 };
 
 /* mandatory function to set up the host structures */
@@ -91,7 +102,7 @@ getFrameRate(OfxImageEffectHandle effect, OfxImageClipHandle clip)
 	gEffectHost->clipGetPropertySet(clip, &props);
 	double fps = 30.000;
 	gPropHost->propGetDouble(props, kOfxImageEffectPropFrameRate, 0, &fps);
-	if(ass) ass->SetFrameRate(fps);
+	if(ass) ass->SetFPS(fps);
 	return(fps);
 }
 /** @brief Called at load */
@@ -189,6 +200,138 @@ describeInContext(OfxImageEffectHandle  effect, OfxPropertySetHandle inArgs)
 	gPropHost->propSetString(paramProps, kOfxParamPropStringMode, 0, kOfxParamStringIsFilePath);
 	gPropHost->propSetInt(paramProps, kOfxParamPropStringFilePathExists, 0, 1);
 
+	// make ass properties group
+	gParamHost->paramDefine(paramSet, kOfxParamTypeGroup, "AssPosProperties", &paramProps);
+	gPropHost->propSetString(paramProps, kOfxPropLabel, 0, "ASS Positions");
+	gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, "ASS Positions");
+
+	// make an ass spacing
+	gParamHost->paramDefine(paramSet, kOfxParamTypeDouble, "assSpace", &paramProps);
+	gPropHost->propSetString(paramProps, kOfxParamPropParent, 0, "AssPosProperties");
+	gPropHost->propSetString(paramProps, kOfxParamPropScriptName, 0, "assSpace");
+	gPropHost->propSetString(paramProps, kOfxPropLabel, 0, "Spacing");
+	gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, "Ass Spacing level bottom");
+	gPropHost->propSetDouble(paramProps, kOfxParamPropDefault, 0, 0.0);
+	gPropHost->propSetDouble(paramProps, kOfxParamPropMin, 0, 0.0);
+	gPropHost->propSetDouble(paramProps, kOfxParamPropMax, 0, 100.0);
+	gPropHost->propSetDouble(paramProps, kOfxParamPropDisplayMin, 0, 0.0);
+	gPropHost->propSetDouble(paramProps, kOfxParamPropDisplayMax, 0, 100.0);
+	gPropHost->propSetDouble(paramProps, kOfxParamPropIncrement, 0, 1.0);
+	gPropHost->propSetInt(paramProps, kOfxParamPropDigits, 0, 1);
+
+	// make an ass position
+	gParamHost->paramDefine(paramSet, kOfxParamTypeDouble, "assPosition", &paramProps);
+	gPropHost->propSetString(paramProps, kOfxParamPropParent, 0, "AssPosProperties");
+	gPropHost->propSetString(paramProps, kOfxParamPropScriptName, 0, "assPosition");
+	gPropHost->propSetString(paramProps, kOfxPropLabel, 0, "Position");
+	gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, "Ass Position level bottom");
+	gPropHost->propSetDouble(paramProps, kOfxParamPropDefault, 0, 2.0);
+	gPropHost->propSetDouble(paramProps, kOfxParamPropMin, 0, 0.0);
+	gPropHost->propSetDouble(paramProps, kOfxParamPropMax, 0, 100.0);
+	gPropHost->propSetDouble(paramProps, kOfxParamPropDisplayMin, 0, 0.0);
+	gPropHost->propSetDouble(paramProps, kOfxParamPropDisplayMax, 0, 100.0);
+	gPropHost->propSetDouble(paramProps, kOfxParamPropIncrement, 0, 1.0);
+	gPropHost->propSetInt(paramProps, kOfxParamPropDigits, 0, 1);
+
+	// make an ass margin used
+	gParamHost->paramDefine(paramSet, kOfxParamTypeBoolean, "assUseMargin", &paramProps);
+	gPropHost->propSetString(paramProps, kOfxParamPropParent, 0, "AssPosProperties");
+	gPropHost->propSetString(paramProps, kOfxParamPropScriptName, 0, "assUseMargin");
+	gPropHost->propSetString(paramProps, kOfxPropLabel, 0, "Used Margin");
+	gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, "Ass Margin Used");
+	gPropHost->propSetInt(paramProps, kOfxParamPropDefault, 0, 0);
+
+	// make an ass margin top
+	gParamHost->paramDefine(paramSet, kOfxParamTypeDouble, "assMarginT", &paramProps);
+	gPropHost->propSetString(paramProps, kOfxParamPropParent, 0, "AssPosProperties");
+	gPropHost->propSetString(paramProps, kOfxParamPropScriptName, 0, "assMarginT");
+	gPropHost->propSetString(paramProps, kOfxPropLabel, 0, "Margin Top");
+	gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, "Ass Margin Top");
+	gPropHost->propSetDouble(paramProps, kOfxParamPropDefault, 0, 0.0);
+	gPropHost->propSetDouble(paramProps, kOfxParamPropMin, 0, 0.0);
+	gPropHost->propSetDouble(paramProps, kOfxParamPropMax, 0, 100.0);
+	gPropHost->propSetDouble(paramProps, kOfxParamPropDisplayMin, 0, 0.0);
+	gPropHost->propSetDouble(paramProps, kOfxParamPropDisplayMax, 0, 100.0);
+	gPropHost->propSetDouble(paramProps, kOfxParamPropIncrement, 0, 1.0);
+	gPropHost->propSetInt(paramProps, kOfxParamPropDigits, 0, 1);
+
+	// make an ass margin bottom
+	gParamHost->paramDefine(paramSet, kOfxParamTypeDouble, "assMarginB", &paramProps);
+	gPropHost->propSetString(paramProps, kOfxParamPropParent, 0, "AssPosProperties");
+	gPropHost->propSetString(paramProps, kOfxParamPropScriptName, 0, "assMarginB");
+	gPropHost->propSetString(paramProps, kOfxPropLabel, 0, "Margin Bottom");
+	gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, "Ass Margin Bottom");
+	gPropHost->propSetDouble(paramProps, kOfxParamPropDefault, 0, 0.0);
+	gPropHost->propSetDouble(paramProps, kOfxParamPropMin, 0, 0.0);
+	gPropHost->propSetDouble(paramProps, kOfxParamPropMax, 0, 100.0);
+	gPropHost->propSetDouble(paramProps, kOfxParamPropDisplayMin, 0, 0.0);
+	gPropHost->propSetDouble(paramProps, kOfxParamPropDisplayMax, 0, 100.0);
+	gPropHost->propSetDouble(paramProps, kOfxParamPropIncrement, 0, 1.0);
+	gPropHost->propSetInt(paramProps, kOfxParamPropDigits, 0, 1);
+
+	// make an ass margin left
+	gParamHost->paramDefine(paramSet, kOfxParamTypeDouble, "assMarginL", &paramProps);
+	gPropHost->propSetString(paramProps, kOfxParamPropParent, 0, "AssPosProperties");
+	gPropHost->propSetString(paramProps, kOfxParamPropScriptName, 0, "assMarginL");
+	gPropHost->propSetString(paramProps, kOfxPropLabel, 0, "Margin Left");
+	gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, "Ass Margin Left");
+	gPropHost->propSetDouble(paramProps, kOfxParamPropDefault, 0, 0.0);
+	gPropHost->propSetDouble(paramProps, kOfxParamPropMin, 0, 0.0);
+	gPropHost->propSetDouble(paramProps, kOfxParamPropMax, 0, 100.0);
+	gPropHost->propSetDouble(paramProps, kOfxParamPropDisplayMin, 0, 0.0);
+	gPropHost->propSetDouble(paramProps, kOfxParamPropDisplayMax, 0, 100.0);
+	gPropHost->propSetDouble(paramProps, kOfxParamPropIncrement, 0, 1.0);
+	gPropHost->propSetInt(paramProps, kOfxParamPropDigits, 0, 1);
+
+	// make an ass margin top
+	gParamHost->paramDefine(paramSet, kOfxParamTypeDouble, "assMarginR", &paramProps);
+	gPropHost->propSetString(paramProps, kOfxParamPropParent, 0, "AssPosProperties");
+	gPropHost->propSetString(paramProps, kOfxParamPropScriptName, 0, "assMarginR");
+	gPropHost->propSetString(paramProps, kOfxPropLabel, 0, "Margin Right");
+	gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, "Ass Margin Right");
+	gPropHost->propSetDouble(paramProps, kOfxParamPropDefault, 0, 0.0);
+	gPropHost->propSetDouble(paramProps, kOfxParamPropMin, 0, 0.0);
+	gPropHost->propSetDouble(paramProps, kOfxParamPropMax, 0, 100.0);
+	gPropHost->propSetDouble(paramProps, kOfxParamPropDisplayMin, 0, 0.0);
+	gPropHost->propSetDouble(paramProps, kOfxParamPropDisplayMax, 0, 100.0);
+	gPropHost->propSetDouble(paramProps, kOfxParamPropIncrement, 0, 1.0);
+	gPropHost->propSetInt(paramProps, kOfxParamPropDigits, 0, 1);
+
+	// make ass font properties group
+	gParamHost->paramDefine(paramSet, kOfxParamTypeGroup, "AssFontProperties", &paramProps);
+	gPropHost->propSetString(paramProps, kOfxPropLabel, 0, "ASS Font Properties");
+	gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, "ASS Font Properties");
+
+	// make an ass font scale
+	gParamHost->paramDefine(paramSet, kOfxParamTypeDouble, "assFontScale", &paramProps);
+	gPropHost->propSetString(paramProps, kOfxParamPropParent, 0, "AssFontProperties");
+	gPropHost->propSetString(paramProps, kOfxParamPropScriptName, 0, "assFontScale");
+	gPropHost->propSetString(paramProps, kOfxPropLabel, 0, "Font Scale");
+	gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, "ASS Font Scale");
+	gPropHost->propSetDouble(paramProps, kOfxParamPropDefault, 0, 1.0);
+	gPropHost->propSetDouble(paramProps, kOfxParamPropMin, 0, 0.1);
+	gPropHost->propSetDouble(paramProps, kOfxParamPropMax, 0, 5.0);
+	gPropHost->propSetDouble(paramProps, kOfxParamPropDisplayMin, 0, 0.1);
+	gPropHost->propSetDouble(paramProps, kOfxParamPropDisplayMax, 0, 5.0);
+	gPropHost->propSetDouble(paramProps, kOfxParamPropIncrement, 0, 0.1);
+	gPropHost->propSetInt(paramProps, kOfxParamPropDigits, 0, 2);
+
+	// make an ass font hinging mode
+	gParamHost->paramDefine(paramSet, kOfxParamTypeChoice, "assFontHints", &paramProps);
+	gPropHost->propSetString(paramProps, kOfxParamPropParent, 0, "AssFontProperties");
+	gPropHost->propSetString(paramProps, kOfxParamPropScriptName, 0, "assFontHints");
+	gPropHost->propSetString(paramProps, kOfxPropLabel, 0, "Used Margin");
+	gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, "Ass Margin Used");
+	gPropHost->propSetString(paramProps, kOfxParamPropChoiceOption, 0, "None");
+	gPropHost->propSetString(paramProps, kOfxParamPropChoiceOption, 1, "Light");
+	gPropHost->propSetString(paramProps, kOfxParamPropChoiceOption, 2, "Normal");
+	gPropHost->propSetString(paramProps, kOfxParamPropChoiceOption, 3, "Native");
+	gPropHost->propSetInt(paramProps, kOfxParamPropDefault, 0, 0);
+
+
+	/*
+	*  Default ASS Font Setings
+	*/
 	// make default ass properties group
 	gParamHost->paramDefine(paramSet, kOfxParamTypeGroup, "defaultAssProperties", &paramProps);
 	gPropHost->propSetString(paramProps, kOfxPropLabel, 0, "Default ASS Properties");
@@ -324,11 +467,23 @@ createInstance(OfxImageEffectHandle effect)
 
 	// cache away param handles
 	gParamHost->paramGetHandle(paramSet, "assFileName", &myData->assFileName, 0);
+
 	gParamHost->paramGetHandle(paramSet, "assDefaultFontName", &myData->assDefaultFontName, 0);
 	gParamHost->paramGetHandle(paramSet, "assDefaultFontSize", &myData->assDefaultFontSize, 0);
 	gParamHost->paramGetHandle(paramSet, "assDefaultFontColor", &myData->assDefaultFontColor, 0);
 	gParamHost->paramGetHandle(paramSet, "assDefaultFontOutline", &myData->assDefaultFontOutline, 0);
 	gParamHost->paramGetHandle(paramSet, "assDefaultBackground", &myData->assDefaultBackground, 0);
+
+	gParamHost->paramGetHandle(paramSet, "assFontScale", &myData->assFontScale, 0);
+	gParamHost->paramGetHandle(paramSet, "assFontHints", &myData->assFontHints, 0);
+
+	gParamHost->paramGetHandle(paramSet, "assUseMargin", &myData->assUseMargin, 0);
+	gParamHost->paramGetHandle(paramSet, "assMarginT", &myData->assMarginT, 0);
+	gParamHost->paramGetHandle(paramSet, "assMarginB", &myData->assMarginB, 0);
+	gParamHost->paramGetHandle(paramSet, "assMarginL", &myData->assMarginL, 0);
+	gParamHost->paramGetHandle(paramSet, "assMarginR", &myData->assMarginR, 0);
+	gParamHost->paramGetHandle(paramSet, "assSpace", &myData->assSpace, 0);
+	gParamHost->paramGetHandle(paramSet, "assPosition", &myData->assPosition, 0);
 
 	// cache away clip handles
 	if (myData->context != eIsGenerator)
@@ -339,22 +494,22 @@ createInstance(OfxImageEffectHandle effect)
 	gEffectHost->clipGetHandle(effect, kOfxImageEffectOutputClipName, &myData->outputClip, 0);
 
 	// set my private instance data
-	gPropHost->propSetPointer(effectProps, kOfxPropInstanceData, 0, (void *)myData);
+	ofxuSetEffectInstanceData(effect, (void *)myData);
 
-	char* boundle;
-	gPropHost->propGetString(effectProps, kOfxPluginPropFilePath, 0, &boundle);
+	//char* boundle;
+	//gPropHost->propGetString(effectProps, kOfxPluginPropFilePath, 0, &boundle);
 
-	int fps = 0;
-	gPropHost->propGetInt(effectProps, kOfxImageEffectPropFrameRate, 0, &fps);
+	//int fps = 0;
+	//gPropHost->propGetInt(effectProps, kOfxImageEffectPropFrameRate, 0, &fps);
 
-	int ufps = 0;
-	gPropHost->propGetInt(effectProps, kOfxImageEffectPropUnmappedFrameRate, 0, &ufps);
+	//int ufps = 0;
+	//gPropHost->propGetInt(effectProps, kOfxImageEffectPropUnmappedFrameRate, 0, &ufps);
 
-	int sfps = 0;
-	gPropHost->propGetInt(effectProps, kOfxImageEffectPropSetableFrameRate, 0, &sfps);
+	//int sfps = 0;
+	//gPropHost->propGetInt(effectProps, kOfxImageEffectPropSetableFrameRate, 0, &sfps);
 
 	if (ass == NULL) {
-		ass = new AssRender(ASS_HINTING_NATIVE, 1.0, "UTF-8");
+		ass = new AssRender(ASS_HINTING_NONE, 1.0, "UTF-8");
 	}
 
 	return kOfxStatOK;
@@ -373,6 +528,7 @@ instanceChanged(OfxImageEffectHandle effect,
 
 	MyInstanceData *myData = new MyInstanceData;
 	myData = getMyInstanceData(effect);
+	if (!myData) return kOfxStatReplyDefault;
 
 	char *propType;
 	char *propName;
@@ -400,7 +556,79 @@ instanceChanged(OfxImageEffectHandle effect,
 		gParamHost->paramGetValue(myData->assDefaultFontSize, &fsize);
 		int dstfsize = fsize;
 	}
-
+	else if (strcmp(propName, "assUseMargin") == 0) {
+		int used_margin = 0;
+		gParamHost->paramGetValue(myData->assUseMargin, &used_margin);
+		if (ass) ass->SetMargin((bool)used_margin);
+	}
+	else if (strcmp(propName, "assMarginT") == 0) {
+		double margin_t = 0, margin_b = 0, margin_l = 0, margin_r = 0;
+		gParamHost->paramGetValue(myData->assMarginT, &margin_t);
+		gParamHost->paramGetValue(myData->assMarginB, &margin_b);
+		gParamHost->paramGetValue(myData->assMarginL, &margin_l);
+		gParamHost->paramGetValue(myData->assMarginR, &margin_r);
+		if (ass) ass->SetMargin(margin_t, margin_b, margin_l, margin_r);
+	}
+	else if (strcmp(propName, "assMarginB") == 0) {
+		double margin_t = 0, margin_b = 0, margin_l = 0, margin_r = 0;
+		gParamHost->paramGetValue(myData->assMarginT, &margin_t);
+		gParamHost->paramGetValue(myData->assMarginB, &margin_b);
+		gParamHost->paramGetValue(myData->assMarginL, &margin_l);
+		gParamHost->paramGetValue(myData->assMarginR, &margin_r);
+		if (ass) ass->SetMargin(margin_t, margin_b, margin_l, margin_r);
+	}
+	else if (strcmp(propName, "assMarginL") == 0) {
+		double margin_t = 0, margin_b = 0, margin_l = 0, margin_r = 0;
+		gParamHost->paramGetValue(myData->assMarginT, &margin_t);
+		gParamHost->paramGetValue(myData->assMarginB, &margin_b);
+		gParamHost->paramGetValue(myData->assMarginL, &margin_l);
+		gParamHost->paramGetValue(myData->assMarginR, &margin_r);
+		if (ass) ass->SetMargin(margin_t, margin_b, margin_l, margin_r);
+	}
+	else if (strcmp(propName, "assMarginR") == 0) {
+		double margin_t = 0, margin_b = 0, margin_l = 0, margin_r = 0;
+		gParamHost->paramGetValue(myData->assMarginT, &margin_t);
+		gParamHost->paramGetValue(myData->assMarginB, &margin_b);
+		gParamHost->paramGetValue(myData->assMarginL, &margin_l);
+		gParamHost->paramGetValue(myData->assMarginR, &margin_r);
+		if (ass) ass->SetMargin(margin_t, margin_b, margin_l, margin_r);
+	}
+	else if (strcmp(propName, "assSpace") == 0) {
+		double spacing = 0;
+		gParamHost->paramGetValue(myData->assSpace, &spacing);
+		if (ass) ass->SetSpace(spacing);
+	}
+	else if (strcmp(propName, "assPosition") == 0) {
+		double position = 0;
+		gParamHost->paramGetValue(myData->assPosition, &position);
+		if (ass) ass->SetSpace(position);
+	}
+	else if (strcmp(propName, "assFontScale") == 0) {
+		double scale = 1.0;
+		gParamHost->paramGetValue(myData->assFontScale, &scale);
+		if (ass) ass->SetSpace(scale);
+	}
+	else if (strcmp(propName, "assFontHints") == 0) {
+		int hints = 0;
+		gParamHost->paramGetValue(myData->assFontHints, &hints);
+		if (ass) {
+			switch (hints)
+			{
+			case 1:
+				ass->SetHints(ASS_HINTING_LIGHT);
+				break;
+			case 2:
+				ass->SetHints(ASS_HINTING_NORMAL);
+				break;
+			case 3:
+				ass->SetHints(ASS_HINTING_NATIVE);
+				break;
+			default:
+				ass->SetHints(ASS_HINTING_NONE);
+				break;
+			}
+		}
+	}
 	// don't trap any others
 	return kOfxStatReplyDefault;
 }
@@ -441,22 +669,24 @@ getClipPreferences(OfxImageEffectHandle effect, OfxPropertySetHandle inArgs, Ofx
 		//gPropHost->propGetDouble(props, kOfxImageEffectPropFrameRate, 0, &fps);
 		gPropHost->propGetDouble(props, kOfxImageEffectPropFrameRate, 0, &fps);
 
-		if (ass != NULL) ass->SetFrameRate(fps);
+		if (ass != NULL) ass->SetFPS(fps);
 
-		if (myData->context != eIsGenerator) {
-			// get the component type and bit depth of our main input
-			int  bitDepth;
-			bool isRGBA;
-			ofxuClipGetFormat(myData->sourceClip, bitDepth, isRGBA, true); // get the unmapped clip component
+		if (myData) {
+			if (myData->context != eIsGenerator) {
+				// get the component type and bit depth of our main input
+				int  bitDepth;
+				bool isRGBA;
+				ofxuClipGetFormat(myData->sourceClip, bitDepth, isRGBA, true); // get the unmapped clip component
 
-																		   // get the strings used to label the various bit depths
-			const char *bitDepthStr = bitDepth == 8 ? kOfxBitDepthByte : (bitDepth == 16 ? kOfxBitDepthShort : kOfxBitDepthFloat);
-			const char *componentStr = isRGBA ? kOfxImageComponentRGBA : kOfxImageComponentAlpha;
+																			   // get the strings used to label the various bit depths
+				const char *bitDepthStr = bitDepth == 8 ? kOfxBitDepthByte : (bitDepth == 16 ? kOfxBitDepthShort : kOfxBitDepthFloat);
+				const char *componentStr = isRGBA ? kOfxImageComponentRGBA : kOfxImageComponentAlpha;
 
-			// set out output to be the same same as the input, component and bitdepth
-			gPropHost->propSetString(outArgs, "OfxImageClipPropComponents_Output", 0, componentStr);
-			if (gHostSupportsMultipleBitDepths)
-				gPropHost->propSetString(outArgs, "OfxImageClipPropDepth_Output", 0, bitDepthStr);
+				// set out output to be the same same as the input, component and bitdepth
+				gPropHost->propSetString(outArgs, "OfxImageClipPropComponents_Output", 0, componentStr);
+				if (gHostSupportsMultipleBitDepths)
+					gPropHost->propSetString(outArgs, "OfxImageClipPropDepth_Output", 0, bitDepthStr);
+			}
 		}
 	}
 	catch (std::exception ex) {
@@ -474,6 +704,7 @@ isIdentity(OfxImageEffectHandle effect,
 {	
 	// retrieve any instance data associated with this effect
 	MyInstanceData *myData = getMyInstanceData(effect);
+	if (!myData) return kOfxStatReplyDefault;
 
 	// fetch a handle to the point param from the parameter set
 	OfxParamSetHandle paramSet;
@@ -584,14 +815,6 @@ blend_frame(OfxImageEffectHandle instance,
 					if (idx >= imglen) break;
 					k = ((unsigned)src_map[idx]) * a / 255;
 					ck = 255 - k;
-					//if (k == 0 && src && srcPix)
-					//{
-					//	dstPix->a = srcPix->a;
-					//	//dstPix->b = srcPix->b;
-					//	//dstPix->g = srcPix->g;
-					//	//dstPix->r = srcPix->r;
-					//}
-					//else
 					{
 						dstPix->a = (unsigned char)k;
 						dstPix->b = (unsigned char)((k*b + ck*dstPix->b) / 255);
@@ -601,7 +824,7 @@ blend_frame(OfxImageEffectHandle instance,
 				}
 				else
 				{
-					if (dst && dstPix) {
+					if (dst && dstPix && src && srcPix) {
 						dstPix->a = srcPix->a;
 						dstPix->b = srcPix->b;
 						dstPix->g = srcPix->g;
@@ -654,9 +877,10 @@ static OfxStatus render(OfxImageEffectHandle instance,
 		gPropHost->propGetPointer(outputImg, kOfxImagePropData, 0, &dstPtr);
 
 		MyInstanceData *myData = getMyInstanceData(instance);
+		if (!myData) throw(new NoImageEx());
 
 		ASS_Image *img = NULL;
-		img = ass->RenderFrame((double)time, renderWindow.x2 - renderWindow.x1, renderWindow.y2 - renderWindow.y1);
+		img = ass->GetAss((double)time, renderWindow.x2 - renderWindow.x1, renderWindow.y2 - renderWindow.y1);
 		//ASS_Image_List* imglist = new ASS_Image_List(img);
 		//ASS_Image_List* imglist = ass->RenderFrame((double)time, renderWindow.x2 - renderWindow.x1, renderWindow.y2 - renderWindow.y1, true);
 
@@ -690,9 +914,14 @@ static OfxStatus render(OfxImageEffectHandle instance,
 
 					blend_frame(instance, img, renderWindow, srcPtr, srcRect, srcRowBytes, dstPtr, dstRect, dstRowBytes);
 
-					unsigned long uia = (unsigned long)(img->next);
-					if (uia <= 0 || uia > 0xcc000000) break;
-					if (!img->next || img->next->w <= 0 || img->next->h <= 0 || img->next->type < 0) break;
+					if (img->next && (unsigned long)img->next < 0xcccc0000) {
+						if (img->next->w || !img->next->h) break;
+						if ((unsigned long)img->next->w > 0xcccc0000 || 
+							(unsigned long)img->next->h > 0xcccc0000 || 
+							(unsigned long)img->next->type > 0xcccc0000) break;
+						if (img->next->w <= 0 || img->next->h <= 0 || img->next->type < 0) break;
+					}
+					else break;
 					img = img->next;
 				}
 				catch (const std::exception&)
@@ -739,9 +968,14 @@ static OfxStatus render(OfxImageEffectHandle instance,
 
 					blend_frame(instance, img, renderWindow, NULL, dstRect, 0, dstPtr, dstRect, dstRowBytes);
 
-					unsigned long uia = (unsigned long)(img->next);
-					if (uia <= 0 || uia > 0xcc000000) break;
-					if (!img->next || img->next->w <= 0 || img->next->h <= 0 || img->next->type < 0) break;
+					if (img->next && (unsigned long)img->next < 0xcccc0000) {
+						if (img->next->w || !img->next->h) break;
+						if ((unsigned long)img->next->w > 0xcccc0000 ||
+							(unsigned long)img->next->h > 0xcccc0000 ||
+							(unsigned long)img->next->type > 0xcccc0000) break;
+						if (img->next->w <= 0 || img->next->h <= 0 || img->next->type < 0) break;
+					}
+					else break;
 					img = img->next;
 				}
 				catch (const std::exception&)
@@ -750,8 +984,6 @@ static OfxStatus render(OfxImageEffectHandle instance,
 				} {}
 			}
 		}
-		//if (img) delete img;
-		//if (imglist) delete imglist;
 	}
 	catch (NoImageEx &) {
 		// if we were interrupted, the failed fetch is fine, just return kOfxStatOK

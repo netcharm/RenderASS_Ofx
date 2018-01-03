@@ -46,13 +46,13 @@ bool AssRender::Resize(double scale, int width, int height)
 	return true;
 }
 
-bool AssRender::SetFrameRate(double fr)
+bool AssRender::SetFPS(double fr)
 {
 	//fps = fr;
 	return false;
 }
 
-ASS_Image* AssRender::RenderFrame(double n, ASS_Image* src)
+ASS_Image* AssRender::GetAss(double n, ASS_Image* src)
 {
 	if (src != NULL) {
 		ass_set_frame_size(ar, src->w, src->h);
@@ -71,7 +71,7 @@ ASS_Image* AssRender::RenderFrame(double n, ASS_Image* src)
 	return img;
 }
 
-ASS_Image* AssRender::RenderFrame(double n, int width, int height)
+ASS_Image* AssRender::GetAss(double n, int width, int height)
 {
 	ass_set_frame_size(ar, width, height);
 	//int64_t now = (int64_t)(n * 1000);
@@ -88,7 +88,7 @@ ASS_Image* AssRender::RenderFrame(double n, int width, int height)
 	return img;
 }
 
-ASS_Image* AssRender::RenderFrame(int64_t n, ASS_Image* src)
+ASS_Image* AssRender::GetAss(int64_t n, ASS_Image* src)
 {
 	ASS_Image *img = ass_render_frame(ar, t, n, NULL);
 
@@ -102,7 +102,7 @@ ASS_Image* AssRender::RenderFrame(int64_t n, ASS_Image* src)
 	return img;
 }
 
-ASS_Image* AssRender::RenderFrame(int n)
+ASS_Image* AssRender::GetAss(int n)
 {
 	//// it's a casting party!
 	//int64_t ts = (int64_t)n * (int64_t)1000 * (int64_t)vi.fps_denominator / (int64_t)vi.fps_numerator;

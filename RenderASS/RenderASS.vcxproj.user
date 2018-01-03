@@ -8,7 +8,7 @@
     <LocalDebuggerWorkingDirectory>D:\Games\Steam\Softs\steamapps\common\MovieStudioPlatinum130\Movie Studio Platinum 13.0</LocalDebuggerWorkingDirectory>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <LocalDebuggerAttach>true</LocalDebuggerAttach>
+    <LocalDebuggerAttach>false</LocalDebuggerAttach>
     <LocalDebuggerDebuggerType>Mixed</LocalDebuggerDebuggerType>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
     <LocalDebuggerCommand>D:\Games\Steam\Softs\steamapps\common\MovieStudioPlatinum130\Movie Studio Platinum 13.0\MovieStudioPlatinum130.exe</LocalDebuggerCommand>

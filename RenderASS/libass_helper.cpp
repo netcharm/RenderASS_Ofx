@@ -5,6 +5,7 @@
 #include <tchar.h>
 #include <time.h>
 #include <string>
+#include <locale>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
@@ -12,6 +13,8 @@
 #include <mbstring.h>
 
 #include <png.h>
+
+#include <iconv.h>
 
 #include "libass_helper.h"
 
@@ -40,17 +43,47 @@ bool s2c(const std::string s, char* c) {
 	return true;
 }
 
+#define BUFSIZE 1024
+int utf2gbk(char *buf, size_t len)
+{
+	iconv_t cd = iconv_open("GBK", "UTF-8");
+	if (cd == (iconv_t)-1) {
+		perror("获取字符转换描述符失败！\n");
+		return -1;
+	}
+	size_t sz = BUFSIZE * BUFSIZE;
+	char *tmp_str = (char *)malloc(sz);
+	// 不要将原始的指针传进去，那样会改变原始指针的  
+	size_t inlen = len;
+	size_t outlen = sz;
+	const char *in = buf;
+	char* out = tmp_str;
+	if (tmp_str == NULL) {
+		iconv_close(cd);
+		fprintf(stderr, "分配内存失败！\n");
+		return -1;
+	}
+	memset(tmp_str, 0, sz);
+	if (iconv(cd, &in, &inlen, &out, &outlen) == (size_t)-1) {
+		iconv_close(cd);
+		return -1;
+	}
+	strcpy_s(buf, MAX_PATH, tmp_str);
+	iconv_close(cd);
+	return 0;
+}
+
 //
 ASS_Image_List::ASS_Image_List(ASS_Image * img)
 {
 	int img_count = 0;
-	while (img && img_count < 3) {
+	while (img) {
 		img_count++;
 		try
 		{
 			if (img->w <= 0 || img->h <= 0)
 			{
-				img = img->next;
+				//img = img->next;
 				continue;
 			}
 
@@ -69,10 +102,14 @@ ASS_Image_List::ASS_Image_List(ASS_Image * img)
 				break;
 			}
 
-			unsigned long uia = (unsigned long)(img->next);
-			if (uia <= 0 || uia > 0xcc000000) break;
-			if (!img->next || img->next->w <= 0 || img->next->h <= 0 || img->next->type < 0) break;
-			img = img->next;
+			if (img->next && (unsigned long)img->next < 0xcccc0000) {
+				if (img->next->w || !img->next->h) break;
+				if ((unsigned long)img->next->w > 0xcccc0000 ||
+					(unsigned long)img->next->h > 0xcccc0000 ||
+					(unsigned long)img->next->type > 0xcccc0000) break;
+				img = img->next;
+			}
+			else break;
 		}
 		catch (const std::exception&)
 		{
@@ -141,9 +178,13 @@ bool AssRender::InitLibass(ASS_Hinting hints, double scale, int width, int heigh
 	std::string path(&cur_dll_path[0]);
 	path.append(_T("fontconfig\\fonts.conf"));
 	s2c(path, fontconf);
+
+	memset(default_fontname, 0, 512);
+	strcpy_s(default_fontname, "Arial");
+
 	//ass_set_fonts(ar, "Arial", "Sans", 1, w2c(path), 1);
 	//ass_set_fonts(ar, "C:\\Windows\\Fonts\\Arial.ttf", "Sans", 1, fontconf, 1);
-	ass_set_fonts(ar, "Arial", "Sans", 1, fontconf, 1);
+	ass_set_fonts(ar, default_fontname, "Sans", 1, fontconf, 1);
 	//ass_set_fonts(ar, "Arial", "Sans", 0, NULL, 0);
 
 	return true;
@@ -152,8 +193,10 @@ bool AssRender::InitLibass(ASS_Hinting hints, double scale, int width, int heigh
 bool AssRender::SetDefaultFont(char * fontname, int fontsize)
 {
 	if (!ar) return false;
-	if (strlen(fontname) > 0) {
-		ass_set_fonts(ar, fontname, "Sans", 1, fontconf, 1);
+	if (strlen(fontname) > 0 && strcmp(fontname, default_fontname) != 0) {
+		memset(default_fontname, 0, 512);
+		strcpy_s(default_fontname, fontname);
+		ass_set_fonts(ar, default_fontname, "Sans", 1, fontconf, 1);
 	}
 	return true;
 }
@@ -294,13 +337,19 @@ bool AssRender::LoadAss(const char * assfile, const char *_charset)
 	char* ap = strrchr(ass_path, '\\');
 	if (ap) ap[0] = 0;
 
-	ass_set_fonts_dir(al, ass_path);
+	//ass_set_fonts_dir(al, ass_path);
 
 	char charset[128]; // 128 bytes ought to be enough for anyone
 	strcpy_s(charset, _charset);
 
 	if(t) ass_flush_events(t);
-	t = ass_read_file(al, ass_file, charset);
+
+	char ass_buf[MAX_PATH];
+	memset(ass_buf, 0, MAX_PATH);
+	strcpy_s(ass_buf, assfile);
+	utf2gbk(ass_buf, strlen(ass_buf));
+
+	t = ass_read_file(al, ass_buf, charset);
 	if (!t) {
 		throw("AssRender: could not read %s", ass_file);
 		return false;
@@ -326,7 +375,7 @@ ASS_Image* AssRender::GetAss(double n, int width, int height)
 	//int64_t now = (int64_t)(n * 1000);
 	int64_t ts = (int64_t)(n / fps * 1000);
 	if (!t) return NULL;
-	int detChange = 1;
+	int detChange = 0;
 	ASS_Image *img = ass_render_frame(ar, t, ts, &detChange);
 
 	// this here loop shamelessly stolen from aegisub's subtitles_provider_libass.cpp

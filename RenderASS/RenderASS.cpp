@@ -133,6 +133,266 @@ onUnLoad(void)
 	return kOfxStatOK;
 }
 
+//  instance construction
+static OfxStatus
+createInstance(OfxImageEffectHandle effect)
+{
+	// get a pointer to the effect properties
+	OfxPropertySetHandle effectProps;
+	gEffectHost->getPropertySet(effect, &effectProps);
+
+	// get a pointer to the effect's parameter set
+	OfxParamSetHandle paramSet;
+	gEffectHost->getParamSet(effect, &paramSet);
+
+	// make my private instance data
+	MyInstanceData *myData = new MyInstanceData;
+	char *context = 0;
+
+	// is this instance a general effect ?
+	gPropHost->propGetString(effectProps, kOfxImageEffectPropContext, 0, &context);
+	if (strcmp(context, kOfxImageEffectContextGenerator) == 0) {
+		myData->context = eIsGenerator;
+	}
+	else if (strcmp(context, kOfxImageEffectContextFilter) == 0) {
+		myData->context = eIsFilter;
+	}
+	else {
+		myData->context = eIsGeneral;
+	}
+
+	// cache away param handles
+	gParamHost->paramGetHandle(paramSet, "assFileName", &myData->assFileName, 0);
+
+	gParamHost->paramGetHandle(paramSet, "assDefaultFontName", &myData->assDefaultFontName, 0);
+	gParamHost->paramGetHandle(paramSet, "assDefaultFontSize", &myData->assDefaultFontSize, 0);
+	gParamHost->paramGetHandle(paramSet, "assDefaultFontColor", &myData->assDefaultFontColor, 0);
+	gParamHost->paramGetHandle(paramSet, "assDefaultFontOutline", &myData->assDefaultFontOutline, 0);
+	gParamHost->paramGetHandle(paramSet, "assDefaultBackground", &myData->assDefaultBackground, 0);
+
+	gParamHost->paramGetHandle(paramSet, "assFontScale", &myData->assFontScale, 0);
+	gParamHost->paramGetHandle(paramSet, "assFontHints", &myData->assFontHints, 0);
+
+	gParamHost->paramGetHandle(paramSet, "assUseMargin", &myData->assUseMargin, 0);
+	gParamHost->paramGetHandle(paramSet, "assMarginT", &myData->assMarginT, 0);
+	gParamHost->paramGetHandle(paramSet, "assMarginB", &myData->assMarginB, 0);
+	gParamHost->paramGetHandle(paramSet, "assMarginL", &myData->assMarginL, 0);
+	gParamHost->paramGetHandle(paramSet, "assMarginR", &myData->assMarginR, 0);
+	gParamHost->paramGetHandle(paramSet, "assSpace", &myData->assSpace, 0);
+	gParamHost->paramGetHandle(paramSet, "assPosition", &myData->assPosition, 0);
+
+	// cache away clip handles
+	if (myData->context != eIsGenerator)
+		gEffectHost->clipGetHandle(effect, kOfxImageEffectSimpleSourceClipName, &myData->sourceClip, 0);
+	else
+		myData->sourceClip = NULL;
+
+	gEffectHost->clipGetHandle(effect, kOfxImageEffectOutputClipName, &myData->outputClip, 0);
+
+	// set my private instance data
+	ofxuSetEffectInstanceData(effect, (void *)myData);
+
+	//char* boundle;
+	//gPropHost->propGetString(effectProps, kOfxPluginPropFilePath, 0, &boundle);
+
+	//int fps = 0;
+	//gPropHost->propGetInt(effectProps, kOfxImageEffectPropFrameRate, 0, &fps);
+
+	//int ufps = 0;
+	//gPropHost->propGetInt(effectProps, kOfxImageEffectPropUnmappedFrameRate, 0, &ufps);
+
+	//int sfps = 0;
+	//gPropHost->propGetInt(effectProps, kOfxImageEffectPropSetableFrameRate, 0, &sfps);
+
+	if (ass == NULL) {
+		ass = new AssRender(ASS_HINTING_NONE, 1.0, "UTF-8");
+	}
+
+	return kOfxStatOK;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// function called when the instance has been changed by anything
+static OfxStatus
+instanceChanged(OfxImageEffectHandle effect,
+	OfxPropertySetHandle inArgs,
+	OfxPropertySetHandle outArgs)
+{
+	// see why it changed
+	char *changeReason;
+	gPropHost->propGetString(inArgs, kOfxPropChangeReason, 0, &changeReason);
+
+	MyInstanceData *myData = new MyInstanceData;
+	myData = getMyInstanceData(effect);
+	if (!myData) return kOfxStatReplyDefault;
+
+	char *propType;
+	char *propName;
+	gPropHost->propGetString(inArgs, kOfxPropType, 0, &propType);
+	gPropHost->propGetString(inArgs, kOfxPropName, 0, &propName);
+
+	if (strcmp(propName, "assFileName") == 0) {
+		//char fn[MAX_PATH];
+		//memset(fn, 0, MAX_PATH);
+		char *fn;
+		gParamHost->paramGetValue(myData->assFileName, &fn);
+		if (ass != NULL && fn[0] != 0) {
+			ass->LoadAss(fn, "UTF-8");
+		}
+	}
+	else if (strcmp(propName, "assDefaultFontName") == 0) {
+		char* fontname = NULL;
+		gParamHost->paramGetValue(myData->assDefaultFontName, &fontname);
+		try
+		{
+			if (ass != NULL) {
+				char fn[512];
+				memset(fn, 0, 512);
+				strcpy_s(fn, fontname);
+				utf2gbk(fn, strlen(fontname));
+				ass->SetDefaultFont(fn, 24);
+			}
+		}
+		catch (const std::exception&)
+		{
+
+		}	
+	}
+	else if (strcmp(propName, "assDefaultFontSize") == 0) {
+		int fsize = 0;
+		gParamHost->paramGetValue(myData->assDefaultFontSize, &fsize);
+		int dstfsize = fsize;
+	}
+	else if (strcmp(propName, "assUseMargin") == 0) {
+		int used_margin = 0;
+		gParamHost->paramGetValue(myData->assUseMargin, &used_margin);
+		if (ass) ass->SetMargin((bool)used_margin);
+	}
+	else if (strcmp(propName, "assMarginT") == 0) {
+		double margin_t = 0, margin_b = 0, margin_l = 0, margin_r = 0;
+		gParamHost->paramGetValue(myData->assMarginT, &margin_t);
+		gParamHost->paramGetValue(myData->assMarginB, &margin_b);
+		gParamHost->paramGetValue(myData->assMarginL, &margin_l);
+		gParamHost->paramGetValue(myData->assMarginR, &margin_r);
+		if (ass) ass->SetMargin(margin_t, margin_b, margin_l, margin_r);
+	}
+	else if (strcmp(propName, "assMarginB") == 0) {
+		double margin_t = 0, margin_b = 0, margin_l = 0, margin_r = 0;
+		gParamHost->paramGetValue(myData->assMarginT, &margin_t);
+		gParamHost->paramGetValue(myData->assMarginB, &margin_b);
+		gParamHost->paramGetValue(myData->assMarginL, &margin_l);
+		gParamHost->paramGetValue(myData->assMarginR, &margin_r);
+		if (ass) ass->SetMargin(margin_t, margin_b, margin_l, margin_r);
+	}
+	else if (strcmp(propName, "assMarginL") == 0) {
+		double margin_t = 0, margin_b = 0, margin_l = 0, margin_r = 0;
+		gParamHost->paramGetValue(myData->assMarginT, &margin_t);
+		gParamHost->paramGetValue(myData->assMarginB, &margin_b);
+		gParamHost->paramGetValue(myData->assMarginL, &margin_l);
+		gParamHost->paramGetValue(myData->assMarginR, &margin_r);
+		if (ass) ass->SetMargin(margin_t, margin_b, margin_l, margin_r);
+	}
+	else if (strcmp(propName, "assMarginR") == 0) {
+		double margin_t = 0, margin_b = 0, margin_l = 0, margin_r = 0;
+		gParamHost->paramGetValue(myData->assMarginT, &margin_t);
+		gParamHost->paramGetValue(myData->assMarginB, &margin_b);
+		gParamHost->paramGetValue(myData->assMarginL, &margin_l);
+		gParamHost->paramGetValue(myData->assMarginR, &margin_r);
+		if (ass) ass->SetMargin(margin_t, margin_b, margin_l, margin_r);
+	}
+	else if (strcmp(propName, "assSpace") == 0) {
+		double spacing = 0;
+		gParamHost->paramGetValue(myData->assSpace, &spacing);
+		if (ass) ass->SetSpace(spacing);
+	}
+	else if (strcmp(propName, "assPosition") == 0) {
+		double position = 0;
+		gParamHost->paramGetValue(myData->assPosition, &position);
+		if (ass) ass->SetSpace(position);
+	}
+	else if (strcmp(propName, "assFontScale") == 0) {
+		double scale = 1.0;
+		gParamHost->paramGetValue(myData->assFontScale, &scale);
+		if (ass) ass->SetSpace(scale);
+	}
+	else if (strcmp(propName, "assFontHints") == 0) {
+		int hints = 0;
+		gParamHost->paramGetValue(myData->assFontHints, &hints);
+		if (ass) {
+			switch (hints)
+			{
+			case 1:
+				ass->SetHints(ASS_HINTING_LIGHT);
+				break;
+			case 2:
+				ass->SetHints(ASS_HINTING_NORMAL);
+				break;
+			case 3:
+				ass->SetHints(ASS_HINTING_NATIVE);
+				break;
+			default:
+				ass->SetHints(ASS_HINTING_NONE);
+				break;
+			}
+		}
+	}
+	// don't trap any others
+	return kOfxStatReplyDefault;
+}
+
+// instance destruction
+static OfxStatus
+destroyInstance(OfxImageEffectHandle effect)
+{
+	// get my instance data
+	MyInstanceData *myData = getMyInstanceData(effect);
+
+	// and delete it
+	if (myData)
+		delete myData;
+	return kOfxStatOK;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+// the plugin's description routine
+static OfxStatus
+describe(OfxImageEffectHandle effect)
+{
+	// first fetch the host APIs, this cannot be done before this call
+	OfxStatus stat;
+	if ((stat = ofxuFetchHostSuites()) != kOfxStatOK)
+		return stat;
+
+	// get the property handle for the plugin
+	OfxPropertySetHandle effectProps;
+	gEffectHost->getPropertySet(effect, &effectProps);
+
+	// We can render both fields in a fielded image in one hit if there is no animation
+	// So set the flag that allows us to do this
+	gPropHost->propSetInt(effectProps, kOfxImageEffectPluginPropFieldRenderTwiceAlways, 0, 0);
+
+	// say we cannot support multiple pixel depths and let the clip preferences action deal with it all.
+	gPropHost->propSetInt(effectProps, kOfxImageEffectPropSupportsMultipleClipDepths, 0, 0);
+
+	// set the bit depths the plugin can handle
+	gPropHost->propSetString(effectProps, kOfxImageEffectPropSupportedPixelDepths, 0, kOfxBitDepthByte);
+	//gPropHost->propSetString(effectProps, kOfxImageEffectPropSupportedPixelDepths, 1, kOfxBitDepthShort);
+	//gPropHost->propSetString(effectProps, kOfxImageEffectPropSupportedPixelDepths, 2, kOfxBitDepthFloat);
+
+	// set plugin label and the group it belongs to
+	gPropHost->propSetString(effectProps, kOfxPropLabel, 0, "Render ASS");
+	gPropHost->propSetString(effectProps, kOfxImageEffectPluginPropGrouping, 0, "NetCharm");
+	//gPropHost->propSetInt(effectProps, kOfxImageEffectPropSupportsOverlays, 0, 1);
+
+	// define the contexts we can be used in
+	gPropHost->propSetString(effectProps, kOfxImageEffectPropSupportedContexts, 0, kOfxImageEffectContextFilter);
+	gPropHost->propSetString(effectProps, kOfxImageEffectPropSupportedContexts, 1, kOfxImageEffectContextGenerator);
+	//gPropHost->propSetString(effectProps, kOfxImageEffectPropSupportedContexts, 2, kOfxImageEffectContextGeneral);
+
+	return kOfxStatOK;
+}
+
 //  describe the plugin in context
 static OfxStatus
 describeInContext(OfxImageEffectHandle  effect, OfxPropertySetHandle inArgs)
@@ -320,8 +580,8 @@ describeInContext(OfxImageEffectHandle  effect, OfxPropertySetHandle inArgs)
 	gParamHost->paramDefine(paramSet, kOfxParamTypeChoice, "assFontHints", &paramProps);
 	gPropHost->propSetString(paramProps, kOfxParamPropParent, 0, "AssFontProperties");
 	gPropHost->propSetString(paramProps, kOfxParamPropScriptName, 0, "assFontHints");
-	gPropHost->propSetString(paramProps, kOfxPropLabel, 0, "Used Margin");
-	gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, "Ass Margin Used");
+	gPropHost->propSetString(paramProps, kOfxPropLabel, 0, "Font Hinting");
+	gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, "Ass Font Hintint Mode");
 	gPropHost->propSetString(paramProps, kOfxParamPropChoiceOption, 0, "None");
 	gPropHost->propSetString(paramProps, kOfxParamPropChoiceOption, 1, "Light");
 	gPropHost->propSetString(paramProps, kOfxParamPropChoiceOption, 2, "Normal");
@@ -398,304 +658,6 @@ describeInContext(OfxImageEffectHandle  effect, OfxPropertySetHandle inArgs)
 	return kOfxStatOK;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-// the plugin's description routine
-static OfxStatus
-describe(OfxImageEffectHandle effect)
-{
-	// first fetch the host APIs, this cannot be done before this call
-	OfxStatus stat;
-	if ((stat = ofxuFetchHostSuites()) != kOfxStatOK)
-		return stat;
-
-	// get the property handle for the plugin
-	OfxPropertySetHandle effectProps;
-	gEffectHost->getPropertySet(effect, &effectProps);
-
-	// We can render both fields in a fielded image in one hit if there is no animation
-	// So set the flag that allows us to do this
-	//gPropHost->propSetInt(effectProps, kOfxImageEffectPluginPropFieldRenderTwiceAlways, 0, 0);
-
-	// say we cannot support multiple pixel depths and let the clip preferences action deal with it all.
-	gPropHost->propSetInt(effectProps, kOfxImageEffectPropSupportsMultipleClipDepths, 0, 0);
-
-	// set the bit depths the plugin can handle
-	gPropHost->propSetString(effectProps, kOfxImageEffectPropSupportedPixelDepths, 0, kOfxBitDepthByte);
-	//gPropHost->propSetString(effectProps, kOfxImageEffectPropSupportedPixelDepths, 1, kOfxBitDepthShort);
-	//gPropHost->propSetString(effectProps, kOfxImageEffectPropSupportedPixelDepths, 2, kOfxBitDepthFloat);
-
-	// set plugin label and the group it belongs to
-	gPropHost->propSetString(effectProps, kOfxPropLabel, 0, "Render ASS");
-	gPropHost->propSetString(effectProps, kOfxImageEffectPluginPropGrouping, 0, "NetCharm");
-	//gPropHost->propSetInt(effectProps, kOfxImageEffectPropSupportsOverlays, 0, 1);
-
-	// define the contexts we can be used in
-	gPropHost->propSetString(effectProps, kOfxImageEffectPropSupportedContexts, 0, kOfxImageEffectContextFilter);
-	gPropHost->propSetString(effectProps, kOfxImageEffectPropSupportedContexts, 1, kOfxImageEffectContextGenerator);
-	//gPropHost->propSetString(effectProps, kOfxImageEffectPropSupportedContexts, 2, kOfxImageEffectContextGeneral);
-
-	return kOfxStatOK;
-}
-
-//  instance construction
-static OfxStatus
-createInstance(OfxImageEffectHandle effect)
-{
-	// get a pointer to the effect properties
-	OfxPropertySetHandle effectProps;
-	gEffectHost->getPropertySet(effect, &effectProps);
-
-	// get a pointer to the effect's parameter set
-	OfxParamSetHandle paramSet;
-	gEffectHost->getParamSet(effect, &paramSet);
-
-	// make my private instance data
-	MyInstanceData *myData = new MyInstanceData;
-	char *context = 0;
-
-	// is this instance a general effect ?
-	gPropHost->propGetString(effectProps, kOfxImageEffectPropContext, 0, &context);
-	if (strcmp(context, kOfxImageEffectContextGenerator) == 0) {
-		myData->context = eIsGenerator;
-	}
-	else if (strcmp(context, kOfxImageEffectContextFilter) == 0) {
-		myData->context = eIsFilter;
-	}
-	else {
-		myData->context = eIsGeneral;
-	}
-
-	// cache away param handles
-	gParamHost->paramGetHandle(paramSet, "assFileName", &myData->assFileName, 0);
-
-	gParamHost->paramGetHandle(paramSet, "assDefaultFontName", &myData->assDefaultFontName, 0);
-	gParamHost->paramGetHandle(paramSet, "assDefaultFontSize", &myData->assDefaultFontSize, 0);
-	gParamHost->paramGetHandle(paramSet, "assDefaultFontColor", &myData->assDefaultFontColor, 0);
-	gParamHost->paramGetHandle(paramSet, "assDefaultFontOutline", &myData->assDefaultFontOutline, 0);
-	gParamHost->paramGetHandle(paramSet, "assDefaultBackground", &myData->assDefaultBackground, 0);
-
-	gParamHost->paramGetHandle(paramSet, "assFontScale", &myData->assFontScale, 0);
-	gParamHost->paramGetHandle(paramSet, "assFontHints", &myData->assFontHints, 0);
-
-	gParamHost->paramGetHandle(paramSet, "assUseMargin", &myData->assUseMargin, 0);
-	gParamHost->paramGetHandle(paramSet, "assMarginT", &myData->assMarginT, 0);
-	gParamHost->paramGetHandle(paramSet, "assMarginB", &myData->assMarginB, 0);
-	gParamHost->paramGetHandle(paramSet, "assMarginL", &myData->assMarginL, 0);
-	gParamHost->paramGetHandle(paramSet, "assMarginR", &myData->assMarginR, 0);
-	gParamHost->paramGetHandle(paramSet, "assSpace", &myData->assSpace, 0);
-	gParamHost->paramGetHandle(paramSet, "assPosition", &myData->assPosition, 0);
-
-	// cache away clip handles
-	if (myData->context != eIsGenerator)
-		gEffectHost->clipGetHandle(effect, kOfxImageEffectSimpleSourceClipName, &myData->sourceClip, 0);
-	else
-		myData->sourceClip = NULL;
-
-	gEffectHost->clipGetHandle(effect, kOfxImageEffectOutputClipName, &myData->outputClip, 0);
-
-	// set my private instance data
-	ofxuSetEffectInstanceData(effect, (void *)myData);
-
-	//char* boundle;
-	//gPropHost->propGetString(effectProps, kOfxPluginPropFilePath, 0, &boundle);
-
-	//int fps = 0;
-	//gPropHost->propGetInt(effectProps, kOfxImageEffectPropFrameRate, 0, &fps);
-
-	//int ufps = 0;
-	//gPropHost->propGetInt(effectProps, kOfxImageEffectPropUnmappedFrameRate, 0, &ufps);
-
-	//int sfps = 0;
-	//gPropHost->propGetInt(effectProps, kOfxImageEffectPropSetableFrameRate, 0, &sfps);
-
-	if (ass == NULL) {
-		ass = new AssRender(ASS_HINTING_NONE, 1.0, "UTF-8");
-	}
-
-	return kOfxStatOK;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// function called when the instance has been changed by anything
-static OfxStatus
-instanceChanged(OfxImageEffectHandle effect,
-	OfxPropertySetHandle inArgs,
-	OfxPropertySetHandle outArgs)
-{
-	// see why it changed
-	char *changeReason;
-	gPropHost->propGetString(inArgs, kOfxPropChangeReason, 0, &changeReason);
-
-	MyInstanceData *myData = new MyInstanceData;
-	myData = getMyInstanceData(effect);
-	if (!myData) return kOfxStatReplyDefault;
-
-	char *propType;
-	char *propName;
-	gPropHost->propGetString(inArgs, kOfxPropType, 0, &propType);
-	gPropHost->propGetString(inArgs, kOfxPropName, 0, &propName);
-
-	if (strcmp(propName, "assFileName") == 0) {
-		//char fn[MAX_PATH];
-		//memset(fn, 0, MAX_PATH);
-		char *fn;
-		gParamHost->paramGetValue(myData->assFileName, &fn);
-		if (ass != NULL && fn[0] != 0) {
-			ass->LoadAss(fn, "UTF-8");
-		}
-	}
-	else if (strcmp(propName, "assDefaultFontName") == 0) {
-		char* fontname = NULL;
-		gParamHost->paramGetValue(myData->assDefaultFontName, &fontname);
-		if (ass != NULL) {
-			ass->SetDefaultFont(fontname, 24);
-		}
-	}
-	else if (strcmp(propName, "assDefaultFontSize") == 0) {
-		int fsize = 0;
-		gParamHost->paramGetValue(myData->assDefaultFontSize, &fsize);
-		int dstfsize = fsize;
-	}
-	else if (strcmp(propName, "assUseMargin") == 0) {
-		int used_margin = 0;
-		gParamHost->paramGetValue(myData->assUseMargin, &used_margin);
-		if (ass) ass->SetMargin((bool)used_margin);
-	}
-	else if (strcmp(propName, "assMarginT") == 0) {
-		double margin_t = 0, margin_b = 0, margin_l = 0, margin_r = 0;
-		gParamHost->paramGetValue(myData->assMarginT, &margin_t);
-		gParamHost->paramGetValue(myData->assMarginB, &margin_b);
-		gParamHost->paramGetValue(myData->assMarginL, &margin_l);
-		gParamHost->paramGetValue(myData->assMarginR, &margin_r);
-		if (ass) ass->SetMargin(margin_t, margin_b, margin_l, margin_r);
-	}
-	else if (strcmp(propName, "assMarginB") == 0) {
-		double margin_t = 0, margin_b = 0, margin_l = 0, margin_r = 0;
-		gParamHost->paramGetValue(myData->assMarginT, &margin_t);
-		gParamHost->paramGetValue(myData->assMarginB, &margin_b);
-		gParamHost->paramGetValue(myData->assMarginL, &margin_l);
-		gParamHost->paramGetValue(myData->assMarginR, &margin_r);
-		if (ass) ass->SetMargin(margin_t, margin_b, margin_l, margin_r);
-	}
-	else if (strcmp(propName, "assMarginL") == 0) {
-		double margin_t = 0, margin_b = 0, margin_l = 0, margin_r = 0;
-		gParamHost->paramGetValue(myData->assMarginT, &margin_t);
-		gParamHost->paramGetValue(myData->assMarginB, &margin_b);
-		gParamHost->paramGetValue(myData->assMarginL, &margin_l);
-		gParamHost->paramGetValue(myData->assMarginR, &margin_r);
-		if (ass) ass->SetMargin(margin_t, margin_b, margin_l, margin_r);
-	}
-	else if (strcmp(propName, "assMarginR") == 0) {
-		double margin_t = 0, margin_b = 0, margin_l = 0, margin_r = 0;
-		gParamHost->paramGetValue(myData->assMarginT, &margin_t);
-		gParamHost->paramGetValue(myData->assMarginB, &margin_b);
-		gParamHost->paramGetValue(myData->assMarginL, &margin_l);
-		gParamHost->paramGetValue(myData->assMarginR, &margin_r);
-		if (ass) ass->SetMargin(margin_t, margin_b, margin_l, margin_r);
-	}
-	else if (strcmp(propName, "assSpace") == 0) {
-		double spacing = 0;
-		gParamHost->paramGetValue(myData->assSpace, &spacing);
-		if (ass) ass->SetSpace(spacing);
-	}
-	else if (strcmp(propName, "assPosition") == 0) {
-		double position = 0;
-		gParamHost->paramGetValue(myData->assPosition, &position);
-		if (ass) ass->SetSpace(position);
-	}
-	else if (strcmp(propName, "assFontScale") == 0) {
-		double scale = 1.0;
-		gParamHost->paramGetValue(myData->assFontScale, &scale);
-		if (ass) ass->SetSpace(scale);
-	}
-	else if (strcmp(propName, "assFontHints") == 0) {
-		int hints = 0;
-		gParamHost->paramGetValue(myData->assFontHints, &hints);
-		if (ass) {
-			switch (hints)
-			{
-			case 1:
-				ass->SetHints(ASS_HINTING_LIGHT);
-				break;
-			case 2:
-				ass->SetHints(ASS_HINTING_NORMAL);
-				break;
-			case 3:
-				ass->SetHints(ASS_HINTING_NATIVE);
-				break;
-			default:
-				ass->SetHints(ASS_HINTING_NONE);
-				break;
-			}
-		}
-	}
-	// don't trap any others
-	return kOfxStatReplyDefault;
-}
-
-// instance destruction
-static OfxStatus
-destroyInstance(OfxImageEffectHandle effect)
-{
-	// get my instance data
-	MyInstanceData *myData = getMyInstanceData(effect);
-
-	// and delete it
-	if (myData)
-		delete myData;
-	return kOfxStatOK;
-}
-
-// Set our clip preferences
-static OfxStatus
-getClipPreferences(OfxImageEffectHandle effect, OfxPropertySetHandle inArgs, OfxPropertySetHandle outArgs)
-{
-	try {
-		// retrieve any instance data associated with this effect
-		MyInstanceData *myData = getMyInstanceData(effect);
-
-		OfxPropertySetHandle props;
-		//OfxImageClipHandle clipHandle;
-		//gEffectHost->clipGetHandle(effect, kOfxImageEffectOutputClipName, &clipHandle, &props);
-		gEffectHost->getPropertySet(effect, &props);
-		
-		// fetch output clip
-		OfxImageClipHandle outputClip;
-		gEffectHost->clipGetHandle(effect, kOfxImageEffectOutputClipName, &outputClip, 0);
-		gEffectHost->clipGetPropertySet(outputClip, &props);
-
-		//double fps = 29.970;
-		double fps = 30.000;
-		//gPropHost->propGetDouble(props, kOfxImageEffectPropFrameRate, 0, &fps);
-		gPropHost->propGetDouble(props, kOfxImageEffectPropFrameRate, 0, &fps);
-
-		if (ass != NULL) ass->SetFPS(fps);
-
-		if (myData) {
-			if (myData->context != eIsGenerator) {
-				// get the component type and bit depth of our main input
-				int  bitDepth;
-				bool isRGBA;
-				ofxuClipGetFormat(myData->sourceClip, bitDepth, isRGBA, true); // get the unmapped clip component
-
-																			   // get the strings used to label the various bit depths
-				const char *bitDepthStr = bitDepth == 8 ? kOfxBitDepthByte : (bitDepth == 16 ? kOfxBitDepthShort : kOfxBitDepthFloat);
-				const char *componentStr = isRGBA ? kOfxImageComponentRGBA : kOfxImageComponentAlpha;
-
-				// set out output to be the same same as the input, component and bitdepth
-				gPropHost->propSetString(outArgs, "OfxImageClipPropComponents_Output", 0, componentStr);
-				if (gHostSupportsMultipleBitDepths)
-					gPropHost->propSetString(outArgs, "OfxImageClipPropDepth_Output", 0, bitDepthStr);
-			}
-		}
-	}
-	catch (std::exception ex) {
-
-	}
-
-	return kOfxStatOK;
-}
-
 // are the settings of the effect performing an identity operation
 static OfxStatus
 isIdentity(OfxImageEffectHandle effect,
@@ -747,6 +709,56 @@ isIdentity(OfxImageEffectHandle effect,
 	return kOfxStatReplyDefault;
 }
 
+// Set our clip preferences
+static OfxStatus
+getClipPreferences(OfxImageEffectHandle effect, OfxPropertySetHandle inArgs, OfxPropertySetHandle outArgs)
+{
+	try {
+		// retrieve any instance data associated with this effect
+		MyInstanceData *myData = getMyInstanceData(effect);
+
+		OfxPropertySetHandle props;
+		//OfxImageClipHandle clipHandle;
+		//gEffectHost->clipGetHandle(effect, kOfxImageEffectOutputClipName, &clipHandle, &props);
+		gEffectHost->getPropertySet(effect, &props);
+
+		// fetch output clip
+		OfxImageClipHandle outputClip;
+		gEffectHost->clipGetHandle(effect, kOfxImageEffectOutputClipName, &outputClip, 0);
+		gEffectHost->clipGetPropertySet(outputClip, &props);
+
+		//double fps = 29.970;
+		double fps = 30.000;
+		//gPropHost->propGetDouble(props, kOfxImageEffectPropFrameRate, 0, &fps);
+		gPropHost->propGetDouble(props, kOfxImageEffectPropFrameRate, 0, &fps);
+
+		if (ass != NULL) ass->SetFPS(fps);
+
+		if (myData) {
+			if (myData->context != eIsGenerator) {
+				// get the component type and bit depth of our main input
+				int  bitDepth;
+				bool isRGBA;
+				ofxuClipGetFormat(myData->sourceClip, bitDepth, isRGBA, true); // get the unmapped clip component
+
+																			   // get the strings used to label the various bit depths
+				const char *bitDepthStr = bitDepth == 8 ? kOfxBitDepthByte : (bitDepth == 16 ? kOfxBitDepthShort : kOfxBitDepthFloat);
+				const char *componentStr = isRGBA ? kOfxImageComponentRGBA : kOfxImageComponentAlpha;
+
+				// set out output to be the same same as the input, component and bitdepth
+				gPropHost->propSetString(outArgs, "OfxImageClipPropComponents_Output", 0, componentStr);
+				if (gHostSupportsMultipleBitDepths)
+					gPropHost->propSetString(outArgs, "OfxImageClipPropDepth_Output", 0, bitDepthStr);
+			}
+		}
+	}
+	catch (std::exception ex) {
+
+	}
+
+	return kOfxStatOK;
+}
+
 // look up a pixel in the image, does bounds checking to see if it is in the image rectangle
 inline OfxRGBAColourB *
 pixelAddress(OfxRGBAColourB *img, OfxRectI rect, int x, int y, int bytesPerLine)
@@ -790,7 +802,7 @@ blend_frame(OfxImageEffectHandle instance,
 	unsigned int b = (unsigned int)_B(img->color);
 
 	const unsigned char *src_map = img->bitmap;
-	unsigned int k, ck;
+	unsigned int ok, ak, sk;
 
 	for (int y = renderWindow.y1; y < renderWindow.y2; y++) {
 		if (gEffectHost->abort(instance)) break;
@@ -813,14 +825,24 @@ blend_frame(OfxImageEffectHandle instance,
 				{
 					unsigned long idx = idx_x + idx_y*stride;
 					if (idx >= imglen) break;
-					k = ((unsigned)src_map[idx]) * a / 255;
-					ck = 255 - k;
+					ok = (unsigned)src_map[idx];
+					ak = (ok) * a / 255;
+					sk = 255 - ak;
+					//if (sk > 0 && sk < 255)
+					//if (ok > 0)
 					{
-						dstPix->a = (unsigned char)k;
-						dstPix->b = (unsigned char)((k*b + ck*dstPix->b) / 255);
-						dstPix->g = (unsigned char)((k*g + ck*dstPix->g) / 255);
-						dstPix->r = (unsigned char)((k*r + ck*dstPix->r) / 255);
+						dstPix->a = (unsigned char)sk;
+						dstPix->b = (unsigned char)((ak*b + sk*srcPix->b) / 255);
+						dstPix->g = (unsigned char)((ak*g + sk*srcPix->g) / 255);
+						dstPix->r = (unsigned char)((ak*r + sk*srcPix->r) / 255);
 					}
+					//else
+					//{
+					//		dstPix->a = 00;
+					//		dstPix->b = b;
+					//		dstPix->g = g;
+					//		dstPix->r = r;
+					//}
 				}
 				else
 				{
@@ -839,6 +861,44 @@ blend_frame(OfxImageEffectHandle instance,
 			dstPix++;
 		}
 	}
+}
+
+inline void
+copy_source(OfxImageEffectHandle instance,
+	OfxRectI renderWindow,
+	void *srcPtr, OfxRectI srcRect, int srcRowBytes,
+	void *dstPtr, OfxRectI dstRect, int dstRowBytes) {
+
+	// cast data pointers to 8 bit RGBA
+	OfxRGBAColourB *src = (OfxRGBAColourB *)srcPtr;
+	OfxRGBAColourB *dst = (OfxRGBAColourB *)dstPtr;
+
+	// and do some inverting
+	for (int y = renderWindow.y1; y < renderWindow.y2; y++) {
+		if (gEffectHost->abort(instance)) break;
+
+		OfxRGBAColourB *dstPix = pixelAddress(dst, dstRect, renderWindow.x1, y, dstRowBytes);
+
+		for (int x = renderWindow.x1; x < renderWindow.x2; x++) {
+
+			OfxRGBAColourB *srcPix = pixelAddress(src, srcRect, x, y, srcRowBytes);
+
+			if (srcPix) {
+				dstPix->r = srcPix->r;
+				dstPix->g = srcPix->g;
+				dstPix->b = srcPix->b;
+				dstPix->a = srcPix->a;
+			}
+			else {
+				dstPix->r = 0;
+				dstPix->g = 0;
+				dstPix->b = 0;
+				dstPix->a = 0;
+			}
+			dstPix++;
+		}
+	}
+
 }
 
 // the process code that the host sees
@@ -880,11 +940,116 @@ static OfxStatus render(OfxImageEffectHandle instance,
 		if (!myData) throw(new NoImageEx());
 
 		ASS_Image *img = NULL;
-		img = ass->GetAss((double)time, renderWindow.x2 - renderWindow.x1, renderWindow.y2 - renderWindow.y1);
-		//ASS_Image_List* imglist = new ASS_Image_List(img);
-		//ASS_Image_List* imglist = ass->RenderFrame((double)time, renderWindow.x2 - renderWindow.x1, renderWindow.y2 - renderWindow.y1, true);
+		if (abs(time - ass->last_time) > 0)	{
+			ass->last_time = time;
+			img = ass->GetAss((double)time, renderWindow.x2 - renderWindow.x1, renderWindow.y2 - renderWindow.y1);
+		}
 
-		if (myData->context != eIsGenerator) {
+		if (img) {
+			if (myData->context != eIsGenerator) {
+				// fetch main input clip
+				OfxImageClipHandle sourceClip;
+				gEffectHost->clipGetHandle(instance, kOfxImageEffectSimpleSourceClipName, &sourceClip, 0);
+
+				// fetch image at render time from that clip
+				if (gEffectHost->clipGetImage(sourceClip, time, NULL, &sourceImg) != kOfxStatOK) {
+					throw NoImageEx();
+				}
+
+				// fetch image info out of that handle
+				int srcRowBytes;
+				OfxRectI srcRect;
+				void *srcPtr;
+				gPropHost->propGetInt(sourceImg, kOfxImagePropRowBytes, 0, &srcRowBytes);
+				gPropHost->propGetIntN(sourceImg, kOfxImagePropBounds, 4, &srcRect.x1);
+				gPropHost->propGetInt(sourceImg, kOfxImagePropRowBytes, 0, &srcRowBytes);
+				gPropHost->propGetPointer(sourceImg, kOfxImagePropData, 0, &srcPtr);
+
+				if (!img)
+				{
+
+				}
+				else {
+
+				}
+				while (img) {
+					try
+					{
+						if (img->w <= 0 || img->h <= 0) continue;
+
+						blend_frame(instance, img, renderWindow, srcPtr, srcRect, srcRowBytes, dstPtr, dstRect, dstRowBytes);
+
+						if (img->next && (unsigned long)img->next < 0xcccc0000) {
+							if (img->next->w || !img->next->h) break;
+							if ((unsigned long)img->next->w > 0xcccc0000 ||
+								(unsigned long)img->next->h > 0xcccc0000 ||
+								(unsigned long)img->next->type > 0xcccc0000) break;
+							img = img->next;
+						}
+						else break;
+					}
+					catch (const std::exception&)
+					{
+
+					} {}
+				}
+
+				//if (imglist->img_shadow)
+				//{
+				//	blend_frame(instance, imglist->img_shadow, renderWindow, srcPtr, srcRect, srcRowBytes, dstPtr, dstRect, dstRowBytes);
+				//}
+				//if (imglist->img_outline)
+				//{
+				//	blend_frame(instance, imglist->img_outline, renderWindow, srcPtr, srcRect, srcRowBytes, dstPtr, dstRect, dstRowBytes);
+				//}
+				//if (imglist->img_text)
+				//{
+				//	blend_frame(instance, imglist->img_text, renderWindow, srcPtr, srcRect, srcRowBytes, dstPtr, dstRect, dstRowBytes);
+				//}
+			}
+			else {
+				//if (imglist->img_outline)
+				//{
+				//	//blend_frame(instance, imglist->img_outline, renderWindow, NULL, dstRect, 0, dstPtr, dstRect, dstRowBytes);
+				//}
+				//if (imglist->img_shadow)
+				//{
+				//	blend_frame(instance, imglist->img_shadow, renderWindow, NULL, dstRect, 0, dstPtr, dstRect, dstRowBytes);
+				//}
+				//if (imglist->img_text)
+				//{
+				//	blend_frame(instance, imglist->img_text, renderWindow, NULL, dstRect, 0, dstPtr, dstRect, dstRowBytes);
+				//}
+				// we are finished with the source images so release them
+				while (img) {
+					try
+					{
+						if (img->w <= 0 || img->h <= 0)
+						{
+							img = img->next;
+							continue;
+						}
+
+						blend_frame(instance, img, renderWindow, NULL, dstRect, 0, dstPtr, dstRect, dstRowBytes);
+
+						if (img->next && (unsigned long)img->next < 0xcccc0000) {
+							if (img->next->w || !img->next->h) break;
+							if ((unsigned long)img->next->w > 0xcccc0000 ||
+								(unsigned long)img->next->h > 0xcccc0000 ||
+								(unsigned long)img->next->type > 0xcccc0000) break;
+							if (img->next->w <= 0 || img->next->h <= 0 || img->next->type < 0) break;
+							img = img->next;
+						}
+						else break;
+					}
+					catch (const std::exception&)
+					{
+
+					} {}
+				}
+			}
+		}
+		else {
 			// fetch main input clip
 			OfxImageClipHandle sourceClip;
 			gEffectHost->clipGetHandle(instance, kOfxImageEffectSimpleSourceClipName, &sourceClip, 0);
@@ -903,86 +1068,7 @@ static OfxStatus render(OfxImageEffectHandle instance,
 			gPropHost->propGetInt(sourceImg, kOfxImagePropRowBytes, 0, &srcRowBytes);
 			gPropHost->propGetPointer(sourceImg, kOfxImagePropData, 0, &srcPtr);
 
-			while (img) {
-				try
-				{
-					if (img->w <= 0 || img->h <= 0)
-					{
-						img = img->next;
-						continue;
-					}
-
-					blend_frame(instance, img, renderWindow, srcPtr, srcRect, srcRowBytes, dstPtr, dstRect, dstRowBytes);
-
-					if (img->next && (unsigned long)img->next < 0xcccc0000) {
-						if (img->next->w || !img->next->h) break;
-						if ((unsigned long)img->next->w > 0xcccc0000 || 
-							(unsigned long)img->next->h > 0xcccc0000 || 
-							(unsigned long)img->next->type > 0xcccc0000) break;
-						if (img->next->w <= 0 || img->next->h <= 0 || img->next->type < 0) break;
-					}
-					else break;
-					img = img->next;
-				}
-				catch (const std::exception&)
-				{
-
-				} {}
-			}
-
-			//if (imglist->img_shadow)
-			//{
-			//	blend_frame(instance, imglist->img_shadow, renderWindow, srcPtr, srcRect, srcRowBytes, dstPtr, dstRect, dstRowBytes);
-			//}
-			//if (imglist->img_outline)
-			//{
-			//	blend_frame(instance, imglist->img_outline, renderWindow, srcPtr, srcRect, srcRowBytes, dstPtr, dstRect, dstRowBytes);
-			//}
-			//if (imglist->img_text)
-			//{
-			//	blend_frame(instance, imglist->img_text, renderWindow, srcPtr, srcRect, srcRowBytes, dstPtr, dstRect, dstRowBytes);
-			//}
-		}
-		else {
-			//if (imglist->img_outline)
-			//{
-			//	//blend_frame(instance, imglist->img_outline, renderWindow, NULL, dstRect, 0, dstPtr, dstRect, dstRowBytes);
-			//}
-			//if (imglist->img_shadow)
-			//{
-			//	blend_frame(instance, imglist->img_shadow, renderWindow, NULL, dstRect, 0, dstPtr, dstRect, dstRowBytes);
-			//}
-			//if (imglist->img_text)
-			//{
-			//	blend_frame(instance, imglist->img_text, renderWindow, NULL, dstRect, 0, dstPtr, dstRect, dstRowBytes);
-			//}
-			// we are finished with the source images so release them
-			while (img) {
-				try
-				{
-					if (img->w <= 0 || img->h <= 0)
-					{
-						img = img->next;
-						continue;
-					}
-
-					blend_frame(instance, img, renderWindow, NULL, dstRect, 0, dstPtr, dstRect, dstRowBytes);
-
-					if (img->next && (unsigned long)img->next < 0xcccc0000) {
-						if (img->next->w || !img->next->h) break;
-						if ((unsigned long)img->next->w > 0xcccc0000 ||
-							(unsigned long)img->next->h > 0xcccc0000 ||
-							(unsigned long)img->next->type > 0xcccc0000) break;
-						if (img->next->w <= 0 || img->next->h <= 0 || img->next->type < 0) break;
-					}
-					else break;
-					img = img->next;
-				}
-				catch (const std::exception&)
-				{
-
-				} {}
-			}
+			copy_source(instance, renderWindow, srcPtr, srcRect, srcRowBytes, dstPtr, dstRect, dstRowBytes);
 		}
 	}
 	catch (NoImageEx &) {
@@ -991,6 +1077,9 @@ static OfxStatus render(OfxImageEffectHandle instance,
 		if (!gEffectHost->abort(instance)) {
 			status = kOfxStatFailed;
 		}
+	}
+	catch (std::exception) {
+
 	}
 
 	if (sourceImg)

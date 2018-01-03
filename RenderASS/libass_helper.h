@@ -68,6 +68,8 @@ private:
 	double fps = 29.970;
 	int renderWidth = 0;
 	int renderHeight = 0;
+
+	char default_fontname[512];
 	double fontscale = 1.0;
 	ASS_Hinting fonthinting = ASS_HINTING_NONE;
 
@@ -78,6 +80,8 @@ private:
 public:
 	AssRender(ASS_Hinting hints, double scale, const char *charset);
 	~AssRender();
+
+	double last_time = 0;
 
 	bool __stdcall Resize(int width, int height);
 	bool __stdcall ReScale(double scale);
@@ -105,3 +109,4 @@ public:
 
 char* w2c(const wchar_t* wsp);
 char* w2c(const std::wstring ws);
+int utf2gbk(char *buf, size_t len);

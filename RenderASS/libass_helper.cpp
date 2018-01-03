@@ -103,7 +103,7 @@ ASS_Image_List::ASS_Image_List(ASS_Image * img)
 			}
 
 			if (img->next && (unsigned long)img->next < 0xcccc0000) {
-				if (img->next->w || !img->next->h) break;
+				if (!img->next->w || !img->next->h) break;
 				if ((unsigned long)img->next->w > 0xcccc0000 ||
 					(unsigned long)img->next->h > 0xcccc0000 ||
 					(unsigned long)img->next->type > 0xcccc0000) break;

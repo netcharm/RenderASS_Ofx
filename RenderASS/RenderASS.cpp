@@ -829,20 +829,19 @@ blend_frame(OfxImageEffectHandle instance,
 					ak = (ok) * a / 255;
 					sk = 255 - ak;
 					//if (sk > 0 && sk < 255)
-					//if (ok > 0)
-					{
-						dstPix->a = (unsigned char)sk;
-						dstPix->b = (unsigned char)((ak*b + sk*srcPix->b) / 255);
-						dstPix->g = (unsigned char)((ak*g + sk*srcPix->g) / 255);
-						dstPix->r = (unsigned char)((ak*r + sk*srcPix->r) / 255);
-					}
-					//else
-					//{
-					//		dstPix->a = 00;
-					//		dstPix->b = b;
-					//		dstPix->g = g;
-					//		dstPix->r = r;
+					//if (ok > 250) {
+					//	dstPix->a = (unsigned char)sk;
+					//	dstPix->b = b;
+					//	dstPix->g = g;
+					//	dstPix->r = r;
 					//}
+					//else 
+					{
+						dstPix->a = (unsigned char)ak;
+						dstPix->b = (unsigned char)((ak*b + sk*dstPix->b) / 255);
+						dstPix->g = (unsigned char)((ak*g + sk*dstPix->g) / 255);
+						dstPix->r = (unsigned char)((ak*r + sk*dstPix->r) / 255);
+					}
 				}
 				else
 				{
@@ -922,7 +921,6 @@ static OfxStatus render(OfxImageEffectHandle instance,
 	OfxPropertySetHandle outputImg = NULL, sourceImg = NULL;
 	try {
 		// fetch image to render into from that clip
-		OfxPropertySetHandle outputImg;
 		if (gEffectHost->clipGetImage(outputClip, time, NULL, &outputImg) != kOfxStatOK) {
 			throw NoImageEx();
 		}
@@ -940,116 +938,9 @@ static OfxStatus render(OfxImageEffectHandle instance,
 		if (!myData) throw(new NoImageEx());
 
 		ASS_Image *img = NULL;
-		if (abs(time - ass->last_time) > 0)	{
-			ass->last_time = time;
-			img = ass->GetAss((double)time, renderWindow.x2 - renderWindow.x1, renderWindow.y2 - renderWindow.y1);
-		}
+		img = ass->GetAss((double)time, renderWindow.x2 - renderWindow.x1, renderWindow.y2 - renderWindow.y1);
 
-		if (img) {
-			if (myData->context != eIsGenerator) {
-				// fetch main input clip
-				OfxImageClipHandle sourceClip;
-				gEffectHost->clipGetHandle(instance, kOfxImageEffectSimpleSourceClipName, &sourceClip, 0);
-
-				// fetch image at render time from that clip
-				if (gEffectHost->clipGetImage(sourceClip, time, NULL, &sourceImg) != kOfxStatOK) {
-					throw NoImageEx();
-				}
-
-				// fetch image info out of that handle
-				int srcRowBytes;
-				OfxRectI srcRect;
-				void *srcPtr;
-				gPropHost->propGetInt(sourceImg, kOfxImagePropRowBytes, 0, &srcRowBytes);
-				gPropHost->propGetIntN(sourceImg, kOfxImagePropBounds, 4, &srcRect.x1);
-				gPropHost->propGetInt(sourceImg, kOfxImagePropRowBytes, 0, &srcRowBytes);
-				gPropHost->propGetPointer(sourceImg, kOfxImagePropData, 0, &srcPtr);
-
-				if (!img)
-				{
-
-				}
-				else {
-
-				}
-				while (img) {
-					try
-					{
-						if (img->w <= 0 || img->h <= 0) continue;
-
-						blend_frame(instance, img, renderWindow, srcPtr, srcRect, srcRowBytes, dstPtr, dstRect, dstRowBytes);
-
-						if (img->next && (unsigned long)img->next < 0xcccc0000) {
-							if (img->next->w || !img->next->h) break;
-							if ((unsigned long)img->next->w > 0xcccc0000 ||
-								(unsigned long)img->next->h > 0xcccc0000 ||
-								(unsigned long)img->next->type > 0xcccc0000) break;
-							img = img->next;
-						}
-						else break;
-					}
-					catch (const std::exception&)
-					{
-
-					} {}
-				}
-
-				//if (imglist->img_shadow)
-				//{
-				//	blend_frame(instance, imglist->img_shadow, renderWindow, srcPtr, srcRect, srcRowBytes, dstPtr, dstRect, dstRowBytes);
-				//}
-				//if (imglist->img_outline)
-				//{
-				//	blend_frame(instance, imglist->img_outline, renderWindow, srcPtr, srcRect, srcRowBytes, dstPtr, dstRect, dstRowBytes);
-				//}
-				//if (imglist->img_text)
-				//{
-				//	blend_frame(instance, imglist->img_text, renderWindow, srcPtr, srcRect, srcRowBytes, dstPtr, dstRect, dstRowBytes);
-				//}
-			}
-			else {
-				//if (imglist->img_outline)
-				//{
-				//	//blend_frame(instance, imglist->img_outline, renderWindow, NULL, dstRect, 0, dstPtr, dstRect, dstRowBytes);
-				//}
-				//if (imglist->img_shadow)
-				//{
-				//	blend_frame(instance, imglist->img_shadow, renderWindow, NULL, dstRect, 0, dstPtr, dstRect, dstRowBytes);
-				//}
-				//if (imglist->img_text)
-				//{
-				//	blend_frame(instance, imglist->img_text, renderWindow, NULL, dstRect, 0, dstPtr, dstRect, dstRowBytes);
-				//}
-				// we are finished with the source images so release them
-				while (img) {
-					try
-					{
-						if (img->w <= 0 || img->h <= 0)
-						{
-							img = img->next;
-							continue;
-						}
-
-						blend_frame(instance, img, renderWindow, NULL, dstRect, 0, dstPtr, dstRect, dstRowBytes);
-
-						if (img->next && (unsigned long)img->next < 0xcccc0000) {
-							if (img->next->w || !img->next->h) break;
-							if ((unsigned long)img->next->w > 0xcccc0000 ||
-								(unsigned long)img->next->h > 0xcccc0000 ||
-								(unsigned long)img->next->type > 0xcccc0000) break;
-							if (img->next->w <= 0 || img->next->h <= 0 || img->next->type < 0) break;
-							img = img->next;
-						}
-						else break;
-					}
-					catch (const std::exception&)
-					{
-
-					} {}
-				}
-			}
-		}
-		else {
+		if (myData->context != eIsGenerator) {
 			// fetch main input clip
 			OfxImageClipHandle sourceClip;
 			gEffectHost->clipGetHandle(instance, kOfxImageEffectSimpleSourceClipName, &sourceClip, 0);
@@ -1069,7 +960,59 @@ static OfxStatus render(OfxImageEffectHandle instance,
 			gPropHost->propGetPointer(sourceImg, kOfxImagePropData, 0, &srcPtr);
 
 			copy_source(instance, renderWindow, srcPtr, srcRect, srcRowBytes, dstPtr, dstRect, dstRowBytes);
+
+			while (img) {
+				try
+				{
+					if (img->w <= 0 || img->h <= 0 || img->w > 8192 || img->h > 8192) {
+						img = img->next;
+						continue;
+					}
+
+					blend_frame(instance, img, renderWindow, srcPtr, srcRect, srcRowBytes, dstPtr, dstRect, dstRowBytes);
+
+					if (img->next && (unsigned long)img->next < 0xcccc0000) {
+						if (!img->next->w || !img->next->h) break;
+						if ((unsigned long)img->next->w > 0xcccc0000 ||
+							(unsigned long)img->next->h > 0xcccc0000) break;
+						img = img->next;
+					}
+					else break;
+				}
+				catch (const std::exception&)
+				{
+
+				} {}
+			}
 		}
+		else {
+			while (img) {
+				try
+				{
+					if (img->w <= 0 || img->h <= 0 || img->w > 8192 || img->h > 8192) {
+						img = img->next;
+						continue;
+					}
+
+					blend_frame(instance, img, renderWindow, NULL, dstRect, 0, dstPtr, dstRect, dstRowBytes);
+
+					if (img->next && (unsigned long)img->next < 0xcccc0000) {
+						if (!img->next->w || !img->next->h) break;
+						if ((unsigned long)img->next->w > 0xcccc0000 ||
+							(unsigned long)img->next->h > 0xcccc0000 ||
+							(unsigned long)img->next->type > 0xcccc0000) break;
+						if (img->next->w <= 0 || img->next->h <= 0 || img->next->type < 0) break;
+						img = img->next;
+					}
+					else break;
+				}
+				catch (const std::exception&)
+				{
+
+				} {}
+			}
+		}
+
 	}
 	catch (NoImageEx &) {
 		// if we were interrupted, the failed fetch is fine, just return kOfxStatOK

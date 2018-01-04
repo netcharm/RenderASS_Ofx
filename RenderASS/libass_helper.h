@@ -42,6 +42,10 @@ extern TCHAR cur_dll_path[MAX_PATH];
 //
 DWORD GetModulePath(HMODULE hModule, LPTSTR pszBuffer, DWORD dwSize);
 
+char* w2c(const wchar_t* wsp);
+char* w2c(const std::wstring ws);
+int utf2gbk(char *buf, size_t len);
+
 //
 class ASS_Image_List {
 public:
@@ -53,14 +57,17 @@ public:
 	ASS_Image *img_shadow = NULL;
 };
 
+///
+void msg_callback(int level, const char *fmt, va_list args, void *);
+
 //
 class AssRender {
 private:
 	bool InitLibass(ASS_Hinting hints, double scale, int width, int height);
 
-	ASS_Library *al;
-	ASS_Renderer *ar;
-	ASS_Track *t;
+	ASS_Library *al = NULL;
+	ASS_Renderer *ar = NULL;
+	ASS_Track *at = NULL;
 
 	char ass_file[MAX_PATH];
 	char fontconf[MAX_PATH];
@@ -91,7 +98,8 @@ public:
 	bool __stdcall SetDefaultFont(char * fontname, int fontsize);
 	bool __stdcall SetSpace(int pixels);
 	bool __stdcall SetSpace(double percentage);
-	bool __stdcall SetPosition(int percentage);
+	bool __stdcall SetPosition(int pixels);
+	bool __stdcall SetPosition(double percentage);
 	bool __stdcall SetMargin(bool used);
 	bool __stdcall SetMargin(int t, int b, int l, int r);
 	bool __stdcall SetMargin(double t, double b, double l, double r);
@@ -107,6 +115,3 @@ public:
 	ASS_Image* __stdcall GetAss(int n);
 };
 
-char* w2c(const wchar_t* wsp);
-char* w2c(const std::wstring ws);
-int utf2gbk(char *buf, size_t len);

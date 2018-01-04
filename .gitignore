@@ -1,10 +1,9 @@
-/ipch
-/RenderASS/x64
-/RenderASS/Win32
-/RenderASS/Debug
-/x64
 /.vs
+/ipch
 *.sdf
 *.opendb
-/_out
 _out
+x64
+Win32
+Debug
+Release

@@ -61,7 +61,7 @@ private:
 
 	ASS_Library *al;
 	ASS_Renderer *ar;
-	ASS_Track *t;
+	ASS_Track *at;
 
 	double fps = 29.970;
 	char ass_file[MAX_PATH];

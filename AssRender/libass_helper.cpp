@@ -12,14 +12,14 @@
 
 
 AssRender::AssRender(ASS_Hinting hints, double scale, const char *charset) {	
-	if (!InitLibass(ASS_HINTING_LIGHT, scale, 1280, 720))
+	if (!InitLibass(hints, scale, 1280, 720))
 	{
 		//throw("AssRender: failed to initialize libass");
 	}		
 }
 
 AssRender::~AssRender() {
-	ass_free_track(t);
+	ass_free_track(at);
 	ass_renderer_done(ar);
 	ass_library_done(al);
 }
@@ -31,8 +31,8 @@ bool AssRender::LoadAss(const char * assfile, const char *_charset)
 	char charset[128]; // 128 bytes ought to be enough for anyone
 	strcpy_s(charset, _charset);
 
-	t = ass_read_file(al, ass_file, charset);
-	if (!t) {
+	at = ass_read_file(al, ass_file, charset);
+	if (!at) {
 		throw("AssRender: could not read %s", ass_file);
 		return false;
 	}
@@ -59,7 +59,7 @@ ASS_Image* AssRender::GetAss(double n, ASS_Image* src)
 	}		
 	//int64_t now = (int64_t)(n * 1000);
 	int64_t ts = (int64_t)(n / fps * 1000);
-	ASS_Image *img = ass_render_frame(ar, t, ts, NULL);
+	ASS_Image *img = ass_render_frame(ar, at, ts, NULL);
 
 	// this here loop shamelessly stolen from aegisub's subtitles_provider_libass.cpp
 	// and slightly modified to render upside-down
@@ -76,7 +76,7 @@ ASS_Image* AssRender::GetAss(double n, int width, int height)
 	ass_set_frame_size(ar, width, height);
 	//int64_t now = (int64_t)(n * 1000);
 	int64_t ts = (int64_t)(n / fps * 1000);
-	ASS_Image *img = ass_render_frame(ar, t, ts, NULL);
+	ASS_Image *img = ass_render_frame(ar, at, ts, NULL);
 
 	// this here loop shamelessly stolen from aegisub's subtitles_provider_libass.cpp
 	// and slightly modified to render upside-down
@@ -90,7 +90,7 @@ ASS_Image* AssRender::GetAss(double n, int width, int height)
 
 ASS_Image* AssRender::GetAss(int64_t n, ASS_Image* src)
 {
-	ASS_Image *img = ass_render_frame(ar, t, n, NULL);
+	ASS_Image *img = ass_render_frame(ar, at, n, NULL);
 
 	// this here loop shamelessly stolen from aegisub's subtitles_provider_libass.cpp
 	// and slightly modified to render upside-down

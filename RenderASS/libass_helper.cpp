@@ -73,6 +73,21 @@ int utf2gbk(char *buf, size_t len)
 	return 0;
 }
 
+void msg_callback(int level, const char *fmt, va_list args, void *) {
+	if (level >= 7) return;
+	char buf[1024];
+#ifdef _WIN32
+	vsprintf_s(buf, sizeof(buf), fmt, args);
+#else
+	vsnprintf(buf, sizeof(buf), fmt, args);
+#endif
+
+	//if (level < 2) // warning/error
+	//	LOG_I("subtitle/provider/libass") << buf;
+	//else // verbose
+	//	LOG_D("subtitle/provider/libass") << buf;
+}
+
 //
 ASS_Image_List::ASS_Image_List(ASS_Image * img)
 {
@@ -81,9 +96,9 @@ ASS_Image_List::ASS_Image_List(ASS_Image * img)
 		img_count++;
 		try
 		{
-			if (img->w <= 0 || img->h <= 0)
-			{
-				//img = img->next;
+			if ((unsigned long)img >= 0xcccc0000) break;
+			if (img->w <= 0 || img->h <= 0 || img->w > 8192 || img->h > 8192) {
+				img = img->next;
 				continue;
 			}
 
@@ -105,11 +120,11 @@ ASS_Image_List::ASS_Image_List(ASS_Image * img)
 			if (img->next && (unsigned long)img->next < 0xcccc0000) {
 				if (!img->next->w || !img->next->h) break;
 				if ((unsigned long)img->next->w > 0xcccc0000 ||
-					(unsigned long)img->next->h > 0xcccc0000 ||
-					(unsigned long)img->next->type > 0xcccc0000) break;
-				img = img->next;
+					(unsigned long)img->next->h > 0xcccc0000) break;
 			}
 			else break;
+			Sleep(10);
+			img = img->next;
 		}
 		catch (const std::exception&)
 		{
@@ -135,14 +150,14 @@ ASS_Image_List::~ASS_Image_List()
 AssRender::AssRender(ASS_Hinting hints, double scale, const char *charset) {	
 	memset(ass_file, 0, MAX_PATH);
 	//if (!InitLibass(ASS_HINTING_LIGHT, scale, 1280, 720))
-	if (!InitLibass(ASS_HINTING_NATIVE, scale, 1280, 720))
+	if (!InitLibass(hints, scale, 1280, 720))
 	{
 		//throw("AssRender: failed to initialize libass");
 	}		
 }
 
 AssRender::~AssRender() {
-	ass_free_track(t);
+	ass_free_track(at);
 	ass_renderer_done(ar);
 	ass_library_done(al);
 }
@@ -151,7 +166,7 @@ bool AssRender::InitLibass(ASS_Hinting hints, double scale, int width, int heigh
 	al = ass_library_init();
 	if (!al)
 		return false;
-
+	ass_set_message_cb(al, msg_callback, nullptr);
 	//char tmp[MAX_PATH];
 	//SHGetFolderPath(NULL, CSIDL_LOCAL_APPDATA, NULL, 0, tmp);
 
@@ -169,8 +184,6 @@ bool AssRender::InitLibass(ASS_Hinting hints, double scale, int width, int heigh
 	//ass_set_margins(ar, 0, 0, 0, 0);
 	//ass_set_use_margins(ar, 0);
 	//ass_set_aspect_ratio(ar,);  // todo: implement this
-	ass_set_hinting(ar, hints);
-	ass_set_font_scale(ar, scale);
 	ass_set_line_position(ar, position);
 	ass_set_line_spacing(ar, spacing);
 	//ass_set_shaper(ar, ASS_SHAPING_COMPLEX);
@@ -182,10 +195,14 @@ bool AssRender::InitLibass(ASS_Hinting hints, double scale, int width, int heigh
 	memset(default_fontname, 0, 512);
 	strcpy_s(default_fontname, "Arial");
 
+	ass_set_hinting(ar, hints);
+	ass_set_font_scale(ar, scale);
+	ass_set_fonts(ar, default_fontname, "Sans", 1, fontconf, 1);
 	//ass_set_fonts(ar, "Arial", "Sans", 1, w2c(path), 1);
 	//ass_set_fonts(ar, "C:\\Windows\\Fonts\\Arial.ttf", "Sans", 1, fontconf, 1);
-	ass_set_fonts(ar, default_fontname, "Sans", 1, fontconf, 1);
 	//ass_set_fonts(ar, "Arial", "Sans", 0, NULL, 0);
+	//ass_renderer_done(ar);
+	Sleep(250);
 
 	return true;
 }
@@ -213,12 +230,12 @@ bool AssRender::SetMargin(int t, int b, int l, int r)
 {
 	if (!ar) return false;
 	if (renderHeight > 0) {
-		margin_t = (double)margin_t / (double)(renderHeight);
-		margin_b = (double)margin_b / (double)(renderHeight);
+		margin_t = (double)t / (double)(renderHeight) * 100;
+		margin_b = (double)b / (double)(renderHeight) * 100;
 	}
 	if (renderWidth > 0) {
-		margin_l = (double)margin_l / (double)(renderHeight);
-		margin_r = (double)margin_r / (double)(renderHeight);
+		margin_l = (double)l / (double)(renderHeight) * 100;
+		margin_r = (double)r / (double)(renderHeight) * 100;
 	}
 	ass_set_margins(ar, t, b, l, r);
 	return true;
@@ -230,12 +247,12 @@ bool AssRender::SetMargin(double t, double b, double l, double r)
 	margin_t = t, margin_b = b, margin_l = l, margin_r = r;
 	int tt = 0, tb = 0, tl = 0, tr = 0;
 	if (renderHeight > 0) {
-		tt = (int)(renderHeight*margin_t);
-		tb = (int)(renderHeight*margin_b);
+		tt = (int)(renderHeight*margin_t / 100);
+		tb = (int)(renderHeight*margin_b / 100);
 	}
 	if (renderWidth > 0) {
-		tl = (int)(renderWidth*margin_l);
-		tr = (int)(renderWidth*margin_r);
+		tl = (int)(renderWidth*margin_l / 100);
+		tr = (int)(renderWidth*margin_r / 100);
 	}
 	ass_set_margins(ar, tt, tb, tl, tr);
 	return true;
@@ -265,8 +282,9 @@ bool AssRender::Resize(int width, int height)
 		renderHeight = height;
 		//ass_set_storage_size(ar, width, height);
 		ass_set_frame_size(ar, width, height);
+		return true;
 	}
-	return true;
+	return false;
 }
 
 bool AssRender::ReScale(double scale)
@@ -275,13 +293,17 @@ bool AssRender::ReScale(double scale)
 	if (scale > 0) {
 		fontscale = scale;
 		ass_set_font_scale(ar, fontscale);
+		return true;
 	}
-	return true;
+	return false;
 }
 
 bool AssRender::SetFPS(double fr)
 {
-	if(fr>0) fps = fr;
+	if (fr > 0) {
+		fps = fr;
+		return true;
+	}
 	return false;
 }
 
@@ -297,10 +319,11 @@ bool AssRender::SetSpace(int pixels)
 {
 	if (!ar) return false;
 	if (pixels > 0 && renderHeight > 0) {
-		spacing = (double)pixels / (double)renderHeight;
+		spacing = (double)pixels / (double)renderHeight * 100;
 		ass_set_line_spacing(ar, pixels);
+		return true;
 	}
-	return true;
+	return false;
 }
 
 bool AssRender::SetSpace(double percentage)
@@ -308,22 +331,34 @@ bool AssRender::SetSpace(double percentage)
 	if (!ar) return false;
 	spacing = percentage;
 	if (renderHeight > 0) {
-		int pixels = (int)(renderHeight*spacing);
+		int pixels = (int)(renderHeight*spacing / 100, 0);
 		ass_set_line_spacing(ar, pixels);
+		return true;
 	}
-	return true;
+	return false;
 }
 
-bool AssRender::SetPosition(int percentage)
+bool AssRender::SetPosition(double percentage)
 {
 	if (!ar) return false;
 	if (percentage >= 0 && percentage <= 100) {
 		position = percentage;
 		ass_set_line_position(ar, percentage);
+		return true;
 	}
 	return false;
 }
 
+bool AssRender::SetPosition(int pixels)
+{
+	if (!ar) return false;
+	if (renderHeight >= 0) {
+		position = pixels / renderHeight * 100;
+		ass_set_line_position(ar, position);
+		return true;
+	}
+	return false;
+}
 
 bool AssRender::LoadAss(const char * assfile, const char *_charset)
 {
@@ -340,20 +375,21 @@ bool AssRender::LoadAss(const char * assfile, const char *_charset)
 	char charset[128]; // 128 bytes ought to be enough for anyone
 	strcpy_s(charset, _charset);
 
-	if(t) ass_flush_events(t);
-
 	char ass_buf[MAX_PATH];
 	memset(ass_buf, 0, MAX_PATH);
 	strcpy_s(ass_buf, assfile);
 	utf2gbk(ass_buf, strlen(ass_buf));
 
-	t = ass_read_file(al, ass_buf, charset);
-	if (!t) {
+	if (at) ass_flush_events(at);
+	if (at) ass_free_track(at);
+	at = NULL;
+	at = ass_read_file(al, ass_buf, charset);
+	if (!at) {
 		throw("AssRender: could not read %s", ass_file);
 		return false;
 	}
 	else {
-		//ass_set_fonts_dir(al, ass_path);
+		Sleep(250);
 		return true;
 	}
 }
@@ -371,12 +407,12 @@ ASS_Image* AssRender::GetAss(double n, int width, int height)
 	try
 	{
 		//ass_set_storage_size(ar, width, height);
-		//ass_set_frame_size(ar, width, height);
+		ass_set_frame_size(ar, width, height);
 		//int64_t now = (int64_t)(n * 1000);
 		int64_t ts = (int64_t)(n / fps * 1000);
 		//if (!t) return NULL;
 		int detChange = 0;
-		ASS_Image *img = ass_render_frame(ar, t, ts, &detChange);
+		ASS_Image *img = ass_render_frame(ar, at, ts, &detChange);
 		return img;
 	}
 	catch (const std::exception&)
@@ -393,14 +429,14 @@ ASS_Image* AssRender::GetAss(double n, ASS_Image* src)
 	//int64_t now = (int64_t)(n * 1000);
 	int64_t ts = (int64_t)(n / fps * 1000);
 	int detChange = 0;
-	ASS_Image *img = ass_render_frame(ar, t, ts, &detChange);
+	ASS_Image *img = ass_render_frame(ar, at, ts, &detChange);
 
 	return img;
 }
 
 ASS_Image* AssRender::GetAss(int64_t n, ASS_Image* src)
 {
-	ASS_Image *img = ass_render_frame(ar, t, n, NULL);
+	ASS_Image *img = ass_render_frame(ar, at, n, NULL);
 	return img;
 }
 

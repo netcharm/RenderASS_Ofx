@@ -904,6 +904,7 @@ static OfxStatus render(OfxImageEffectHandle instance,
 		if (!myData) throw(new NoImageEx());
 
 		ASS_Image *img = NULL;
+		//auto ASS_Image *img = NULL;
 		img = ass->GetAss((double)time, renderWindow.x2 - renderWindow.x1, renderWindow.y2 - renderWindow.y1);
 
 		if (myData->context != eIsGenerator) {
@@ -929,6 +930,7 @@ static OfxStatus render(OfxImageEffectHandle instance,
 		}
 
 		while (img) {
+			if ((unsigned long)img >= 0xcccc0000) break;
 			if (img->w <= 0 || img->h <= 0 || img->w > 8192 || img->h > 8192) {
 				img = img->next;
 				continue;
@@ -940,10 +942,10 @@ static OfxStatus render(OfxImageEffectHandle instance,
 				if (!img->next->w || !img->next->h) break;
 				if ((unsigned long)img->next->w > 0xcccc0000 ||
 					(unsigned long)img->next->h > 0xcccc0000) break;
-				img = img->next;
 			}
 			else break;
 			Sleep(10);
+			img = img->next;
 		}
 
 		img = NULL;

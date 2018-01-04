@@ -263,7 +263,7 @@ bool AssRender::Resize(int width, int height)
 	if (width > 0 && height > 0) {
 		renderWidth = width;
 		renderHeight = height;
-		ass_set_storage_size(ar, width, height);
+		//ass_set_storage_size(ar, width, height);
 		ass_set_frame_size(ar, width, height);
 	}
 	return true;
@@ -337,8 +337,6 @@ bool AssRender::LoadAss(const char * assfile, const char *_charset)
 	char* ap = strrchr(ass_path, '\\');
 	if (ap) ap[0] = 0;
 
-	//ass_set_fonts_dir(al, ass_path);
-
 	char charset[128]; // 128 bytes ought to be enough for anyone
 	strcpy_s(charset, _charset);
 
@@ -355,6 +353,7 @@ bool AssRender::LoadAss(const char * assfile, const char *_charset)
 		return false;
 	}
 	else {
+		//ass_set_fonts_dir(al, ass_path);
 		return true;
 	}
 }
@@ -369,23 +368,21 @@ ASS_Image_List* AssRender::GetAss(double n, int width, int height, bool ass_type
 ASS_Image* AssRender::GetAss(double n, int width, int height)
 {
 	if (!ar) return(NULL);
-
-	ass_set_storage_size(ar, width, height);
-	ass_set_frame_size(ar, width, height);
-	//int64_t now = (int64_t)(n * 1000);
-	int64_t ts = (int64_t)(n / fps * 1000);
-	if (!t) return NULL;
-	int detChange = 0;
-	ASS_Image *img = ass_render_frame(ar, t, ts, &detChange);
-
-	// this here loop shamelessly stolen from aegisub's subtitles_provider_libass.cpp
-	// and slightly modified to render upside-down
-	//while (img) {
-	//	if (img->w == 0 || img->h == 0)
-	//		continue;
-
-	//}
-	return img;
+	try
+	{
+		//ass_set_storage_size(ar, width, height);
+		//ass_set_frame_size(ar, width, height);
+		//int64_t now = (int64_t)(n * 1000);
+		int64_t ts = (int64_t)(n / fps * 1000);
+		//if (!t) return NULL;
+		int detChange = 0;
+		ASS_Image *img = ass_render_frame(ar, t, ts, &detChange);
+		return img;
+	}
+	catch (const std::exception&)
+	{
+		return NULL;
+	}
 }
 
 ASS_Image* AssRender::GetAss(double n, ASS_Image* src)

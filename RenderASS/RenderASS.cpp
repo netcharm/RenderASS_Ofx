@@ -17,6 +17,7 @@ The main features are
 #include <stdexcept>
 #include <new>
 #include <tchar.h>
+#include <windows.h>
 #include "ofxImageEffect.h"
 #include "ofxMemory.h"
 #include "ofxMultiThread.h"
@@ -681,14 +682,6 @@ isIdentity(OfxImageEffectHandle effect,
 	gPropHost->propGetString(inArgs, kOfxPropType, 0, &propType);
 	gPropHost->propGetString(inArgs, kOfxPropName, 0, &propName);
 
-	if (strcmp(propName, "assFileName") == 0) {
-		char *fn;
-		gParamHost->paramGetValue(myData->assFileName, &fn);
-		if (ass != NULL && fn[0] != 0) {
-			ass->LoadAss(fn, "UTF-8");
-		}
-	}
-
 	// we should not be called on a generator
 	if (myData->context != eIsGenerator) {
 
@@ -699,8 +692,7 @@ isIdentity(OfxImageEffectHandle effect,
 		gPropHost->propGetDouble(inArgs, kOfxPropTime, 0, &time);
 		gPropHost->propGetIntN(inArgs, kOfxImageEffectPropRenderWindow, 4, &renderWindow.x1);
 
-		OfxRGBAColourD col;
-		gParamHost->paramGetValueAtTime(myData->assDefaultFontColor, time, &col.r, &col.g, &col.b, &col.a);
+		if (ass) ass->Resize(renderWindow.x2 - renderWindow.x1, renderWindow.y2 - renderWindow.y1);
 
 		return kOfxStatOK;
 	}
@@ -777,13 +769,11 @@ inline void
 blend_frame(OfxImageEffectHandle instance, 
 	ASS_Image* img,
 	OfxRectI renderWindow,
-	void *srcPtr, OfxRectI srcRect, int srcRowBytes,
 	void *dstPtr, OfxRectI dstRect, int dstRowBytes) {
 
 	if (!img || img->w <= 0 || img->h <= 0) return;
 
 	// cast data pointers to 8 bit RGBA
-	OfxRGBAColourB *src = (OfxRGBAColourB *)srcPtr;
 	OfxRGBAColourB *dst = (OfxRGBAColourB *)dstPtr;
 
 	OfxRectI dstRectAss;
@@ -791,8 +781,6 @@ blend_frame(OfxImageEffectHandle instance,
 	dstRectAss.x2 = img->dst_x + img->w;
 	dstRectAss.y1 = dstRect.y2 - (img->dst_y + img->h);
 	dstRectAss.y2 = dstRect.y2 - img->dst_y;
-	//dstRectAss.y1 = img->dst_y;
-	//dstRectAss.y2 = (img->dst_y + img->h);
 
 	unsigned int stride = (unsigned int)img->stride;
 	unsigned int imglen = (unsigned int)(stride*img->h);
@@ -807,50 +795,28 @@ blend_frame(OfxImageEffectHandle instance,
 	for (int y = renderWindow.y1; y < renderWindow.y2; y++) {
 		if (gEffectHost->abort(instance)) break;
 				
-		if (!img || img->w <= 0 || img->h <= 0) break;
+		//if (!img || img->w <= 0 || img->h <= 0) break;
 
-		//OfxRGBAColourB *dstPix = pixelAddress(dst, dstRect, renderWindow.x1, renderWindow.y2 - y - 1, dstRowBytes);
 		OfxRGBAColourB *dstPix = pixelAddress(dst, dstRect, renderWindow.x1, y, dstRowBytes);
 		for (int x = renderWindow.x1; x < renderWindow.x2; x++) {
 			try
 			{
-				if (!img || img->w <= 0 || img->h <= 0) break;
+				//if (!img || img->w <= 0 || img->h <= 0) break;
 
 				long idx_x = x - dstRectAss.x1;
 				long idx_y = img->h - (y - dstRectAss.y1) - 1;
 
-				//OfxRGBAColourB *srcPix = pixelAddress(src, srcRect, x, renderWindow.y2 - y - 1, srcRowBytes);
-				OfxRGBAColourB *srcPix = pixelAddress(src, srcRect, x, y, srcRowBytes);
 				if (dst && dstPix && x >= dstRectAss.x1 && x < dstRectAss.x2 && y >= dstRectAss.y1 && y < dstRectAss.y2)
 				{
 					unsigned long idx = idx_x + idx_y*stride;
 					if (idx >= imglen) break;
 					ok = (unsigned)src_map[idx];
-					ak = (ok) * a / 255;
+					ak = ok*a / 255;
 					sk = 255 - ak;
-					//if (sk > 0 && sk < 255)
-					//if (ok > 250) {
-					//	dstPix->a = (unsigned char)sk;
-					//	dstPix->b = b;
-					//	dstPix->g = g;
-					//	dstPix->r = r;
-					//}
-					//else 
-					{
-						dstPix->a = (unsigned char)ak;
-						dstPix->b = (unsigned char)((ak*b + sk*dstPix->b) / 255);
-						dstPix->g = (unsigned char)((ak*g + sk*dstPix->g) / 255);
-						dstPix->r = (unsigned char)((ak*r + sk*dstPix->r) / 255);
-					}
-				}
-				else
-				{
-					if (dst && dstPix && src && srcPix) {
-						dstPix->a = srcPix->a;
-						dstPix->b = srcPix->b;
-						dstPix->g = srcPix->g;
-						dstPix->r = srcPix->r;
-					}
+					dstPix->a = (unsigned char)ak;
+					dstPix->b = (unsigned char)((ak*b + sk*dstPix->b) / 255);
+					dstPix->g = (unsigned char)((ak*g + sk*dstPix->g) / 255);
+					dstPix->r = (unsigned char)((ak*r + sk*dstPix->r) / 255);
 				}
 			}
 			catch (const std::exception&)
@@ -960,59 +926,27 @@ static OfxStatus render(OfxImageEffectHandle instance,
 			gPropHost->propGetPointer(sourceImg, kOfxImagePropData, 0, &srcPtr);
 
 			copy_source(instance, renderWindow, srcPtr, srcRect, srcRowBytes, dstPtr, dstRect, dstRowBytes);
-
-			while (img) {
-				try
-				{
-					if (img->w <= 0 || img->h <= 0 || img->w > 8192 || img->h > 8192) {
-						img = img->next;
-						continue;
-					}
-
-					blend_frame(instance, img, renderWindow, srcPtr, srcRect, srcRowBytes, dstPtr, dstRect, dstRowBytes);
-
-					if (img->next && (unsigned long)img->next < 0xcccc0000) {
-						if (!img->next->w || !img->next->h) break;
-						if ((unsigned long)img->next->w > 0xcccc0000 ||
-							(unsigned long)img->next->h > 0xcccc0000) break;
-						img = img->next;
-					}
-					else break;
-				}
-				catch (const std::exception&)
-				{
-
-				} {}
-			}
-		}
-		else {
-			while (img) {
-				try
-				{
-					if (img->w <= 0 || img->h <= 0 || img->w > 8192 || img->h > 8192) {
-						img = img->next;
-						continue;
-					}
-
-					blend_frame(instance, img, renderWindow, NULL, dstRect, 0, dstPtr, dstRect, dstRowBytes);
-
-					if (img->next && (unsigned long)img->next < 0xcccc0000) {
-						if (!img->next->w || !img->next->h) break;
-						if ((unsigned long)img->next->w > 0xcccc0000 ||
-							(unsigned long)img->next->h > 0xcccc0000 ||
-							(unsigned long)img->next->type > 0xcccc0000) break;
-						if (img->next->w <= 0 || img->next->h <= 0 || img->next->type < 0) break;
-						img = img->next;
-					}
-					else break;
-				}
-				catch (const std::exception&)
-				{
-
-				} {}
-			}
 		}
 
+		while (img) {
+			if (img->w <= 0 || img->h <= 0 || img->w > 8192 || img->h > 8192) {
+				img = img->next;
+				continue;
+			}
+
+			blend_frame(instance, img, renderWindow, dstPtr, dstRect, dstRowBytes);
+
+			if (img->next && (unsigned long)img->next < 0xcccc0000) {
+				if (!img->next->w || !img->next->h) break;
+				if ((unsigned long)img->next->w > 0xcccc0000 ||
+					(unsigned long)img->next->h > 0xcccc0000) break;
+				img = img->next;
+			}
+			else break;
+			Sleep(10);
+		}
+
+		img = NULL;
 	}
 	catch (NoImageEx &) {
 		// if we were interrupted, the failed fetch is fine, just return kOfxStatOK
@@ -1021,10 +955,7 @@ static OfxStatus render(OfxImageEffectHandle instance,
 			status = kOfxStatFailed;
 		}
 	}
-	catch (std::exception) {
-
-	}
-
+	
 	if (sourceImg)
 		gEffectHost->clipReleaseImage(sourceImg);
 	if (outputImg)

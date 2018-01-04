@@ -1,7 +1,0 @@
-﻿C:\Program Files (x86)\MSBuild\Microsoft.Cpp\v4.0\V140\Microsoft.CppBuild.targets(367,5): warning MSB8004: Intermediate Directory does not end with a trailing slash.  This build instance will add the slash as it is required to allow proper evaluation of the Intermediate Directory.
-C:\Program Files (x86)\MSBuild\Microsoft.Cpp\v4.0\V140\Microsoft.CppBuild.targets(368,5): warning MSB8004: Output Directory does not end with a trailing slash.  This build instance will add the slash as it is required to allow proper evaluation of the Output Directory.
-  libass_helper.cpp
-d:\develop\ms\_projects\vs2015\subtitles\renderass\assrender\libass_helper.cpp : fatal error C1041: 无法打开程序数据库“D:\Develop\MS\_projects\VS2015\SubTitles\RenderASS\AssRender\_out\Debug\x64\_inter\vc140.idb”；如果要将多个 CL.EXE 写入同一个 .PDB 文件，请使用 /FS
-  AssRender.cpp
-d:\develop\ms\_projects\vs2015\subtitles\renderass\assrender\assrender.cpp : fatal error C1041: 无法打开程序数据库“D:\Develop\MS\_projects\VS2015\SubTitles\RenderASS\AssRender\_out\Debug\x64\_inter\vc140.pdb”；如果要将多个 CL.EXE 写入同一个 .PDB 文件，请使用 /FS
-  正在生成代码...

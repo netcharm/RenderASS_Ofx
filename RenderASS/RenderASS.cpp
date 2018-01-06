@@ -18,6 +18,7 @@ The main features are
 #include <new>
 #include <tchar.h>
 #include <windows.h>
+#include <math.h>
 #include "ofxImageEffect.h"
 #include "ofxMemory.h"
 #include "ofxMultiThread.h"
@@ -133,25 +134,22 @@ getMyInstanceParam(OfxImageEffectHandle effect) {
 
 
 	gParamHost->paramGetHandle(paramSet, "assDefaultFontColor", &param, 0);
-	OfxRGBAColourB fc;
+	RGBAColourD fc = { 0, 0, 0, 1 };
 	gParamHost->paramGetValue(param, &fc.r, &fc.g, &fc.b, &fc.a);
 	gParamHost->paramGetHandle(paramSet, "assDefaultFontColor", &myData->assDefaultFontColor, 0);
-	RGBA dfc = { fc.r, fc.g, fc.b, fc.a };
-	if (myData->ass) myData->ass->SetDefaultFontColor(dfc);
+	if (myData->ass) myData->ass->SetDefaultFontColor(fc);
 
 	gParamHost->paramGetHandle(paramSet, "assDefaultFontOutline", &param, 0);
-	OfxRGBAColourB fo;
+	RGBAColourD fo = { 0, 0, 0, 1 };
 	gParamHost->paramGetValue(param, &fo.r, &fo.g, &fo.b, &fo.a);
 	gParamHost->paramGetHandle(paramSet, "assDefaultFontOutline", &myData->assDefaultFontOutline, 0);
-	RGBA dfo = { fo.r, fo.g, fo.b, fo.a };
-	if (myData->ass) myData->ass->SetDefaultFontOutline(dfo);
+	if (myData->ass) myData->ass->SetDefaultFontOutline(fo);
 
 	gParamHost->paramGetHandle(paramSet, "assDefaultBackground", &param, 0);
-	OfxRGBAColourB fb;
+	RGBAColourD fb = { 0, 0, 0, 1 };
 	gParamHost->paramGetValue(param, &fb.r, &fb.g, &fb.b, &fb.a);
 	gParamHost->paramGetHandle(paramSet, "assDefaultBackground", &myData->assDefaultBackground, 0);
-	RGBA dfb = { fb.r, fb.g, fb.b, fb.a };
-	if (myData->ass) myData->ass->SetDefaultFontOutline(dfb);
+	if (myData->ass) myData->ass->SetDefaultFontBG(fb);
 
 
 	gParamHost->paramGetHandle(paramSet, "assUseMargin", &param, 0);
@@ -418,22 +416,18 @@ instanceChanged(OfxImageEffectHandle effect,
 		if (myData->ass) myData->ass->SetDefaultFontSize(fsize);
 	}
 	else if (strcmp(propName, "assDefaultFontColor") == 0) {
-		OfxRGBAColourB fc;
+		RGBAColourD fc = { 0, 0, 0, 1 };
 		gParamHost->paramGetValue(myData->assDefaultFontColor, &fc.r, &fc.g, &fc.b, &fc.a);
-		RGBA dfc = { fc.r, fc.g, fc.b, fc.a };
-		if (myData->ass) myData->ass->SetDefaultFontColor(dfc);
+		if (myData->ass) myData->ass->SetDefaultFontColor(fc);
 	}
 	else if (strcmp(propName, "assDefaultFontOutline") == 0) {
-		OfxRGBAColourB fo;
+		RGBAColourD fo = { 0, 0, 0, 1 };
 		gParamHost->paramGetValue(myData->assDefaultFontColor, &fo.r, &fo.g, &fo.b, &fo.a);
-		RGBA dfo = { fo.r, fo.g, fo.b, fo.a };
-		if (myData->ass) myData->ass->SetDefaultFontOutline(dfo);
+		if (myData->ass) myData->ass->SetDefaultFontOutline(fo);
 	}
 	else if (strcmp(propName, "assDefaultBackground") == 0) {
-		OfxRGBAColourB fb;
-		gParamHost->paramGetValue(myData->assDefaultFontColor, &fb.r, &fb.g, &fb.b, &fb.a);
-		RGBA dfb = { fb.r, fb.g, fb.b, fb.a };
-		if (myData->ass) myData->ass->SetDefaultFontBG(dfb);
+		RGBAColourD fb = { 0, 0, 0, 1 };
+		if (myData->ass) myData->ass->SetDefaultFontBG(fb);
 	}
 	else if (strcmp(propName, "assUseMargin") == 0) {
 		int used_margin = 0;
@@ -1112,34 +1106,6 @@ static OfxStatus render(OfxImageEffectHandle instance,
 
 		if(myData->ass)
 			myData->ass->GetAss((double)time, renderWindow.x2 - renderWindow.x1, renderWindow.y2 - renderWindow.y1, colorDepth, dstPtr);
-
-		//ASS_Image *img = NULL;
-		////auto ASS_Image *img = NULL;
-
-		//AssRender* ass = NULL;
-		//if (myData->ass && abs(time - myData->ass->last_time) > 0) {
-		//	img = myData->ass->GetAss((double)time, renderWindow.x2 - renderWindow.x1, renderWindow.y2 - renderWindow.y1);
-		//}
-
-
-		//while (img) {
-		//	if ((__int64)img >= 0xcccccccccccc0000) break;
-		//	if (img->w <= 0 || img->h <= 0 || img->w > 8192 || img->h > 8192) {
-		//		img = img->next;
-		//		continue;
-		//	}
-
-		//	blend_frame(instance, img, renderWindow, dstPtr, dstRect, dstRowBytes);
-
-		//	if (img->next && (__int64)img->next < 0xcccccccccccc0000) {
-		//		if (!img->next->w || !img->next->h) break;
-		//		if ((__int64)img->next->w > 0xcccccccccccc0000 ||
-		//			(__int64)img->next->h > 0xcccccccccccc0000) break;
-		//	}
-		//	else break;
-		//	img = img->next;
-		//}
-		//img = NULL;
 	}
 	catch (NoImageEx &) {
 		// if we were interrupted, the failed fetch is fine, just return kOfxStatOK

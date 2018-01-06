@@ -11,7 +11,7 @@
 #include <stdarg.h>
 #include <string.h>
 #include <mbstring.h>
-
+#include <math.h>
 #include <png.h>
 
 #include <iconv.h>
@@ -71,6 +71,17 @@ int utf2gbk(char *buf, size_t len)
 	strcpy_s(buf, MAX_PATH, tmp_str);
 	iconv_close(cd);
 	return 0;
+}
+
+inline
+unsigned char d2b(double value)
+{
+	return (unsigned char)floor(value);
+}
+
+RGBA color_d2b(RGBAColourD color)
+{
+	return{ d2b(color.r * 256), d2b(color.g * 256), d2b(color.b * 256), d2b(color.a * 256) };
 }
 
 void msg_callback(int level, const char *fmt, va_list args, void *) {
@@ -316,15 +327,31 @@ bool AssRender::SetDefaultFontColor(RGBA color)
 	return true;
 }
 
+bool AssRender::SetDefaultFontColor(RGBAColourD color)
+{
+	return SetDefaultFontColor(color_d2b(color));
+}
+
 bool AssRender::SetDefaultFontOutline(RGBA color)
 {
 	default_fontoutline = color;
 	return true;
 }
 
+bool AssRender::SetDefaultFontOutline(RGBAColourD color)
+{
+	return SetDefaultFontOutline(color_d2b(color));
+}
+
 bool AssRender::SetDefaultFontBG(RGBA color)
 {
 	default_fontbg = color;
+	return false;
+}
+
+bool AssRender::SetDefaultFontBG(RGBAColourD color)
+{
+	return SetDefaultFontBG(color_d2b(color));
 	return false;
 }
 

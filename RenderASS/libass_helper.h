@@ -39,6 +39,9 @@ extern "C" {
 
 extern TCHAR cur_dll_path[MAX_PATH];
 
+typedef struct RGBAColourD {
+	double r, g, b, a;
+}RGBAColourD;
 
 typedef struct RGBA {
 	unsigned char r, g, b, a;
@@ -55,6 +58,8 @@ char* w2c(const wchar_t* wsp);
 char* w2c(const std::wstring ws);
 int utf2gbk(char *buf, size_t len);
 
+unsigned char d2b(double);
+RGBA color_d2b(RGBAColourD color);
 //
 class ASS_Image_List {
 public:
@@ -91,9 +96,9 @@ private:
 
 	char default_fontname[512];
 	int default_fontsize = 24;
-	RGBA default_fontcolor = { 0,0,0,0 };
-	RGBA default_fontoutline = { 0,0,0,0 };
-	RGBA default_fontbg = { 0,0,0,0 };
+	RGBA default_fontcolor = { 0,0,0,255 };
+	RGBA default_fontoutline = { 0,0,0,255 };
+	RGBA default_fontbg = { 0,0,0,255 };
 
 	int margin = 0;
 	double margin_t = 0, margin_b = 0, margin_l = 0, margin_r = 0;
@@ -117,8 +122,11 @@ public:
 	bool __stdcall SetDefaultFontName(const char * fontname);
 	bool __stdcall SetDefaultFontSize(int fontsize);
 	bool __stdcall SetDefaultFontColor(RGBA color);
+	bool __stdcall SetDefaultFontColor(RGBAColourD color);
 	bool __stdcall SetDefaultFontOutline(RGBA color);
+	bool __stdcall SetDefaultFontOutline(RGBAColourD color);
 	bool __stdcall SetDefaultFontBG(RGBA color);
+	bool __stdcall SetDefaultFontBG(RGBAColourD color);
 
 	bool __stdcall SetSpace(int pixels);
 	bool __stdcall SetSpace(double percentage);

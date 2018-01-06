@@ -126,8 +126,7 @@ copy /Y "$(TargetPath)" /B "$(OutDir)$(ProjectName).ofx.bundle\Contents\$(Platfo
       <ExceptionHandling>Sync</ExceptionHandling>
       <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
-      <StringPooling>
-      </StringPooling>
+      <StringPooling>true</StringPooling>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
     </ClCompile>
     <Link>
@@ -185,7 +184,9 @@ copy /Y "$(TargetPath)" /B "$(OutDir)$(ProjectName).ofx.bundle\Contents\$(Platfo
       <AdditionalIncludeDirectories>$(SolutionDir)..\libass-msvc\libass-0.14.0\libass\;$(SolutionDir)..\libass-msvc\freetype-2.6.1\include;$(SolutionDir)..\openfx-master\Include;D:\develop\lib\Image\libpng140b106\;D:\develop\lib\zlib-1.2.5-dll\include;$(SolutionDir)..\libass-msvc\libiconv-1.15-msvc\iconv;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
       <ExceptionHandling>Async</ExceptionHandling>
-      <DisableSpecificWarnings>C4819</DisableSpecificWarnings>
+      <DisableSpecificWarnings>
+      </DisableSpecificWarnings>
+      <StringPooling>true</StringPooling>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

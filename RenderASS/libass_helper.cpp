@@ -528,8 +528,8 @@ bool AssRender::LoadAss(const char * assfile, const char *_charset)
 	else {
 		//ass_process_force_style(at);
 		//resize_read_order_bitmap(at, 8192);
-		for (int i = 0; i < 2000; i++)
-			GetAss((double)i, renderWidth, renderHeight);
+		//for (int i = 0; i < 2000; i++)
+		//	GetAss((double)i, renderWidth, renderHeight);
 
 		return true;
 	}

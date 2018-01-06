@@ -33,7 +33,7 @@ The main features are
 #  error Not building on your operating system quite yet
 #endif
 
-//#include "common_ofx.h"
+#include "common_ofx.h"
 
 //#include <ass.h>
 #include "libass_helper.h"
@@ -51,40 +51,6 @@ OfxInteractSuiteV1    *gInteractHost = 0;
 // some flags about the host's behaviour
 int gHostSupportsMultipleBitDepths = false;
 
-enum ContextEnum {
-	eIsGenerator,
-	eIsFilter,
-	eIsGeneral
-};
-// private instance data type
-struct MyInstanceData {
-	ContextEnum context;
-
-	// handles to the clips we deal with
-	OfxImageClipHandle sourceClip;
-	OfxImageClipHandle outputClip;
-
-	// handles to a our parameters
-	AssRender * ass;
-
-	OfxParamHandle assFileName;
-
-	OfxParamHandle assUseMargin;
-	OfxParamHandle assMarginT;
-	OfxParamHandle assMarginB;
-	OfxParamHandle assMarginL;
-	OfxParamHandle assMarginR;
-	OfxParamHandle assSpace;
-	OfxParamHandle assPosition;
-	OfxParamHandle assFontScale;
-	OfxParamHandle assFontHints;
-
-	OfxParamHandle assDefaultFontName;
-	OfxParamHandle assDefaultFontSize;
-	OfxParamHandle assDefaultFontColor;
-	OfxParamHandle assDefaultFontOutline;
-	OfxParamHandle assDefaultBackground;
-};
 
 /* mandatory function to set up the host structures */
 

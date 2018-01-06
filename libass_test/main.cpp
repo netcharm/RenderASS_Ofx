@@ -42,7 +42,7 @@ typedef struct OfxRectI {
 void generateBitmapImage(const unsigned char *image, int height, int width, char* imageFileName);
 unsigned char* createBitmapFileHeader(int height, int width);
 unsigned char* createBitmapInfoHeader(int height, int width);
-
+void changePixelColorOrder(const unsigned char *image, int height, int width);
 
 void generateBitmapImage(const unsigned char *image, int height, int width, char* imageFileName) {
 
@@ -115,6 +115,33 @@ unsigned char* createBitmapInfoHeader(int height, int width) {
 	return infoHeader;
 }
 
+void changePixelColorOrder(const unsigned char *image, int height, int width) {
+	int dstRowBytes = width*bDepth;
+
+	OfxRGBAColourB *dst = (OfxRGBAColourB *)image;
+	for (int y = 0; y < height; y++) {
+		for (int x = 0; x < width; x++) {
+			try
+			{
+				unsigned int a = dst->a;
+				unsigned int r = dst->r;
+				unsigned int g = dst->g;
+				unsigned int b = dst->b;
+
+				dst->a = a; ///alpha
+				dst->r = b; ///red
+				dst->g = g; ///green
+				dst->b = r; ///blue				
+			}
+			catch (const std::exception&)
+			{
+
+			}
+			dst++;
+		}
+	}
+}
+
 // look up a pixel in the image, does bounds checking to see if it is in the image rectangle
 inline OfxRGBAColourB *
 pixelAddress(OfxRGBAColourB *img, OfxRectI rect, int x, int y, int bytesPerLine)
@@ -174,6 +201,12 @@ bool blend_image(ASS_Image* img, const void* image) {
 					dstPix->g = (unsigned char)((ak*g + sk*dstPix->g) / 255); ///green
 					dstPix->b = (unsigned char)((ak*b + sk*dstPix->b) / 255); ///blue				
 				}
+				else {
+					dstPix->a = 0x00; ///alpha
+					dstPix->r = 0x00; ///red
+					dstPix->g = 0x00; ///green
+					dstPix->b = 0x00; ///blue				
+				}
 			}
 			catch (const std::exception&)
 			{
@@ -207,7 +240,7 @@ int main(int args, char** argv) {
 
 		for (int h = 0; h<bHeight; h++) {
 			for (int w = 0; w<bWidth; w++) {
-				image->a = 0xFF; ///alpha
+				image->a = 0x00; ///alpha
 				image->r = 0x00; ///red
 				image->g = 0x00; ///green
 				image->b = 0x00; ///blue
@@ -217,36 +250,10 @@ int main(int args, char** argv) {
 
 		int c = ass->GetAss((double)i, bWidth, bHeight, bDepth, buf);
 
-		//ASS_Image* img = NULL;
-		//img = ass->GetAss((double)i, bWidth, bHeight);
-
-		//int c = 0;
-		//while(img) {
-		//	if ((__int64)img >= 0xcccccccccccc0000) break;
-		//	if (img->w <= 0 || img->h <= 0 || img->w > 8192 || img->h > 8192) {
-		//		img = img->next;
-		//		continue;
-		//	}
-
-		//	blend_image(img, buf);
-
-		//	char fName[32] = "";
-		//	sprintf(fName, "Get ASS Frame %06d...", i + 1);
-		//	std::cout << fName << std::endl;
-
-		//	if (img->next && (__int64)img->next < 0xcccccccccccc0000) {
-		//		if (!img->next->w || !img->next->h) break;
-		//		if ((__int64)img->next->w > 0xcccccccccccc0000 ||
-		//			(__int64)img->next->h > 0xcccccccccccc0000) break;
-		//	}
-		//	else break;
-		//	img = img->next;
-		//	c++;
-		//}
-		//img = NULL;
 		if (c > 0) {
 			char bName[MAX_PATH] = "";
 			sprintf(bName, "ass_%06d_%02d.bmp", i + 1, c);
+			changePixelColorOrder((unsigned char *)buf, bHeight, bWidth);
 			generateBitmapImage((unsigned char *)buf, bHeight, bWidth, bName);
 		}
 	}

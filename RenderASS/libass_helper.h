@@ -81,14 +81,19 @@ private:
 	char ass_file[MAX_PATH];
 	char fontconf[MAX_PATH];
 
-	double fps = 29.970;
+	double fps = 0;
 	int renderWidth = 0;
 	int renderHeight = 0;
 	int renderDepth = 0;
 
-	char default_fontname[512];
-	double fontscale = 1.0;
 	ASS_Hinting fonthinting = ASS_HINTING_NONE;
+	double fontscale = 1.0;
+
+	char default_fontname[512];
+	int default_fontsize = 24;
+	RGBA default_fontcolor = { 0,0,0,0 };
+	RGBA default_fontoutline = { 0,0,0,0 };
+	RGBA default_fontbg = { 0,0,0,0 };
 
 	int margin = 0;
 	double margin_t = 0, margin_b = 0, margin_l = 0, margin_r = 0;
@@ -109,6 +114,12 @@ public:
 	bool __stdcall SetHints(ASS_Hinting hints);
 
 	bool __stdcall SetDefaultFont(const char * fontname, int fontsize);
+	bool __stdcall SetDefaultFontName(const char * fontname);
+	bool __stdcall SetDefaultFontSize(int fontsize);
+	bool __stdcall SetDefaultFontColor(RGBA color);
+	bool __stdcall SetDefaultFontOutline(RGBA color);
+	bool __stdcall SetDefaultFontBG(RGBA color);
+
 	bool __stdcall SetSpace(int pixels);
 	bool __stdcall SetSpace(double percentage);
 	bool __stdcall SetPosition(int pixels);

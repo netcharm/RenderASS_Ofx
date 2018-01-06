@@ -35,9 +35,6 @@ The main features are
 #include <ass.h>
 #include "libass_helper.h"
 
-AssRender *ass;
-
-
 // pointers to various bits of the host
 OfxHost               *gHost;
 OfxImageEffectSuiteV1 *gEffectHost = 0;
@@ -88,7 +85,6 @@ struct MyInstanceData {
 
 /* mandatory function to set up the host structures */
 
-
 // Convinience wrapper to get private data 
 static MyInstanceData *
 getMyInstanceData(OfxImageEffectHandle effect)
@@ -97,15 +93,168 @@ getMyInstanceData(OfxImageEffectHandle effect)
 	return myData;
 }
 
+static MyInstanceData *
+getMyInstanceParam(OfxImageEffectHandle effect) {
+
+	// get a pointer to the effect properties
+	OfxPropertySetHandle effectProps;
+	gEffectHost->getPropertySet(effect, &effectProps);
+
+	// get a pointer to the effect's parameter set
+	OfxParamSetHandle paramSet;
+	gEffectHost->getParamSet(effect, &paramSet);
+
+	// get the parameter from the parameter set
+	OfxParamHandle param;
+
+	MyInstanceData *myData = new MyInstanceData;
+
+	myData->ass = new AssRender(ASS_HINTING_NONE, 1.0, "UTF-8");
+
+	// cache away param handles
+	char *str_ass;
+	gParamHost->paramGetHandle(paramSet, "assFileName", &param, 0);
+	gParamHost->paramGetValue(param, &str_ass);
+	myData->ass->LoadAss(str_ass, "UTF-8");
+	gParamHost->paramGetHandle(paramSet, "assFileName", &myData->assFileName, 0);
+
+	gParamHost->paramGetHandle(paramSet, "assDefaultFontName", &param, 0);
+	char* str_fontname;
+	gParamHost->paramGetValue(param, &str_fontname);
+	gParamHost->paramGetHandle(paramSet, "assDefaultFontSize", &param, 0);
+	int fontsize = 24;
+	gParamHost->paramGetValue(param, &fontsize);
+
+	if (myData->ass && fontsize<256) {
+		myData->ass->SetDefaultFont(str_fontname, fontsize);
+	}
+	gParamHost->paramGetHandle(paramSet, "assDefaultFontName", &myData->assDefaultFontName, 0);
+	gParamHost->paramGetHandle(paramSet, "assDefaultFontSize", &myData->assDefaultFontSize, 0);
+
+
+	gParamHost->paramGetHandle(paramSet, "assDefaultFontColor", &param, 0);
+	OfxRGBAColourB fc;
+	gParamHost->paramGetValue(param, &fc.r, &fc.g, &fc.b, &fc.a);
+	gParamHost->paramGetHandle(paramSet, "assDefaultFontColor", &myData->assDefaultFontColor, 0);
+	RGBA dfc = { fc.r, fc.g, fc.b, fc.a };
+	if (myData->ass) myData->ass->SetDefaultFontColor(dfc);
+
+	gParamHost->paramGetHandle(paramSet, "assDefaultFontOutline", &param, 0);
+	OfxRGBAColourB fo;
+	gParamHost->paramGetValue(param, &fo.r, &fo.g, &fo.b, &fo.a);
+	gParamHost->paramGetHandle(paramSet, "assDefaultFontOutline", &myData->assDefaultFontOutline, 0);
+	RGBA dfo = { fo.r, fo.g, fo.b, fo.a };
+	if (myData->ass) myData->ass->SetDefaultFontOutline(dfo);
+
+	gParamHost->paramGetHandle(paramSet, "assDefaultBackground", &param, 0);
+	OfxRGBAColourB fb;
+	gParamHost->paramGetValue(param, &fb.r, &fb.g, &fb.b, &fb.a);
+	gParamHost->paramGetHandle(paramSet, "assDefaultBackground", &myData->assDefaultBackground, 0);
+	RGBA dfb = { fb.r, fb.g, fb.b, fb.a };
+	if (myData->ass) myData->ass->SetDefaultFontOutline(dfb);
+
+
+	gParamHost->paramGetHandle(paramSet, "assUseMargin", &param, 0);
+	int margin_enabled = 0;
+	gParamHost->paramGetValue(param, &margin_enabled);
+	if (myData->ass) myData->ass->SetMargin(margin_enabled);
+	gParamHost->paramGetHandle(paramSet, "assMarginT", &param, 0);
+	double margin_t = 0.0;
+	gParamHost->paramGetValue(param, &margin_t);
+	gParamHost->paramGetHandle(paramSet, "assMarginB", &param, 0);
+	double margin_b = 0.0;
+	gParamHost->paramGetValue(param, &margin_b);
+	gParamHost->paramGetHandle(paramSet, "assMarginL", &param, 0);
+	double margin_l = 0.0;
+	gParamHost->paramGetValue(param, &margin_l);
+	gParamHost->paramGetHandle(paramSet, "assMarginR", &param, 0);
+	double margin_r = 0.0;
+	gParamHost->paramGetValue(param, &margin_r);
+	if (myData->ass) myData->ass->SetMargin(margin_t, margin_b, margin_l, margin_r);
+
+	gParamHost->paramGetHandle(paramSet, "assUseMargin", &myData->assUseMargin, 0);
+	gParamHost->paramGetHandle(paramSet, "assMarginT", &myData->assMarginT, 0);
+	gParamHost->paramGetHandle(paramSet, "assMarginB", &myData->assMarginB, 0);
+	gParamHost->paramGetHandle(paramSet, "assMarginL", &myData->assMarginL, 0);
+	gParamHost->paramGetHandle(paramSet, "assMarginR", &myData->assMarginR, 0);
+
+
+	gParamHost->paramGetHandle(paramSet, "assSpace", &param, 0);
+	double spacing = 0.0;
+	gParamHost->paramGetValue(param, &spacing);
+	if (myData->ass) myData->ass->SetSpace(spacing);
+	gParamHost->paramGetHandle(paramSet, "assSpace", &myData->assSpace, 0);
+
+	gParamHost->paramGetHandle(paramSet, "assPosition", &param, 0); 
+	double position = 0.0;
+	gParamHost->paramGetValue(param, &position);
+	if (myData->ass) myData->ass->SetSpace(position);
+	gParamHost->paramGetHandle(paramSet, "assPosition", &myData->assPosition, 0);
+
+
+	gParamHost->paramGetHandle(paramSet, "assFontScale", &param, 0);
+	double scale = 1.0;
+	gParamHost->paramGetValue(param, &scale);
+	if (myData->ass) myData->ass->SetSpace(scale);
+	gParamHost->paramGetHandle(paramSet, "assFontScale", &myData->assFontScale, 0);
+
+	gParamHost->paramGetHandle(paramSet, "assFontHints", &param, 0);
+	int hints = 0;
+	gParamHost->paramGetValue(param, &position);
+	if (myData->ass) {
+		switch (hints)
+		{
+		case 1:
+			myData->ass->SetHints(ASS_HINTING_LIGHT);
+			break;
+		case 2:
+			myData->ass->SetHints(ASS_HINTING_NORMAL);
+			break;
+		case 3:
+			myData->ass->SetHints(ASS_HINTING_NATIVE);
+			break;
+		default:
+			myData->ass->SetHints(ASS_HINTING_NONE);
+			break;
+		}
+	}
+	gParamHost->paramGetHandle(paramSet, "assFontHints", &myData->assFontHints, 0);
+
+	char *context = 0;
+
+	// is this instance a general effect ?
+	gPropHost->propGetString(effectProps, kOfxImageEffectPropContext, 0, &context);
+	if (strcmp(context, kOfxImageEffectContextGenerator) == 0) {
+		myData->context = eIsGenerator;
+	}
+	else if (strcmp(context, kOfxImageEffectContextFilter) == 0) {
+		myData->context = eIsFilter;
+	}
+	else {
+		myData->context = eIsGeneral;
+	}
+
+	// cache away clip handles
+	if (myData->context != eIsGenerator)
+		gEffectHost->clipGetHandle(effect, kOfxImageEffectSimpleSourceClipName, &myData->sourceClip, 0);
+	else
+		myData->sourceClip = NULL;
+
+	gEffectHost->clipGetHandle(effect, kOfxImageEffectOutputClipName, &myData->outputClip, 0);
+
+	return myData;
+}
 
 static double 
 getFrameRate(OfxImageEffectHandle effect, OfxImageClipHandle clip)
 {
 	OfxPropertySetHandle props;
 	gEffectHost->clipGetPropertySet(clip, &props);
-	double fps = 30.000;
+	double fps = 0;
 	gPropHost->propGetDouble(props, kOfxImageEffectPropFrameRate, 0, &fps);
-	if(ass) ass->SetFPS(fps);
+
+	MyInstanceData *myData = getMyInstanceData(effect);
+	if(myData && myData->ass) myData->ass->SetFPS(fps);
 	return(fps);
 }
 /** @brief Called at load */
@@ -123,9 +272,9 @@ onLoad(void)
 	if (!gEffectHost || !gPropHost)
 		return kOfxStatErrMissingHostFeature;
 
-	if (ass == NULL) {
-		ass = new AssRender(ASS_HINTING_NONE, 1.0, "UTF-8");
-	}
+	//if (myData->ass == NULL) {
+	//	ass = new AssRender(ASS_HINTING_NONE, 1.0, "UTF-8");
+	//}
 
 	return kOfxStatOK;
 }
@@ -134,9 +283,9 @@ onLoad(void)
 static OfxStatus
 onUnLoad(void)
 {
-	if (ass != NULL) {
-		ass->~AssRender();
-	}
+	//if (myData->ass != NULL) {
+	//	myData->ass->~AssRender();
+	//}
 	return kOfxStatOK;
 }
 
@@ -152,69 +301,66 @@ createInstance(OfxImageEffectHandle effect)
 	OfxParamSetHandle paramSet;
 	gEffectHost->getParamSet(effect, &paramSet);
 
+	//// get the parameter from the parameter set
+	//OfxParamHandle param;
+	//gParamHost->paramGetHandle(paramSet, "assFileName", &param, NULL);
+
+	//// get my custom param's raw value
+	//char *str = 0;
+	//gParamHost->paramGetValue(param, &str);
+
 	// make my private instance data
-	MyInstanceData *myData = new MyInstanceData;
-	char *context = 0;
+	MyInstanceData *myData = getMyInstanceParam(effect);
 
-	// is this instance a general effect ?
-	gPropHost->propGetString(effectProps, kOfxImageEffectPropContext, 0, &context);
-	if (strcmp(context, kOfxImageEffectContextGenerator) == 0) {
-		myData->context = eIsGenerator;
-	}
-	else if (strcmp(context, kOfxImageEffectContextFilter) == 0) {
-		myData->context = eIsFilter;
-	}
-	else {
-		myData->context = eIsGeneral;
-	}
-	myData->ass = ass;
+	//MyInstanceData *myData = new MyInstanceData;
+	//char *context = 0;
 
-	// cache away param handles
-	gParamHost->paramGetHandle(paramSet, "assFileName", &myData->assFileName, 0);
+	//// is this instance a general effect ?
+	//gPropHost->propGetString(effectProps, kOfxImageEffectPropContext, 0, &context);
+	//if (strcmp(context, kOfxImageEffectContextGenerator) == 0) {
+	//	myData->context = eIsGenerator;
+	//}
+	//else if (strcmp(context, kOfxImageEffectContextFilter) == 0) {
+	//	myData->context = eIsFilter;
+	//}
+	//else {
+	//	myData->context = eIsGeneral;
+	//}
+	//if (myDataOld) 
+	//	myData->ass = myDataOld->ass;
+	//else
+	//	myData->ass = new AssRender(ASS_HINTING_NONE, 1.0, "UTF-8");
 
-	gParamHost->paramGetHandle(paramSet, "assDefaultFontName", &myData->assDefaultFontName, 0);
-	gParamHost->paramGetHandle(paramSet, "assDefaultFontSize", &myData->assDefaultFontSize, 0);
-	gParamHost->paramGetHandle(paramSet, "assDefaultFontColor", &myData->assDefaultFontColor, 0);
-	gParamHost->paramGetHandle(paramSet, "assDefaultFontOutline", &myData->assDefaultFontOutline, 0);
-	gParamHost->paramGetHandle(paramSet, "assDefaultBackground", &myData->assDefaultBackground, 0);
+	//// cache away param handles
+	//gParamHost->paramGetHandle(paramSet, "assFileName", &myData->assFileName, 0);
 
-	gParamHost->paramGetHandle(paramSet, "assFontScale", &myData->assFontScale, 0);
-	gParamHost->paramGetHandle(paramSet, "assFontHints", &myData->assFontHints, 0);
+	//gParamHost->paramGetHandle(paramSet, "assDefaultFontName", &myData->assDefaultFontName, 0);
+	//gParamHost->paramGetHandle(paramSet, "assDefaultFontSize", &myData->assDefaultFontSize, 0);
+	//gParamHost->paramGetHandle(paramSet, "assDefaultFontColor", &myData->assDefaultFontColor, 0);
+	//gParamHost->paramGetHandle(paramSet, "assDefaultFontOutline", &myData->assDefaultFontOutline, 0);
+	//gParamHost->paramGetHandle(paramSet, "assDefaultBackground", &myData->assDefaultBackground, 0);
 
-	gParamHost->paramGetHandle(paramSet, "assUseMargin", &myData->assUseMargin, 0);
-	gParamHost->paramGetHandle(paramSet, "assMarginT", &myData->assMarginT, 0);
-	gParamHost->paramGetHandle(paramSet, "assMarginB", &myData->assMarginB, 0);
-	gParamHost->paramGetHandle(paramSet, "assMarginL", &myData->assMarginL, 0);
-	gParamHost->paramGetHandle(paramSet, "assMarginR", &myData->assMarginR, 0);
-	gParamHost->paramGetHandle(paramSet, "assSpace", &myData->assSpace, 0);
-	gParamHost->paramGetHandle(paramSet, "assPosition", &myData->assPosition, 0);
+	//gParamHost->paramGetHandle(paramSet, "assFontScale", &myData->assFontScale, 0);
+	//gParamHost->paramGetHandle(paramSet, "assFontHints", &myData->assFontHints, 0);
 
-	// cache away clip handles
-	if (myData->context != eIsGenerator)
-		gEffectHost->clipGetHandle(effect, kOfxImageEffectSimpleSourceClipName, &myData->sourceClip, 0);
-	else
-		myData->sourceClip = NULL;
+	//gParamHost->paramGetHandle(paramSet, "assUseMargin", &myData->assUseMargin, 0);
+	//gParamHost->paramGetHandle(paramSet, "assMarginT", &myData->assMarginT, 0);
+	//gParamHost->paramGetHandle(paramSet, "assMarginB", &myData->assMarginB, 0);
+	//gParamHost->paramGetHandle(paramSet, "assMarginL", &myData->assMarginL, 0);
+	//gParamHost->paramGetHandle(paramSet, "assMarginR", &myData->assMarginR, 0);
+	//gParamHost->paramGetHandle(paramSet, "assSpace", &myData->assSpace, 0);
+	//gParamHost->paramGetHandle(paramSet, "assPosition", &myData->assPosition, 0);
 
-	gEffectHost->clipGetHandle(effect, kOfxImageEffectOutputClipName, &myData->outputClip, 0);
+	//// cache away clip handles
+	//if (myData->context != eIsGenerator)
+	//	gEffectHost->clipGetHandle(effect, kOfxImageEffectSimpleSourceClipName, &myData->sourceClip, 0);
+	//else
+	//	myData->sourceClip = NULL;
+
+	//gEffectHost->clipGetHandle(effect, kOfxImageEffectOutputClipName, &myData->outputClip, 0);
 
 	// set my private instance data
 	ofxuSetEffectInstanceData(effect, (void *)myData);
-
-	//char* boundle;
-	//gPropHost->propGetString(effectProps, kOfxPluginPropFilePath, 0, &boundle);
-
-	//int fps = 0;
-	//gPropHost->propGetInt(effectProps, kOfxImageEffectPropFrameRate, 0, &fps);
-
-	//int ufps = 0;
-	//gPropHost->propGetInt(effectProps, kOfxImageEffectPropUnmappedFrameRate, 0, &ufps);
-
-	//int sfps = 0;
-	//gPropHost->propGetInt(effectProps, kOfxImageEffectPropSetableFrameRate, 0, &sfps);
-
-	//if (ass == NULL) {
-	//	ass = new AssRender(ASS_HINTING_NONE, 1.0, "UTF-8");
-	//}
 
 	return kOfxStatOK;
 }
@@ -244,8 +390,8 @@ instanceChanged(OfxImageEffectHandle effect,
 		//memset(fn, 0, MAX_PATH);
 		char *fn;
 		gParamHost->paramGetValue(myData->assFileName, &fn);
-		if (ass != NULL && fn[0] != 0) {
-			ass->LoadAss(fn, "UTF-8");
+		if (myData->ass && fn[0] != 0) {
+			myData->ass->LoadAss(fn, "UTF-8");
 		}
 	}
 	else if (strcmp(propName, "assDefaultFontName") == 0) {
@@ -253,12 +399,12 @@ instanceChanged(OfxImageEffectHandle effect,
 		gParamHost->paramGetValue(myData->assDefaultFontName, &fontname);
 		try
 		{
-			if (ass != NULL) {
+			if (myData->ass) {
 				char fn[512];
 				memset(fn, 0, 512);
 				strcpy_s(fn, fontname);
 				utf2gbk(fn, strlen(fontname));
-				ass->SetDefaultFont(fn, 24);
+				myData->ass->SetDefaultFont(fn, 24);
 			}
 		}
 		catch (const std::exception&)
@@ -269,12 +415,30 @@ instanceChanged(OfxImageEffectHandle effect,
 	else if (strcmp(propName, "assDefaultFontSize") == 0) {
 		int fsize = 0;
 		gParamHost->paramGetValue(myData->assDefaultFontSize, &fsize);
-		int dstfsize = fsize;
+		if (myData->ass) myData->ass->SetDefaultFontSize(fsize);
+	}
+	else if (strcmp(propName, "assDefaultFontColor") == 0) {
+		OfxRGBAColourB fc;
+		gParamHost->paramGetValue(myData->assDefaultFontColor, &fc.r, &fc.g, &fc.b, &fc.a);
+		RGBA dfc = { fc.r, fc.g, fc.b, fc.a };
+		if (myData->ass) myData->ass->SetDefaultFontColor(dfc);
+	}
+	else if (strcmp(propName, "assDefaultFontOutline") == 0) {
+		OfxRGBAColourB fo;
+		gParamHost->paramGetValue(myData->assDefaultFontColor, &fo.r, &fo.g, &fo.b, &fo.a);
+		RGBA dfo = { fo.r, fo.g, fo.b, fo.a };
+		if (myData->ass) myData->ass->SetDefaultFontOutline(dfo);
+	}
+	else if (strcmp(propName, "assDefaultBackground") == 0) {
+		OfxRGBAColourB fb;
+		gParamHost->paramGetValue(myData->assDefaultFontColor, &fb.r, &fb.g, &fb.b, &fb.a);
+		RGBA dfb = { fb.r, fb.g, fb.b, fb.a };
+		if (myData->ass) myData->ass->SetDefaultFontBG(dfb);
 	}
 	else if (strcmp(propName, "assUseMargin") == 0) {
 		int used_margin = 0;
 		gParamHost->paramGetValue(myData->assUseMargin, &used_margin);
-		if (ass) ass->SetMargin(used_margin);
+		if (myData->ass) myData->ass->SetMargin(used_margin);
 	}
 	else if (strcmp(propName, "assMarginT") == 0) {
 		double margin_t = 0, margin_b = 0, margin_l = 0, margin_r = 0;
@@ -282,7 +446,7 @@ instanceChanged(OfxImageEffectHandle effect,
 		gParamHost->paramGetValue(myData->assMarginB, &margin_b);
 		gParamHost->paramGetValue(myData->assMarginL, &margin_l);
 		gParamHost->paramGetValue(myData->assMarginR, &margin_r);
-		if (ass) ass->SetMargin(margin_t, margin_b, margin_l, margin_r);
+		if (myData->ass) myData->ass->SetMargin(margin_t, margin_b, margin_l, margin_r);
 	}
 	else if (strcmp(propName, "assMarginB") == 0) {
 		double margin_t = 0, margin_b = 0, margin_l = 0, margin_r = 0;
@@ -290,7 +454,7 @@ instanceChanged(OfxImageEffectHandle effect,
 		gParamHost->paramGetValue(myData->assMarginB, &margin_b);
 		gParamHost->paramGetValue(myData->assMarginL, &margin_l);
 		gParamHost->paramGetValue(myData->assMarginR, &margin_r);
-		if (ass) ass->SetMargin(margin_t, margin_b, margin_l, margin_r);
+		if (myData->ass) myData->ass->SetMargin(margin_t, margin_b, margin_l, margin_r);
 	}
 	else if (strcmp(propName, "assMarginL") == 0) {
 		double margin_t = 0, margin_b = 0, margin_l = 0, margin_r = 0;
@@ -298,7 +462,7 @@ instanceChanged(OfxImageEffectHandle effect,
 		gParamHost->paramGetValue(myData->assMarginB, &margin_b);
 		gParamHost->paramGetValue(myData->assMarginL, &margin_l);
 		gParamHost->paramGetValue(myData->assMarginR, &margin_r);
-		if (ass) ass->SetMargin(margin_t, margin_b, margin_l, margin_r);
+		if (myData->ass) myData->ass->SetMargin(margin_t, margin_b, margin_l, margin_r);
 	}
 	else if (strcmp(propName, "assMarginR") == 0) {
 		double margin_t = 0, margin_b = 0, margin_l = 0, margin_r = 0;
@@ -306,40 +470,40 @@ instanceChanged(OfxImageEffectHandle effect,
 		gParamHost->paramGetValue(myData->assMarginB, &margin_b);
 		gParamHost->paramGetValue(myData->assMarginL, &margin_l);
 		gParamHost->paramGetValue(myData->assMarginR, &margin_r);
-		if (ass) ass->SetMargin(margin_t, margin_b, margin_l, margin_r);
+		if (myData->ass) myData->ass->SetMargin(margin_t, margin_b, margin_l, margin_r);
 	}
 	else if (strcmp(propName, "assSpace") == 0) {
 		double spacing = 0;
 		gParamHost->paramGetValue(myData->assSpace, &spacing);
-		if (ass) ass->SetSpace(spacing);
+		if (myData->ass) myData->ass->SetSpace(spacing);
 	}
 	else if (strcmp(propName, "assPosition") == 0) {
 		double position = 0;
 		gParamHost->paramGetValue(myData->assPosition, &position);
-		if (ass) ass->SetSpace(position);
+		if (myData->ass) myData->ass->SetSpace(position);
 	}
 	else if (strcmp(propName, "assFontScale") == 0) {
 		double scale = 1.0;
 		gParamHost->paramGetValue(myData->assFontScale, &scale);
-		if (ass) ass->SetSpace(scale);
+		if (myData->ass) myData->ass->SetSpace(scale);
 	}
 	else if (strcmp(propName, "assFontHints") == 0) {
 		int hints = 0;
 		gParamHost->paramGetValue(myData->assFontHints, &hints);
-		if (ass) {
+		if (myData->ass) {
 			switch (hints)
 			{
 			case 1:
-				ass->SetHints(ASS_HINTING_LIGHT);
+				myData->ass->SetHints(ASS_HINTING_LIGHT);
 				break;
 			case 2:
-				ass->SetHints(ASS_HINTING_NORMAL);
+				myData->ass->SetHints(ASS_HINTING_NORMAL);
 				break;
 			case 3:
-				ass->SetHints(ASS_HINTING_NATIVE);
+				myData->ass->SetHints(ASS_HINTING_NATIVE);
 				break;
 			default:
-				ass->SetHints(ASS_HINTING_NONE);
+				myData->ass->SetHints(ASS_HINTING_NONE);
 				break;
 			}
 		}
@@ -356,8 +520,11 @@ destroyInstance(OfxImageEffectHandle effect)
 	MyInstanceData *myData = getMyInstanceData(effect);
 
 	// and delete it
-	if (myData)
+	if (myData) {
+		//if (myData->ass) delete myData->ass;
 		delete myData;
+	}
+
 	return kOfxStatOK;
 }
 
@@ -702,7 +869,7 @@ isIdentity(OfxImageEffectHandle effect,
 		gPropHost->propGetDouble(inArgs, kOfxPropTime, 0, &time);
 		gPropHost->propGetIntN(inArgs, kOfxImageEffectPropRenderWindow, 4, &renderWindow.x1);
 
-		if (ass) ass->Resize(renderWindow.x2 - renderWindow.x1, renderWindow.y2 - renderWindow.y1);
+		if (myData->ass) myData->ass->Resize(renderWindow.x2 - renderWindow.x1, renderWindow.y2 - renderWindow.y1);
 
 		return kOfxStatOK;
 	}
@@ -734,7 +901,7 @@ getClipPreferences(OfxImageEffectHandle effect, OfxPropertySetHandle inArgs, Ofx
 		//gPropHost->propGetDouble(props, kOfxImageEffectPropFrameRate, 0, &fps);
 		gPropHost->propGetDouble(props, kOfxImageEffectPropFrameRate, 0, &fps);
 
-		if (ass != NULL) ass->SetFPS(fps);
+		if (myData->ass) myData->ass->SetFPS(fps);
 
 		if (myData) {
 			if (myData->context != eIsGenerator) {
@@ -943,15 +1110,15 @@ static OfxStatus render(OfxImageEffectHandle instance,
 			copy_source(instance, renderWindow, srcPtr, srcRect, srcRowBytes, dstPtr, dstRect, dstRowBytes);
 		}
 
-		if(ass)
-			ass->GetAss((double)time, renderWindow.x2 - renderWindow.x1, renderWindow.y2 - renderWindow.y1, colorDepth, dstPtr);
+		if(myData->ass)
+			myData->ass->GetAss((double)time, renderWindow.x2 - renderWindow.x1, renderWindow.y2 - renderWindow.y1, colorDepth, dstPtr);
 
 		//ASS_Image *img = NULL;
 		////auto ASS_Image *img = NULL;
 
 		//AssRender* ass = NULL;
-		//if (ass && abs(time - ass->last_time) > 0) {
-		//	img = ass->GetAss((double)time, renderWindow.x2 - renderWindow.x1, renderWindow.y2 - renderWindow.y1);
+		//if (myData->ass && abs(time - myData->ass->last_time) > 0) {
+		//	img = myData->ass->GetAss((double)time, renderWindow.x2 - renderWindow.x1, renderWindow.y2 - renderWindow.y1);
 		//}
 
 
@@ -991,8 +1158,6 @@ static OfxStatus render(OfxImageEffectHandle instance,
 	return status;
 }
 
-
-
 ////////////////////////////////////////////////////////////////////////////////
 // The main entry point function
 static OfxStatus
@@ -1026,6 +1191,9 @@ pluginMain(const char *action, const void *handle, OfxPropertySetHandle inArgs, 
 		else if (strcmp(action, kOfxImageEffectActionIsIdentity) == 0) {
 			return isIdentity(effect, inArgs, outArgs);
 		}
+		//else if (strcmp(action, "OfxActionSyncPrivateData") == 0) {
+		//	return syncData(effect, inArgs, outArgs);
+		//}
 		else if (strcmp(action, kOfxImageEffectActionGetClipPreferences) == 0) {
 			return getClipPreferences(effect, inArgs, outArgs);
 		}

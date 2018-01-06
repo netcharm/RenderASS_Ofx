@@ -285,12 +285,47 @@ bool AssRender::InitLibass(ASS_Hinting hints, double scale, int width, int heigh
 bool AssRender::SetDefaultFont(const char * fontname, int fontsize)
 {
 	if (!ar) return false;
+	return SetDefaultFontName(fontname);
+	return true;
+}
+
+bool AssRender::SetDefaultFontName(const char * fontname)
+{
+	if (!ar) return false;
 	if (strlen(fontname) > 0 && strcmp(fontname, default_fontname) != 0) {
 		memset(default_fontname, 0, 512);
 		strcpy_s(default_fontname, fontname);
+		utf2gbk(default_fontname, strlen(default_fontname));
 		ass_set_fonts(ar, default_fontname, "Sans", 1, fontconf, 1);
 	}
+	return false;
+}
+
+bool AssRender::SetDefaultFontSize(int fontsize)
+{
+	if (fontsize > 0 && fontsize < 256) {
+		default_fontsize = fontsize;
+		return true;
+	}
+	return false;
+}
+
+bool AssRender::SetDefaultFontColor(RGBA color)
+{
+	default_fontcolor = color;
 	return true;
+}
+
+bool AssRender::SetDefaultFontOutline(RGBA color)
+{
+	default_fontoutline = color;
+	return true;
+}
+
+bool AssRender::SetDefaultFontBG(RGBA color)
+{
+	default_fontbg = color;
+	return false;
 }
 
 bool AssRender::SetMargin(int used)
@@ -460,7 +495,7 @@ bool AssRender::LoadAss(const char * assfile, const char *_charset)
 	at = NULL;
 	at = ass_read_file(al, ass_buf, charset);
 	if (!at) {
-		throw("AssRender: could not read %s", ass_file);
+		//throw("AssRender: could not read %s", ass_file);
 		return false;
 	}
 	else {
@@ -482,9 +517,10 @@ ASS_Image_List* AssRender::GetAss(double n, int width, int height, bool ass_type
 
 ASS_Image* AssRender::GetAss(double n, int width, int height)
 {
-	if (!ar) return(NULL);
+	if (!ar || !al || !at) return(NULL);
 	try
 	{
+		if (fps <= 0) return NULL;
 		//ass_set_storage_size(ar, width, height);
 		renderWidth = width;
 		renderHeight = height;

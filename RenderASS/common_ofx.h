@@ -3,6 +3,13 @@
 #ifndef COMMON_OFX
 #define COMMON_OFX
 
+#include <math.h>
+#include "ofxImageEffect.h"
+#include "ofxMemory.h"
+#include "ofxMultiThread.h"
+#include "ofxPixels.h"
+#include "../include/ofxUtilities.H"
+
 //extern "C" {
 #  include <ass.h>
 //}

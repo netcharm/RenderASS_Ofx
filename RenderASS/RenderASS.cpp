@@ -33,7 +33,9 @@ The main features are
 #  error Not building on your operating system quite yet
 #endif
 
-#include <ass.h>
+//#include "common_ofx.h"
+
+//#include <ass.h>
 #include "libass_helper.h"
 
 // pointers to various bits of the host
@@ -291,71 +293,8 @@ onUnLoad(void)
 static OfxStatus
 createInstance(OfxImageEffectHandle effect)
 {
-	// get a pointer to the effect properties
-	OfxPropertySetHandle effectProps;
-	gEffectHost->getPropertySet(effect, &effectProps);
-
-	// get a pointer to the effect's parameter set
-	OfxParamSetHandle paramSet;
-	gEffectHost->getParamSet(effect, &paramSet);
-
-	//// get the parameter from the parameter set
-	//OfxParamHandle param;
-	//gParamHost->paramGetHandle(paramSet, "assFileName", &param, NULL);
-
-	//// get my custom param's raw value
-	//char *str = 0;
-	//gParamHost->paramGetValue(param, &str);
-
 	// make my private instance data
 	MyInstanceData *myData = getMyInstanceParam(effect);
-
-	//MyInstanceData *myData = new MyInstanceData;
-	//char *context = 0;
-
-	//// is this instance a general effect ?
-	//gPropHost->propGetString(effectProps, kOfxImageEffectPropContext, 0, &context);
-	//if (strcmp(context, kOfxImageEffectContextGenerator) == 0) {
-	//	myData->context = eIsGenerator;
-	//}
-	//else if (strcmp(context, kOfxImageEffectContextFilter) == 0) {
-	//	myData->context = eIsFilter;
-	//}
-	//else {
-	//	myData->context = eIsGeneral;
-	//}
-	//if (myDataOld) 
-	//	myData->ass = myDataOld->ass;
-	//else
-	//	myData->ass = new AssRender(ASS_HINTING_NONE, 1.0, "UTF-8");
-
-	//// cache away param handles
-	//gParamHost->paramGetHandle(paramSet, "assFileName", &myData->assFileName, 0);
-
-	//gParamHost->paramGetHandle(paramSet, "assDefaultFontName", &myData->assDefaultFontName, 0);
-	//gParamHost->paramGetHandle(paramSet, "assDefaultFontSize", &myData->assDefaultFontSize, 0);
-	//gParamHost->paramGetHandle(paramSet, "assDefaultFontColor", &myData->assDefaultFontColor, 0);
-	//gParamHost->paramGetHandle(paramSet, "assDefaultFontOutline", &myData->assDefaultFontOutline, 0);
-	//gParamHost->paramGetHandle(paramSet, "assDefaultBackground", &myData->assDefaultBackground, 0);
-
-	//gParamHost->paramGetHandle(paramSet, "assFontScale", &myData->assFontScale, 0);
-	//gParamHost->paramGetHandle(paramSet, "assFontHints", &myData->assFontHints, 0);
-
-	//gParamHost->paramGetHandle(paramSet, "assUseMargin", &myData->assUseMargin, 0);
-	//gParamHost->paramGetHandle(paramSet, "assMarginT", &myData->assMarginT, 0);
-	//gParamHost->paramGetHandle(paramSet, "assMarginB", &myData->assMarginB, 0);
-	//gParamHost->paramGetHandle(paramSet, "assMarginL", &myData->assMarginL, 0);
-	//gParamHost->paramGetHandle(paramSet, "assMarginR", &myData->assMarginR, 0);
-	//gParamHost->paramGetHandle(paramSet, "assSpace", &myData->assSpace, 0);
-	//gParamHost->paramGetHandle(paramSet, "assPosition", &myData->assPosition, 0);
-
-	//// cache away clip handles
-	//if (myData->context != eIsGenerator)
-	//	gEffectHost->clipGetHandle(effect, kOfxImageEffectSimpleSourceClipName, &myData->sourceClip, 0);
-	//else
-	//	myData->sourceClip = NULL;
-
-	//gEffectHost->clipGetHandle(effect, kOfxImageEffectOutputClipName, &myData->outputClip, 0);
 
 	// set my private instance data
 	ofxuSetEffectInstanceData(effect, (void *)myData);

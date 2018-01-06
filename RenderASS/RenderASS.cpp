@@ -65,6 +65,8 @@ struct MyInstanceData {
 	OfxImageClipHandle outputClip;
 
 	// handles to a our parameters
+	AssRender * ass;
+
 	OfxParamHandle assFileName;
 
 	OfxParamHandle assUseMargin;
@@ -121,6 +123,10 @@ onLoad(void)
 	if (!gEffectHost || !gPropHost)
 		return kOfxStatErrMissingHostFeature;
 
+	if (ass == NULL) {
+		ass = new AssRender(ASS_HINTING_NONE, 1.0, "UTF-8");
+	}
+
 	return kOfxStatOK;
 }
 
@@ -129,7 +135,7 @@ static OfxStatus
 onUnLoad(void)
 {
 	if (ass != NULL) {
-		//ass->~AssRender();
+		ass->~AssRender();
 	}
 	return kOfxStatOK;
 }
@@ -161,6 +167,7 @@ createInstance(OfxImageEffectHandle effect)
 	else {
 		myData->context = eIsGeneral;
 	}
+	myData->ass = ass;
 
 	// cache away param handles
 	gParamHost->paramGetHandle(paramSet, "assFileName", &myData->assFileName, 0);
@@ -205,9 +212,9 @@ createInstance(OfxImageEffectHandle effect)
 	//int sfps = 0;
 	//gPropHost->propGetInt(effectProps, kOfxImageEffectPropSetableFrameRate, 0, &sfps);
 
-	if (ass == NULL) {
-		ass = new AssRender(ASS_HINTING_NONE, 1.0, "UTF-8");
-	}
+	//if (ass == NULL) {
+	//	ass = new AssRender(ASS_HINTING_NONE, 1.0, "UTF-8");
+	//}
 
 	return kOfxStatOK;
 }
@@ -267,7 +274,7 @@ instanceChanged(OfxImageEffectHandle effect,
 	else if (strcmp(propName, "assUseMargin") == 0) {
 		int used_margin = 0;
 		gParamHost->paramGetValue(myData->assUseMargin, &used_margin);
-		if (ass) ass->SetMargin((bool)used_margin);
+		if (ass) ass->SetMargin(used_margin);
 	}
 	else if (strcmp(propName, "assMarginT") == 0) {
 		double margin_t = 0, margin_b = 0, margin_l = 0, margin_r = 0;
@@ -404,9 +411,9 @@ describeInContext(OfxImageEffectHandle  effect, OfxPropertySetHandle inArgs)
 
 	// set the component types we can handle on out output
 	gPropHost->propSetString(props, kOfxImageEffectPropSupportedComponents, 0, kOfxImageComponentRGBA);
-	gPropHost->propSetString(props, kOfxImageEffectPropSupportedComponents, 1, kOfxImageComponentRGB);
 	//gPropHost->propSetString(props, kOfxImageEffectPropSupportedComponents, 1, kOfxImageComponentRGB);
-	//gPropHost->propSetString(props, kOfxImageEffectPropSupportedComponents, 2, kOfxImageComponentNone);
+	//gPropHost->propSetString(props, kOfxImageEffectPropSupportedComponents, 2, kOfxImageComponentAlpha);
+	//gPropHost->propSetString(props, kOfxImageEffectPropSupportedComponents, 3, kOfxImageComponentNone);
 	
 	// define the single source clip in both contexts
 	gEffectHost->clipDefine(effect, kOfxImageEffectSimpleSourceClipName, &props);
@@ -454,6 +461,9 @@ describeInContext(OfxImageEffectHandle  effect, OfxPropertySetHandle inArgs)
 	// params properties
 	OfxPropertySetHandle paramProps;
 
+	// make ass file name
+
+	// make ass file name
 	gParamHost->paramDefine(paramSet, kOfxParamTypeString, "assFileName", &paramProps);
 	gPropHost->propSetString(paramProps, kOfxParamPropScriptName, 0, "assFileName");
 	gPropHost->propSetString(paramProps, kOfxPropLabel, 0, "ASS File");
@@ -767,9 +777,9 @@ class NoImageEx {};
 
 inline void 
 blend_frame(OfxImageEffectHandle instance, 
-	ASS_Image* img,
-	OfxRectI renderWindow,
-	void *dstPtr, OfxRectI dstRect, int dstRowBytes) {
+	const ASS_Image* img,
+	const OfxRectI renderWindow,
+	const void *dstPtr, const OfxRectI dstRect, const int dstRowBytes) {
 
 	if (!img || img->w <= 0 || img->h <= 0) return;
 
@@ -830,9 +840,9 @@ blend_frame(OfxImageEffectHandle instance,
 
 inline void
 copy_source(OfxImageEffectHandle instance,
-	OfxRectI renderWindow,
-	void *srcPtr, OfxRectI srcRect, int srcRowBytes,
-	void *dstPtr, OfxRectI dstRect, int dstRowBytes) {
+	const OfxRectI renderWindow,
+	const void *srcPtr, const OfxRectI srcRect, const int srcRowBytes,
+	const void *dstPtr, const OfxRectI dstRect, const int dstRowBytes) {
 
 	// cast data pointers to 8 bit RGBA
 	OfxRGBAColourB *src = (OfxRGBAColourB *)srcPtr;
@@ -874,10 +884,18 @@ static OfxStatus render(OfxImageEffectHandle instance,
 	// get the render window and the time from the inArgs
 	OfxTime time;
 	OfxRectI renderWindow;
+	char* renderDepth;
+	int colorDepth = 4;
 	OfxStatus status = kOfxStatOK;
 
 	gPropHost->propGetDouble(inArgs, kOfxPropTime, 0, &time);
 	gPropHost->propGetIntN(inArgs, kOfxImageEffectPropRenderWindow, 4, &renderWindow.x1);
+	gPropHost->propGetString(inArgs, kOfxImageEffectPropComponents, 0, &renderDepth);
+
+	if (renderDepth == kOfxBitDepthNone) colorDepth = 0;
+	else if (renderDepth == kOfxImageComponentRGBA) colorDepth = 4;
+	else if (renderDepth == kOfxImageComponentRGB) colorDepth = 3;
+	else if (renderDepth == kOfxImageComponentAlpha) colorDepth = 1;
 
 	// fetch output clip
 	OfxImageClipHandle outputClip;
@@ -903,10 +921,6 @@ static OfxStatus render(OfxImageEffectHandle instance,
 		MyInstanceData *myData = getMyInstanceData(instance);
 		if (!myData) throw(new NoImageEx());
 
-		ASS_Image *img = NULL;
-		//auto ASS_Image *img = NULL;
-		img = ass->GetAss((double)time, renderWindow.x2 - renderWindow.x1, renderWindow.y2 - renderWindow.y1);
-
 		if (myData->context != eIsGenerator) {
 			// fetch main input clip
 			OfxImageClipHandle sourceClip;
@@ -929,26 +943,36 @@ static OfxStatus render(OfxImageEffectHandle instance,
 			copy_source(instance, renderWindow, srcPtr, srcRect, srcRowBytes, dstPtr, dstRect, dstRowBytes);
 		}
 
-		while (img) {
-			if ((unsigned long)img >= 0xcccc0000) break;
-			if (img->w <= 0 || img->h <= 0 || img->w > 8192 || img->h > 8192) {
-				img = img->next;
-				continue;
-			}
+		if(ass)
+			ass->GetAss((double)time, renderWindow.x2 - renderWindow.x1, renderWindow.y2 - renderWindow.y1, colorDepth, dstPtr);
 
-			blend_frame(instance, img, renderWindow, dstPtr, dstRect, dstRowBytes);
+		//ASS_Image *img = NULL;
+		////auto ASS_Image *img = NULL;
 
-			if (img->next && (unsigned long)img->next < 0xcccc0000) {
-				if (!img->next->w || !img->next->h) break;
-				if ((unsigned long)img->next->w > 0xcccc0000 ||
-					(unsigned long)img->next->h > 0xcccc0000) break;
-			}
-			else break;
-			Sleep(10);
-			img = img->next;
-		}
+		//AssRender* ass = NULL;
+		//if (ass && abs(time - ass->last_time) > 0) {
+		//	img = ass->GetAss((double)time, renderWindow.x2 - renderWindow.x1, renderWindow.y2 - renderWindow.y1);
+		//}
 
-		img = NULL;
+
+		//while (img) {
+		//	if ((__int64)img >= 0xcccccccccccc0000) break;
+		//	if (img->w <= 0 || img->h <= 0 || img->w > 8192 || img->h > 8192) {
+		//		img = img->next;
+		//		continue;
+		//	}
+
+		//	blend_frame(instance, img, renderWindow, dstPtr, dstRect, dstRowBytes);
+
+		//	if (img->next && (__int64)img->next < 0xcccccccccccc0000) {
+		//		if (!img->next->w || !img->next->h) break;
+		//		if ((__int64)img->next->w > 0xcccccccccccc0000 ||
+		//			(__int64)img->next->h > 0xcccccccccccc0000) break;
+		//	}
+		//	else break;
+		//	img = img->next;
+		//}
+		//img = NULL;
 	}
 	catch (NoImageEx &) {
 		// if we were interrupted, the failed fetch is fine, just return kOfxStatOK
@@ -981,9 +1005,9 @@ pluginMain(const char *action, const void *handle, OfxPropertySetHandle inArgs, 
 		if (strcmp(action, kOfxActionLoad) == 0) {
 			return onLoad();
 		}
-		//else if (strcmp(action, kOfxActionUnload) == 0) {
-		//	return onUnLoad();
-		//}
+		else if (strcmp(action, kOfxActionUnload) == 0) {
+			return onUnLoad();
+		}
 		else if (strcmp(action, kOfxActionDescribe) == 0) {
 			return describe(effect);
 		}

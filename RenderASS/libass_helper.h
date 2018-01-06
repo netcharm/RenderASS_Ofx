@@ -39,6 +39,15 @@ extern "C" {
 
 extern TCHAR cur_dll_path[MAX_PATH];
 
+
+typedef struct RGBA {
+	unsigned char r, g, b, a;
+}RGBA;
+
+typedef struct ARECT {
+	int x1, y1, x2, y2;
+} ARECT;
+
 //
 DWORD GetModulePath(HMODULE hModule, LPTSTR pszBuffer, DWORD dwSize);
 
@@ -58,12 +67,12 @@ public:
 };
 
 ///
-void msg_callback(int level, const char *fmt, va_list args, void *);
+void msg_callback(const int level, const char *fmt, const va_list args, const void *);
 
 //
 class AssRender {
 private:
-	bool InitLibass(ASS_Hinting hints, double scale, int width, int height);
+	bool InitLibass(const ASS_Hinting hints, const double scale, const int width, const int height);
 
 	ASS_Library *al = NULL;
 	ASS_Renderer *ar = NULL;
@@ -75,15 +84,19 @@ private:
 	double fps = 29.970;
 	int renderWidth = 0;
 	int renderHeight = 0;
+	int renderDepth = 0;
 
 	char default_fontname[512];
 	double fontscale = 1.0;
 	ASS_Hinting fonthinting = ASS_HINTING_NONE;
 
-	bool margin = false;
+	int margin = 0;
 	double margin_t = 0, margin_b = 0, margin_l = 0, margin_r = 0;
 	double spacing = 2, position = 2;
 
+	ASS_Image* assImg;
+	inline RGBA * pixelAddress(RGBA *img, ARECT rect, int x, int y, int bytesPerLine);
+	inline bool blend_image(ASS_Image* img, const void* image);
 public:
 	AssRender(ASS_Hinting hints, double scale, const char *charset);
 	~AssRender();
@@ -95,23 +108,24 @@ public:
 	bool __stdcall SetFPS(double fr);
 	bool __stdcall SetHints(ASS_Hinting hints);
 
-	bool __stdcall SetDefaultFont(char * fontname, int fontsize);
+	bool __stdcall SetDefaultFont(const char * fontname, int fontsize);
 	bool __stdcall SetSpace(int pixels);
 	bool __stdcall SetSpace(double percentage);
 	bool __stdcall SetPosition(int pixels);
 	bool __stdcall SetPosition(double percentage);
-	bool __stdcall SetMargin(bool used);
+	bool __stdcall SetMargin(int used);
 	bool __stdcall SetMargin(int t, int b, int l, int r);
 	bool __stdcall SetMargin(double t, double b, double l, double r);
-	bool __stdcall SetMargin(bool used, int t, int b, int l, int r);
-	bool __stdcall SetMargin(bool used, double t, double b, double l, double r);
+	bool __stdcall SetMargin(int used, int t, const int b, int l, int r);
+	bool __stdcall SetMargin(int used, double t, double b, double l, double r);
 
 	bool __stdcall LoadAss(const char* assfile, const char *_charset);
 
-	ASS_Image_List* __stdcall GetAss(double n, int width, int height, bool ass_type);
+	int __stdcall GetAss(double n, int width, int height, int depth, const void*image);
 	ASS_Image* __stdcall GetAss(double n, int width, int height);
-	ASS_Image* __stdcall GetAss(double n, ASS_Image* src);
-	ASS_Image* __stdcall GetAss(int64_t n, ASS_Image* src);
+	ASS_Image* __stdcall GetAss(double n, const ASS_Image* src);
+	ASS_Image* __stdcall GetAss(int64_t n, const ASS_Image* src);
 	ASS_Image* __stdcall GetAss(int n);
+	ASS_Image_List* __stdcall GetAss(double n, int width, int height, bool ass_type);
 };
 

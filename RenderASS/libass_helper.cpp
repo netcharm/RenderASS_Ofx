@@ -96,7 +96,7 @@ ASS_Image_List::ASS_Image_List(ASS_Image * img)
 		img_count++;
 		try
 		{
-			if ((unsigned long)img >= 0xcccc0000) break;
+			if ((__int64)img >= 0xcccc0000) break;
 			if (img->w <= 0 || img->h <= 0 || img->w > 8192 || img->h > 8192) {
 				img = img->next;
 				continue;
@@ -117,10 +117,10 @@ ASS_Image_List::ASS_Image_List(ASS_Image * img)
 				break;
 			}
 
-			if (img->next && (unsigned long)img->next < 0xcccc0000) {
+			if (img->next && (__int64)img->next < 0xcccccccccccc0000) {
 				if (!img->next->w || !img->next->h) break;
-				if ((unsigned long)img->next->w > 0xcccc0000 ||
-					(unsigned long)img->next->h > 0xcccc0000) break;
+				if ((__int64)img->next->w > 0xcccccccccccc0000 ||
+					(__int64)img->next->h > 0xcccccccccccc0000) break;
 			}
 			else break;
 			Sleep(10);
@@ -147,7 +147,7 @@ ASS_Image_List::~ASS_Image_List()
 //
 // 
 //
-AssRender::AssRender(ASS_Hinting hints, double scale, const char *charset) {	
+AssRender::AssRender(ASS_Hinting hints, double scale, const char *charset) {
 	memset(ass_file, 0, MAX_PATH);
 	//if (!InitLibass(ASS_HINTING_LIGHT, scale, 1280, 720))
 	if (!InitLibass(hints, scale, 1280, 720))
@@ -162,6 +162,77 @@ AssRender::~AssRender() {
 	ass_library_done(al);
 }
 
+// look up a pixel in the image, does bounds checking to see if it is in the image rectangle
+inline RGBA *
+AssRender::pixelAddress(RGBA *img, ARECT rect, int x, int y, int bytesPerLine)
+{
+	if (x < rect.x1 || x >= rect.x2 || y < rect.y1 || y > rect.y2)
+		return 0;
+	RGBA *pix = (RGBA *)(((char *)img) + (y - rect.y1) * bytesPerLine);
+	pix += x - rect.x1;
+	return pix;
+}
+
+// render ass image to source clip frame
+inline
+bool AssRender::blend_image(ASS_Image* img, const void* image) {
+
+	int dstRowBytes = renderWidth*renderDepth;
+	ARECT dstRect;
+	dstRect.x1 = 0;
+	dstRect.x2 = renderWidth;
+	dstRect.y1 = 0;
+	dstRect.y2 = renderHeight;
+
+	ARECT dstRectAss;
+	dstRectAss.x1 = img->dst_x;
+	dstRectAss.x2 = img->dst_x + img->w;
+	dstRectAss.y1 = renderHeight - (img->dst_y + img->h);
+	dstRectAss.y2 = renderHeight - img->dst_y;
+
+	const unsigned char *src_map = img->bitmap;
+	unsigned int ok, ak, sk;
+
+	unsigned int stride = (unsigned int)img->stride;
+	unsigned int imglen = (unsigned int)(stride*img->h);
+	unsigned int a = 255 - (_A(img->color));
+	unsigned int r = (unsigned int)_R(img->color);
+	unsigned int g = (unsigned int)_G(img->color);
+	unsigned int b = (unsigned int)_B(img->color);
+	
+	RGBA *dst = (RGBA *)image;
+	for (int y = 0; y < renderHeight; y++) {
+		RGBA *dstPix = pixelAddress(dst, dstRect, 0, y, dstRowBytes);		
+		for (int x = 0; x < renderWidth; x++) {
+			try
+			{
+				long idx_x = x - dstRectAss.x1;
+				long idx_y = img->h - (y - dstRectAss.y1) - 1;
+
+				if (dst && dstPix && x >= dstRectAss.x1 && x < dstRectAss.x2 && y >= dstRectAss.y1 && y < dstRectAss.y2)
+				{
+					unsigned long idx = idx_x + idx_y*stride;
+					if (idx >= imglen) break;
+					ok = (unsigned)src_map[idx];
+					ak = ok*a / 255;
+					sk = 255 - ak;
+					dstPix->a = (unsigned char)ak;
+					dstPix->b = (unsigned char)((ak*b + sk*dstPix->b) / 255);
+					dstPix->g = (unsigned char)((ak*g + sk*dstPix->g) / 255);
+					dstPix->r = (unsigned char)((ak*r + sk*dstPix->r) / 255);
+				}
+			}
+			catch (const std::exception&)
+			{
+
+			}
+			dstPix++;
+		}
+
+	}
+	return true;
+}
+
 bool AssRender::InitLibass(ASS_Hinting hints, double scale, int width, int height) {
 	al = ass_library_init();
 	if (!al)
@@ -173,7 +244,7 @@ bool AssRender::InitLibass(ASS_Hinting hints, double scale, int width, int heigh
 	// not needed?
 	//ass_set_fonts_dir(al, tmp);
 	//ass_set_fonts_dir(al, "C:\\Windows\\Fonts");
-	ass_set_extract_fonts(al, 2);
+	//ass_set_extract_fonts(al, 2);
 	ass_set_style_overrides(al, NULL);
 
 	ar = ass_renderer_init(al);
@@ -202,12 +273,16 @@ bool AssRender::InitLibass(ASS_Hinting hints, double scale, int width, int heigh
 	//ass_set_fonts(ar, "C:\\Windows\\Fonts\\Arial.ttf", "Sans", 1, fontconf, 1);
 	//ass_set_fonts(ar, "Arial", "Sans", 0, NULL, 0);
 	//ass_renderer_done(ar);
-	Sleep(250);
+	ass_fonts_update(ar);
+	
+	//ass_set_cache_limits(ar, 2048, 64);
+	ass_set_cache_limits(ar, 0, 0);
 
+	//ass_get_available_font_providers(al, )
 	return true;
 }
 
-bool AssRender::SetDefaultFont(char * fontname, int fontsize)
+bool AssRender::SetDefaultFont(const char * fontname, int fontsize)
 {
 	if (!ar) return false;
 	if (strlen(fontname) > 0 && strcmp(fontname, default_fontname) != 0) {
@@ -218,7 +293,7 @@ bool AssRender::SetDefaultFont(char * fontname, int fontsize)
 	return true;
 }
 
-bool AssRender::SetMargin(bool used)
+bool AssRender::SetMargin(int used)
 {
 	if (!ar) return false;
 	margin = used;
@@ -258,7 +333,7 @@ bool AssRender::SetMargin(double t, double b, double l, double r)
 	return true;
 }
 
-bool AssRender::SetMargin(bool used, int t, int b, int l, int r)
+bool AssRender::SetMargin(int used, int t, int b, int l, int r)
 {
 	if (!ar) return false;
 	SetMargin(used);
@@ -266,7 +341,7 @@ bool AssRender::SetMargin(bool used, int t, int b, int l, int r)
 	return true;
 }
 
-bool AssRender::SetMargin(bool used, double t, double b, double l, double r)
+bool AssRender::SetMargin(int used, double t, double b, double l, double r)
 {
 	if (!ar) return false;
 	SetMargin(used);
@@ -389,7 +464,11 @@ bool AssRender::LoadAss(const char * assfile, const char *_charset)
 		return false;
 	}
 	else {
-		Sleep(250);
+		//ass_process_force_style(at);
+		//resize_read_order_bitmap(at, 8192);
+		for (int i = 0; i < 2000; i++)
+			GetAss((double)i, renderWidth, renderHeight);
+
 		return true;
 	}
 }
@@ -407,6 +486,8 @@ ASS_Image* AssRender::GetAss(double n, int width, int height)
 	try
 	{
 		//ass_set_storage_size(ar, width, height);
+		renderWidth = width;
+		renderHeight = height;
 		ass_set_frame_size(ar, width, height);
 		//int64_t now = (int64_t)(n * 1000);
 		int64_t ts = (int64_t)(n / fps * 1000);
@@ -421,7 +502,34 @@ ASS_Image* AssRender::GetAss(double n, int width, int height)
 	}
 }
 
-ASS_Image* AssRender::GetAss(double n, ASS_Image* src)
+int AssRender::GetAss(double n, int width, int height, int depth, const void * image)
+{
+	renderDepth = depth;
+	ASS_Image* assImg = GetAss(n, width, height);
+	int c = 0;
+	while (assImg) {
+		if ((__int64)assImg >= 0xcccccccccccc0000) break;
+		if (assImg->w <= 0 || assImg->h <= 0 || assImg->w > 8192 || assImg->h > 8192) {
+			assImg = assImg->next;
+			continue;
+		}
+
+		blend_image(assImg, image);
+
+		if (assImg->next && (__int64)assImg->next < 0xcccccccccccc0000) {
+			if (!assImg->next->w || !assImg->next->h) break;
+			if ((__int64)assImg->next->w > 0xcccccccccccc0000 ||
+				(__int64)assImg->next->h > 0xcccccccccccc0000) break;
+		}
+		else break;
+		assImg = assImg->next;
+		c++;
+	}
+	assImg = NULL;
+	return c;
+}
+
+ASS_Image* AssRender::GetAss(double n, const ASS_Image* src)
 {
 	if (src != NULL) {
 		ass_set_frame_size(ar, src->w, src->h);
@@ -434,7 +542,7 @@ ASS_Image* AssRender::GetAss(double n, ASS_Image* src)
 	return img;
 }
 
-ASS_Image* AssRender::GetAss(int64_t n, ASS_Image* src)
+ASS_Image* AssRender::GetAss(int64_t n, const ASS_Image* src)
 {
 	ASS_Image *img = ass_render_frame(ar, at, n, NULL);
 	return img;

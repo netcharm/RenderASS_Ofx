@@ -19,33 +19,33 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{BEEF9E5D-0E9C-466E-A170-1C9F5EA07B3A}</ProjectGuid>
+    <ProjectGuid>{EB16BB28-FE54-4C55-906D-B399DE2DDAA4}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>RenderASS</RootNamespace>
+    <RootNamespace>libass_test</RootNamespace>
     <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
-    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v140</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
-    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v140</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
-    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v140</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
-    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v140</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
@@ -72,22 +72,22 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
     <OutDir>$(ProjectDir)_out\$(PlatformTarget)\$(Configuration)\</OutDir>
-    <IntDir>_out\$(PlatformTarget)\$(Configuration)\_inter\</IntDir>
+    <IntDir>$(ProjectDir)_out\$(PlatformTarget)\$(Configuration)\_inter\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
     <OutDir>$(ProjectDir)_out\$(PlatformTarget)\$(Configuration)\</OutDir>
-    <IntDir>_out\$(PlatformTarget)\$(Configuration)\_inter\</IntDir>
+    <IntDir>$(OutDir)_inter\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(ProjectDir)_out\$(PlatformTarget)\$(Configuration)\</OutDir>
-    <IntDir>_out\$(PlatformTarget)\$(Configuration)\_inter\</IntDir>
+    <IntDir>$(ProjectDir)_out\$(PlatformTarget)\$(Configuration)\_inter\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(ProjectDir)_out\$(PlatformTarget)\$(Configuration)\</OutDir>
-    <IntDir>_out\$(PlatformTarget)\$(Configuration)\_inter\</IntDir>
+    <IntDir>$(ProjectDir)_out\$(PlatformTarget)\$(Configuration)\_inter\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -95,22 +95,15 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;RENDERASS_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)..\libass-msvc\libass-0.14.0\libass\;$(SolutionDir)..\libass-msvc\freetype-2.6.1\include;$(SolutionDir)..\openfx-master\Include;D:\develop\lib\Image\libpng140b106\;D:\develop\lib\zlib-1.2.5-dll\include;$(SolutionDir)..\libass-msvc\libiconv-1.15-msvc\iconv;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(SolutionDir)RenderASS;$(SolutionDir)..\libass-msvc\libass-0.14.0\libass\;$(SolutionDir)..\libass-msvc\freetype-2.6.1\include;$(SolutionDir)..\openfx-master\Include;D:\develop\lib\Image\libpng140b106\;D:\develop\lib\zlib-1.2.5-dll\include;$(SolutionDir)..\libass-msvc\libiconv-1.15-msvc\iconv;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <SubSystem>Windows</SubSystem>
+      <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(SolutionDir)..\libass-msvc\$(PlatformTarget)\$(Configuration)\lib;$(SolutionDir)..\libass-msvc\$(PlatformTarget)\$(Configuration);$(SolutionDir)..\libass-msvc\\libiconv-1.15-msvc\$(PlatformTarget)\$(Configuration)\;D:\develop\lib\zlib-1.2.5-dll\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>fontconfig.lib;freetype.lib;fribidi.lib;harfbuzz.lib;libiconv.lib;libass-s.lib;zlib1.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <PostBuildEvent>
-      <Command>if not exist "$(OutDir)$(ProjectName).ofx.bundle\Contents\Resources" mkdir "$(OutDir)$(ProjectName).ofx.bundle\Contents\Resources"
-if not exist "$(OutDir)$(ProjectName).ofx.bundle\Contents\$(PlatformTarget)" mkdir "$(OutDir)$(ProjectName).ofx.bundle\Contents\$(Platform)"
-copy /Y "$(TargetPath)" /B "$(OutDir)$(ProjectName).ofx.bundle\Contents\$(Platform)\$(ProjectName).ofx" /B
-</Command>
-    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -118,114 +111,62 @@ copy /Y "$(TargetPath)" /B "$(OutDir)$(ProjectName).ofx.bundle\Contents\$(Platfo
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>_DEBUG;WIN32;_WINDOWS;_USRDLL;RENDERASS_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <SDLCheck>
-      </SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)..\libass-msvc\libass-0.14.0\libass\;$(SolutionDir)..\libass-msvc\freetype-2.6.1\include;$(SolutionDir)..\openfx-master\Include;D:\develop\lib\Image\libpng140b106\;D:\develop\lib\zlib-1.2.5-dll\include;$(SolutionDir)..\libass-msvc\libiconv-1.15-msvc\iconv;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
-      <ExceptionHandling>Sync</ExceptionHandling>
-      <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
-      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
-      <StringPooling>
-      </StringPooling>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;WIN32;_WINDOWS;_USRDLL;RENDERASS_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(SolutionDir)RenderASS;$(SolutionDir)..\libass-msvc\libass-0.14.0\libass\;$(SolutionDir)..\libass-msvc\freetype-2.6.1\include;$(SolutionDir)..\openfx-master\Include;D:\develop\lib\Image\libpng140b106\;D:\develop\lib\zlib-1.2.5-dll\include;$(SolutionDir)..\libass-msvc\libiconv-1.15-msvc\iconv;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <SubSystem>
-      </SubSystem>
+      <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(SolutionDir)..\libass-msvc\$(PlatformTarget)\$(Configuration)\lib;$(SolutionDir)..\libass-msvc\$(PlatformTarget)\$(Configuration);$(SolutionDir)..\libass-msvc\\libiconv-1.15-msvc\$(PlatformTarget)\$(Configuration)\;$(SolutionDir)..\libass-msvc\libxml2-2.9.7\win32\bin.msvc\;D:\develop\lib\zlib-1.2.5-dll\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)..\libass-msvc\$(PlatformTarget)\$(Configuration)\lib;$(SolutionDir)..\libass-msvc\$(PlatformTarget)\$(Configuration);$(SolutionDir)..\libass-msvc\\libiconv-1.15-msvc\$(PlatformTarget)\$(Configuration)\;D:\develop\lib\zlib-1.2.5-dll\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>libass-s.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <PostBuildEvent>
-      <Command>if not exist "$(OutDir)$(ProjectName).ofx.bundle\Contents\Resources" mkdir "$(OutDir)$(ProjectName).ofx.bundle\Contents\Resources"
-if not exist "$(OutDir)$(ProjectName).ofx.bundle\Contents\$(Platform)" mkdir "$(OutDir)$(ProjectName).ofx.bundle\Contents\Win64"
-copy /Y "$(TargetPath)" /B "$(OutDir)$(ProjectName).ofx.bundle\Contents\Win64\$(ProjectName).ofx" /B
-</Command>
-    </PostBuildEvent>
-    <PostBuildEvent>
-      <Message>Creating bundle...</Message>
-    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;RENDERASS_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)..\libass-msvc\libass-0.14.0\libass\;$(SolutionDir)..\libass-msvc\freetype-2.6.1\include;$(SolutionDir)..\openfx-master\Include;D:\develop\lib\Image\libpng140b106\;D:\develop\lib\zlib-1.2.5-dll\include;$(SolutionDir)..\libass-msvc\libiconv-1.15-msvc\iconv;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(SolutionDir)RenderASS;$(SolutionDir)..\libass-msvc\libass-0.14.0\libass\;$(SolutionDir)..\libass-msvc\freetype-2.6.1\include;$(SolutionDir)..\openfx-master\Include;D:\develop\lib\Image\libpng140b106\;D:\develop\lib\zlib-1.2.5-dll\include;$(SolutionDir)..\libass-msvc\libiconv-1.15-msvc\iconv;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <SubSystem>Windows</SubSystem>
+      <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalLibraryDirectories>$(SolutionDir)..\libass-msvc\$(PlatformTarget)\$(Configuration)\lib;$(SolutionDir)..\libass-msvc\$(PlatformTarget)\$(Configuration);$(SolutionDir)..\libass-msvc\\libiconv-1.15-msvc\$(PlatformTarget)\$(Configuration)\;D:\develop\lib\zlib-1.2.5-dll\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>fontconfig.lib;freetype.lib;fribidi.lib;harfbuzz.lib;libiconv.lib;libass-s.lib;zlib1.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <PostBuildEvent>
-      <Command>if not exist "$(OutDir)$(ProjectName).ofx.bundle\Contents\Resources" mkdir "$(OutDir)$(ProjectName).ofx.bundle\Contents\Resources"
-if not exist "$(OutDir)$(ProjectName).ofx.bundle\Contents\$(PlatformTarget)" mkdir "$(OutDir)$(ProjectName).ofx.bundle\Contents\$(Platform)"
-copy /Y "$(TargetPath)" /B "$(OutDir)$(ProjectName).ofx.bundle\Contents\$(Platform)\$(ProjectName).ofx" /B
-</Command>
-    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;_WINDOWS;_USRDLL;RENDERASS_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)..\libass-msvc\libass-0.14.0\libass\;$(SolutionDir)..\libass-msvc\freetype-2.6.1\include;$(SolutionDir)..\openfx-master\Include;D:\develop\lib\Image\libpng140b106\;D:\develop\lib\zlib-1.2.5-dll\include;$(SolutionDir)..\libass-msvc\libiconv-1.15-msvc\iconv;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
-      <ExceptionHandling>Async</ExceptionHandling>
-      <DisableSpecificWarnings>C4819</DisableSpecificWarnings>
+      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(SolutionDir)RenderASS;$(SolutionDir)..\libass-msvc\libass-0.14.0\libass\;$(SolutionDir)..\libass-msvc\freetype-2.6.1\include;$(SolutionDir)..\openfx-master\Include;D:\develop\lib\Image\libpng140b106\;D:\develop\lib\zlib-1.2.5-dll\include;$(SolutionDir)..\libass-msvc\libiconv-1.15-msvc\iconv;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <SubSystem>Windows</SubSystem>
+      <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>$(SolutionDir)..\libass-msvc\$(PlatformTarget)\$(Configuration)\lib;$(SolutionDir)..\libass-msvc\$(PlatformTarget)\$(Configuration);$(SolutionDir)..\libass-msvc\libiconv-1.15-msvc\$(PlatformTarget)\$(Configuration)\;$(SolutionDir)..\libass-msvc\libxml2-2.9.7\win32\bin.msvc\;D:\develop\lib\zlib-1.2.5-dll\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>libass-s.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)..\libass-msvc\$(PlatformTarget)\$(Configuration)\lib;$(SolutionDir)..\libass-msvc\$(PlatformTarget)\$(Configuration);$(SolutionDir)..\libass-msvc\\libiconv-1.15-msvc\$(PlatformTarget)\$(Configuration)\;D:\develop\lib\zlib-1.2.5-dll\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>fontconfig.lib;freetype.lib;fribidi.lib;harfbuzz.lib;libiconv.lib;libass-s.lib;zlib1.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <PostBuildEvent>
-      <Command>if not exist "$(OutDir)$(ProjectName).ofx.bundle\Contents\Resources" mkdir "$(OutDir)$(ProjectName).ofx.bundle\Contents\Resources"
-if not exist "$(OutDir)$(ProjectName).ofx.bundle\Contents\$(Platform)" mkdir "$(OutDir)$(ProjectName).ofx.bundle\Contents\Win64"
-copy /Y "$(TargetPath)" /B "$(OutDir)$(ProjectName).ofx.bundle\Contents\Win64\$(ProjectName).ofx" /B
-</Command>
-    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <Text Include="ReadMe.txt" />
+    <ClCompile Include="..\RenderASS\libass_helper.cpp" />
+    <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="libass_helper.h" />
-    <ClInclude Include="stdafx.h" />
-    <ClInclude Include="targetver.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="dllmain.cpp">
-      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</CompileAsManaged>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-      </PrecompiledHeader>
-      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</CompileAsManaged>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-      </PrecompiledHeader>
-      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</CompileAsManaged>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-      </PrecompiledHeader>
-      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</CompileAsManaged>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-      </PrecompiledHeader>
-    </ClCompile>
-    <ClCompile Include="libass_helper.cpp" />
-    <ClCompile Include="RenderASS.cpp" />
+    <ClInclude Include="..\RenderASS\libass_helper.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

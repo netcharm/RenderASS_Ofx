@@ -174,8 +174,7 @@ AssRender::~AssRender() {
 }
 
 // look up a pixel in the image, does bounds checking to see if it is in the image rectangle
-inline RGBA *
-AssRender::pixelAddress(RGBA *img, ARECT rect, int x, int y, int bytesPerLine)
+inline RGBA *AssRender::pixelAddress(RGBA *img, ARECT rect, int x, int y, int bytesPerLine)
 {
 	if (x < rect.x1 || x >= rect.x2 || y < rect.y1 || y > rect.y2)
 		return 0;
@@ -185,8 +184,7 @@ AssRender::pixelAddress(RGBA *img, ARECT rect, int x, int y, int bytesPerLine)
 }
 
 // render ass image to source clip frame
-inline
-bool AssRender::blend_image(ASS_Image* img, const void* image) {
+inline bool AssRender::blend_image(ASS_Image* img, const void* image) {
 
 	int dstRowBytes = renderWidth*renderDepth;
 	ARECT dstRect;
@@ -213,7 +211,10 @@ bool AssRender::blend_image(ASS_Image* img, const void* image) {
 	
 	RGBA *dst = (RGBA *)image;
 	for (int y = 0; y < renderHeight; y++) {
+		if (y < dstRectAss.y1 || y > dstRectAss.y2) continue;
 		RGBA *dstPix = pixelAddress(dst, dstRect, 0, y, dstRowBytes);		
+		//dstPix += dstRectAss.x1;
+		//for (int x = dstRectAss.x1; x < dstRectAss.x2; x++) {
 		for (int x = 0; x < renderWidth; x++) {
 			try
 			{
@@ -239,7 +240,7 @@ bool AssRender::blend_image(ASS_Image* img, const void* image) {
 			}
 			dstPix++;
 		}
-
+		//dstPix += renderWidth - dstRectAss.x2;
 	}
 	return true;
 }
@@ -565,7 +566,7 @@ ASS_Image* AssRender::GetAss(double n, int width, int height)
 	}
 }
 
-int AssRender::GetAss(double n, int width, int height, int depth, const void * image)
+int AssRender::GetAss(double n, int width, int height, int depth, const void* image)
 {
 	renderDepth = depth;
 	ASS_Image* assImg = GetAss(n, width, height);

@@ -310,6 +310,53 @@ createInstance(OfxImageEffectHandle effect)
 	// make my private instance data
 	MyInstanceData *myData = getMyInstanceParam(effect);
 
+	//MyInstanceData *myData = new MyInstanceData;
+	//char *context = 0;
+
+	//// is this instance a general effect ?
+	//gPropHost->propGetString(effectProps, kOfxImageEffectPropContext, 0, &context);
+	//if (strcmp(context, kOfxImageEffectContextGenerator) == 0) {
+	//	myData->context = eIsGenerator;
+	//}
+	//else if (strcmp(context, kOfxImageEffectContextFilter) == 0) {
+	//	myData->context = eIsFilter;
+	//}
+	//else {
+	//	myData->context = eIsGeneral;
+	//}
+	//if (myDataOld) 
+	//	myData->ass = myDataOld->ass;
+	//else
+	//	myData->ass = new AssRender(ASS_HINTING_NONE, 1.0, "UTF-8");
+
+	//// cache away param handles
+	//gParamHost->paramGetHandle(paramSet, "assFileName", &myData->assFileName, 0);
+
+	//gParamHost->paramGetHandle(paramSet, "assDefaultFontName", &myData->assDefaultFontName, 0);
+	//gParamHost->paramGetHandle(paramSet, "assDefaultFontSize", &myData->assDefaultFontSize, 0);
+	//gParamHost->paramGetHandle(paramSet, "assDefaultFontColor", &myData->assDefaultFontColor, 0);
+	//gParamHost->paramGetHandle(paramSet, "assDefaultFontOutline", &myData->assDefaultFontOutline, 0);
+	//gParamHost->paramGetHandle(paramSet, "assDefaultBackground", &myData->assDefaultBackground, 0);
+
+	//gParamHost->paramGetHandle(paramSet, "assFontScale", &myData->assFontScale, 0);
+	//gParamHost->paramGetHandle(paramSet, "assFontHints", &myData->assFontHints, 0);
+
+	//gParamHost->paramGetHandle(paramSet, "assUseMargin", &myData->assUseMargin, 0);
+	//gParamHost->paramGetHandle(paramSet, "assMarginT", &myData->assMarginT, 0);
+	//gParamHost->paramGetHandle(paramSet, "assMarginB", &myData->assMarginB, 0);
+	//gParamHost->paramGetHandle(paramSet, "assMarginL", &myData->assMarginL, 0);
+	//gParamHost->paramGetHandle(paramSet, "assMarginR", &myData->assMarginR, 0);
+	//gParamHost->paramGetHandle(paramSet, "assSpace", &myData->assSpace, 0);
+	//gParamHost->paramGetHandle(paramSet, "assPosition", &myData->assPosition, 0);
+
+	//// cache away clip handles
+	//if (myData->context != eIsGenerator)
+	//	gEffectHost->clipGetHandle(effect, kOfxImageEffectSimpleSourceClipName, &myData->sourceClip, 0);
+	//else
+	//	myData->sourceClip = NULL;
+
+	//gEffectHost->clipGetHandle(effect, kOfxImageEffectOutputClipName, &myData->outputClip, 0);
+
 	// set my private instance data
 	ofxuSetEffectInstanceData(effect, (void *)myData);
 
@@ -503,13 +550,17 @@ describe(OfxImageEffectHandle effect)
 	//gPropHost->propSetString(effectProps, kOfxImageEffectPropSupportedPixelDepths, 2, kOfxBitDepthFloat);
 
 	// set plugin label and the group it belongs to
-	gPropHost->propSetString(effectProps, kOfxPropLabel, 0, "Render ASS");
+#ifdef _DEBUG
+		gPropHost->propSetString(effectProps, kOfxPropLabel, 0, "Render ASS Debug");
+#else
+		gPropHost->propSetString(effectProps, kOfxPropLabel, 0, "Render ASS");
+#endif
 	gPropHost->propSetString(effectProps, kOfxImageEffectPluginPropGrouping, 0, "NetCharm");
 	//gPropHost->propSetInt(effectProps, kOfxImageEffectPropSupportsOverlays, 0, 1);
 
 	// define the contexts we can be used in
 	gPropHost->propSetString(effectProps, kOfxImageEffectPropSupportedContexts, 0, kOfxImageEffectContextFilter);
-	//gPropHost->propSetString(effectProps, kOfxImageEffectPropSupportedContexts, 1, kOfxImageEffectContextGenerator);
+	gPropHost->propSetString(effectProps, kOfxImageEffectPropSupportedContexts, 1, kOfxImageEffectContextGenerator);
 	//gPropHost->propSetString(effectProps, kOfxImageEffectPropSupportedContexts, 2, kOfxImageEffectContextGeneral);
 
 	return kOfxStatOK;
@@ -543,27 +594,27 @@ describeInContext(OfxImageEffectHandle  effect, OfxPropertySetHandle inArgs)
 	gPropHost->propGetString(inArgs, kOfxImageEffectPropContext, 0, &context);
 	bool isGeneratorContext = strcmp(context, kOfxImageEffectContextGenerator) == 0;
 
-	OfxPropertySetHandle clipProps;
-	// define the single output clip in both contexts
-	gEffectHost->clipDefine(effect, kOfxImageEffectOutputClipName, &clipProps);
+	//OfxPropertySetHandle clipProps;
+	//// define the single output clip in both contexts
+	//gEffectHost->clipDefine(effect, kOfxImageEffectOutputClipName, &clipProps);
 
-	// set the component types we can handle on out output
-	gPropHost->propSetString(clipProps, kOfxImageEffectPropSupportedComponents, 0, kOfxImageComponentRGBA);
-	//gPropHost->propSetString(clipProps, kOfxImageEffectPropSupportedComponents, 1, kOfxImageComponentAlpha);
-	//gPropHost->propSetString(clipProps, kOfxImageClipPropFieldExtraction, 0, kOfxImageFieldSingle);
+	//// set the component types we can handle on out output
+	//gPropHost->propSetString(clipProps, kOfxImageEffectPropSupportedComponents, 0, kOfxImageComponentRGBA);
+	////gPropHost->propSetString(clipProps, kOfxImageEffectPropSupportedComponents, 1, kOfxImageComponentAlpha);
+	////gPropHost->propSetString(clipProps, kOfxImageClipPropFieldExtraction, 0, kOfxImageFieldSingle);
 
-	if (!isGeneratorContext) {
-		OfxPropertySetHandle clipProps;
-		// define the single source clip in filter and general contexts
-		gEffectHost->clipDefine(effect, kOfxImageEffectSimpleSourceClipName, &clipProps);
+	//if (!isGeneratorContext) {
+	//	OfxPropertySetHandle clipProps;
+	//	// define the single source clip in filter and general contexts
+	//	gEffectHost->clipDefine(effect, kOfxImageEffectSimpleSourceClipName, &clipProps);
 
-		// set the component types we can handle on our main input
-		gPropHost->propSetString(clipProps, kOfxImageEffectPropSupportedComponents, 0, kOfxImageComponentRGBA);
-		gPropHost->propSetString(clipProps, kOfxImageEffectPropSupportedComponents, 1, kOfxImageComponentRGB);
-		//gPropHost->propSetString(clipProps, kOfxImageEffectPropSupportedComponents, 2, kOfxImageComponentAlpha);
-		//gPropHost->propSetString(clipProps, kOfxImageEffectPropSupportedComponents, 3, kOfxImageComponentNone);
-		//gPropHost->propSetString(clipProps, kOfxImageClipPropFieldExtraction, 0, kOfxImageFieldSingle);
-	}
+	//	// set the component types we can handle on our main input
+	//	gPropHost->propSetString(clipProps, kOfxImageEffectPropSupportedComponents, 0, kOfxImageComponentRGBA);
+	//	//gPropHost->propSetString(clipProps, kOfxImageEffectPropSupportedComponents, 1, kOfxImageComponentAlpha);
+	//	//gPropHost->propSetString(clipProps, kOfxImageClipPropFieldExtraction, 0, kOfxImageFieldSingle);
+	//}
+
+	//return kOfxStatOK;
 
 	////////////////////////////////////////////////////////////////////////////////
 	// define the parameters for this context
@@ -979,9 +1030,9 @@ copy_source(OfxImageEffectHandle instance,
 				dstPix->a = srcPix->a;
 			}
 			else {
-				dstPix->r = 255;
-				dstPix->g = 255;
-				dstPix->b = 255;
+				dstPix->r = 0;
+				dstPix->g = 0;
+				dstPix->b = 0;
 				dstPix->a = 0;
 			}
 			dstPix++;
@@ -1056,8 +1107,6 @@ static OfxStatus render(OfxImageEffectHandle instance,
 
 			copy_source(instance, renderWindow, srcPtr, srcRect, srcRowBytes, dstPtr, dstRect, dstRowBytes);
 		}
-		else
-			copy_source(instance, renderWindow, NULL, dstRect, dstRowBytes, dstPtr, dstRect, dstRowBytes);
 
 		if(myData->ass)
 			myData->ass->GetAss((double)time, renderWindow.x2 - renderWindow.x1, renderWindow.y2 - renderWindow.y1, colorDepth, dstPtr);
@@ -1160,7 +1209,11 @@ static OfxPlugin RenderAssPlugin =
 {
 	kOfxImageEffectPluginApi,
 	1,
+#ifdef _DEBUG
+	"cn.netcharm.Ofx.RenderASS-D",
+#else
 	"cn.netcharm.Ofx.RenderASS",
+#endif
 	1,
 	0,
 	setHostFunc,

@@ -27,6 +27,9 @@
     <ClInclude Include="libass_helper.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="common_ofx.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="RenderASS.cpp">

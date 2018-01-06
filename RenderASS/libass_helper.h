@@ -19,18 +19,20 @@
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
 
+#ifndef _LIBASS_HELPER_
+#define _LIBASS_HELPER_
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <stdint.h>
 #include <stdio.h>
+
 extern "C" {
-#  include <ass.h>
-//#  include <ass_outline.h>
-#  include <ass_types.h>
+#include <ass.h>
+#include <ass_types.h>
 }
 
-#define M_PI       3.14159265358979323846   // pi
+#define M_PI   3.14159265358979323846   // pi
 
 #define _R(c)  ((c)>>24)
 #define _G(c)  (((c)>>16)&0xFF)
@@ -104,7 +106,6 @@ private:
 	double margin_t = 0, margin_b = 0, margin_l = 0, margin_r = 0;
 	double spacing = 2, position = 2;
 
-	ASS_Image* assImg;
 	inline RGBA * pixelAddress(RGBA *img, ARECT rect, int x, int y, int bytesPerLine);
 	inline bool blend_image(ASS_Image* img, const void* image);
 public:
@@ -140,7 +141,7 @@ public:
 
 	bool __stdcall LoadAss(const char* assfile, const char *_charset);
 
-	int __stdcall GetAss(double n, int width, int height, int depth, const void*image);
+	int __stdcall GetAss(double n, int width, int height, int depth, const void* image);
 	ASS_Image* __stdcall GetAss(double n, int width, int height);
 	ASS_Image* __stdcall GetAss(double n, const ASS_Image* src);
 	ASS_Image* __stdcall GetAss(int64_t n, const ASS_Image* src);
@@ -148,3 +149,4 @@ public:
 	ASS_Image_List* __stdcall GetAss(double n, int width, int height, bool ass_type);
 };
 
+#endif

@@ -74,15 +74,15 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <OutDir>_out\$(Configuration)\$(PlatformTarget)</OutDir>
-    <IntDir>_out\$(Configuration)\$(PlatformTarget)\_inter</IntDir>
+    <IntDir>$(OutDir)_inter\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <OutDir>_out\$(Configuration)\$(PlatformTarget)</OutDir>
     <IntDir>_out\$(Configuration)\$(PlatformTarget)\_inter</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <OutDir>_out\$(Configuration)\$(PlatformTarget)</OutDir>
-    <IntDir>_out\$(Configuration)\$(PlatformTarget)\_inter</IntDir>
+    <OutDir>$(ProjectDir)_out\$(PlatformTarget)\$(Configuration)\</OutDir>
+    <IntDir>$(OutDir)_inter\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>

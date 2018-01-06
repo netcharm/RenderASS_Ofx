@@ -181,8 +181,10 @@ bool blend_image(ASS_Image* img, const void* image) {
 	
 	OfxRGBAColourB *dst = (OfxRGBAColourB *)image;
 	for (int y = 0; y < bHeight; y++) {
+		if (y < dstRectAss.y1 || y > dstRectAss.y2) continue;
 		OfxRGBAColourB *dstPix = pixelAddress(dst, dstRect, 0, y, dstRowBytes);		
-		for (int x = 0; x < bWidth; x++) {
+		dstPix += dstRectAss.x1;
+		for (int x = dstRectAss.x1; x < dstRectAss.x2; x++) {
 			try
 			{
 				long idx_x = x - dstRectAss.x1;
@@ -214,7 +216,7 @@ bool blend_image(ASS_Image* img, const void* image) {
 			}
 			dstPix++;
 		}
-
+		dstPix += bWidth - dstRectAss.x2;
 	}
 	return true;
 }

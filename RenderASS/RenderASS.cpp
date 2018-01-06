@@ -19,19 +19,13 @@ The main features are
 #include <tchar.h>
 #include <windows.h>
 #include <math.h>
+#include <Shlobj.h>
 #include "ofxImageEffect.h"
 #include "ofxMemory.h"
 #include "ofxMultiThread.h"
 #include "ofxPixels.h"
 #include "../include/ofxUtilities.H"
 
-#if defined __APPLE__ || defined linux || defined __FreeBSD__
-#  define EXPORT __attribute__((visibility("default")))
-#elif defined _WIN32
-#  define EXPORT OfxExport
-#else
-#  error Not building on your operating system quite yet
-#endif
 
 #include "common_ofx.h"
 
@@ -52,7 +46,7 @@ OfxInteractSuiteV1    *gInteractHost = 0;
 int gHostSupportsMultipleBitDepths = false;
 
 /* mandatory function to set up the host structures */
-static class RenderASS {
+class RenderASS {
 private:
 	// Convinience wrapper to get private data 
 	static MyInstanceData * getMyInstanceData(OfxImageEffectHandle effect)
@@ -74,7 +68,9 @@ private:
 		// get the parameter from the parameter set
 		OfxParamHandle param;
 
-		MyInstanceData *myData = new MyInstanceData;
+		//MyInstanceData *myData = new MyInstanceData;
+		MyInstanceData *myData = getMyInstanceData(effect);
+		if(!myData) myData = new MyInstanceData;
 
 		myData->ass = new AssRender(ASS_HINTING_NONE, 1.0, "UTF-8");
 
@@ -955,8 +951,7 @@ public:
 	}
 
 	// function to set the host structure
-	static void
-		setHostFunc(OfxHost *hostStruct)
+	static void setHostFunc(OfxHost *hostStruct)
 	{
 		gHost = hostStruct;
 	}
@@ -980,17 +975,7 @@ static OfxPlugin RenderAssPlugin =
 	RenderASS::pluginMain
 };
 
-// the two mandated functions
-EXPORT OfxPlugin *
-OfxGetPlugin(int nth)
+static OfxPlugin * GetRenderASS(void)
 {
-	if (nth == 0)
-		return &RenderAssPlugin;
-	return 0;
-}
-
-EXPORT int
-OfxGetNumberOfPlugins(void)
-{
-	return 1;
+	return &RenderAssPlugin;
 }

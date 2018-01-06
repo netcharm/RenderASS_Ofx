@@ -3,12 +3,21 @@
 #ifndef COMMON_OFX
 #define COMMON_OFX
 
+#if defined __APPLE__ || defined linux || defined __FreeBSD__
+#  define EXPORT __attribute__((visibility("default")))
+#elif defined _WIN32
+#  define EXPORT OfxExport
+#else
+#  error Not building on your operating system quite yet
+#endif
+
 #include <math.h>
 #include "ofxImageEffect.h"
 #include "ofxMemory.h"
 #include "ofxMultiThread.h"
 #include "ofxPixels.h"
 #include "../include/ofxUtilities.H"
+
 
 //extern "C" {
 #  include <ass.h>
@@ -53,7 +62,6 @@ struct MyInstanceData {
 
 // throws this if it can't fetch an image
 class NoImageEx {};
-
 
 // look up a pixel in the image, does bounds checking to see if it is in the image rectangle
 inline OfxRGBAColourB * pixelAddress(OfxRGBAColourB *img, OfxRectI rect, int x, int y, int bytesPerLine) {
@@ -164,5 +172,20 @@ inline void copy_source(OfxImageEffectHandle instance,
 
 }
 
+static OfxPlugin * GetRenderASS(void);
+
+// the two mandated functions
+EXPORT OfxPlugin * OfxGetPlugin(int nth)
+{
+	if (nth == 0)
+		//return &RenderAssPlugin;
+		return GetRenderASS();
+	return 0;
+}
+
+EXPORT int OfxGetNumberOfPlugins(void)
+{
+	return 1;
+}
 
 #endif

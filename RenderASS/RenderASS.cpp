@@ -37,6 +37,7 @@ struct RenderAssInstanceData {
 	ContextEnum context;
 	AssRender * ass;
 
+	double Offset;
 	double FrameStart;
 	double FrameEnd;
 
@@ -46,6 +47,7 @@ struct RenderAssInstanceData {
 
 	// handles to a our parameters
 	OfxParamHandle assFileName;
+	OfxParamHandle assOffset;
 
 	OfxParamHandle assUseMargin;
 	OfxParamHandle assMarginT;
@@ -125,6 +127,11 @@ private:
 		gParamHost->paramGetValue(param, &str_ass);
 		myData->ass->LoadAss(str_ass, "UTF-8");
 		gParamHost->paramGetHandle(paramSet, "assFileName", &myData->assFileName, 0);
+
+		myData->Offset = ofxuGetTime(effect);
+		gParamHost->paramGetHandle(paramSet, "assOffset", &param, 0);
+		gParamHost->paramGetValue(param, &myData->Offset);
+		gParamHost->paramGetHandle(paramSet, "assOffset", &myData->assOffset, 0);
 
 		gParamHost->paramGetHandle(paramSet, "assDefaultFontName", &param, 0);
 		char* str_fontname;
@@ -349,6 +356,11 @@ public:
 			if (myData->ass && fn[0] != 0) {
 				myData->ass->LoadAss(fn, "UTF-8");
 			}
+		}
+		else if (strcmp(propName, "assOffset") == 0) {
+			int offset = 0;
+			gParamHost->paramGetValue(myData->assOffset, &offset);
+			if (myData->ass) myData->Offset = offset;
 		}
 		else if (strcmp(propName, "assDefaultFontName") == 0) {
 			char* fontname = NULL;
@@ -579,6 +591,18 @@ public:
 			gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, "Loaded ASS File");
 			gPropHost->propSetString(paramProps, kOfxParamPropStringMode, 0, kOfxParamStringIsFilePath);
 			gPropHost->propSetInt(paramProps, kOfxParamPropStringFilePathExists, 0, 1);
+
+			// make an font size parameter
+			gParamHost->paramDefine(paramSet, kOfxParamTypeInteger, "assOffset", &paramProps);
+			gPropHost->propSetString(paramProps, kOfxParamPropScriptName, 0, "assOffset");
+			gPropHost->propSetString(paramProps, kOfxPropLabel, 0, "ASS Offset");
+			gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, "ASS Time Offset");
+			gPropHost->propSetInt(paramProps, kOfxParamPropDefault, 0, 0);
+			gPropHost->propSetInt(paramProps, kOfxParamPropMin, 0, 0);
+			gPropHost->propSetInt(paramProps, kOfxParamPropMax, 0, 512000);
+			gPropHost->propSetInt(paramProps, kOfxParamPropDisplayMin, 0, 0);
+			gPropHost->propSetInt(paramProps, kOfxParamPropDisplayMax, 0, 512000);
+			gPropHost->propSetInt(paramProps, kOfxParamPropIncrement, 0, 100);
 
 			// make ass properties group
 			gParamHost->paramDefine(paramSet, kOfxParamTypeGroup, "AssPosProperties", &paramProps);
@@ -904,25 +928,21 @@ public:
 
 		OfxPropertySetHandle outputImg = NULL, sourceImg = NULL;
 		try {
-			// fetch image to render into from that clip
-			if (gEffectHost->clipGetImage(outputClip, time, NULL, &outputImg) != kOfxStatOK) {
-				throw NoImageEx();
-			}
-
 			//getFrameRange(instance, outputClip);
-
-			// fetch output image info from that handle
-			int dstRowBytes = ofxuGetImageRowBytes(outputImg);
-			OfxRectI dstRect = ofxuGetImageBounds(outputImg);
-			void *dstPtr = ofxuGetImageData(outputImg);
-			int bitDepth;
-			bool isAlpha;
-
-			outputImg = ofxuGetImage(outputClip, time, dstRowBytes, bitDepth, isAlpha, dstRect, dstPtr);
+			// fetch image to render into from that clip
+			int dstRowBytes;
+			int dstBitDepth;
+			bool dstIsAlpha;
+			OfxRectI dstRect;
+			void *dstPtr;
+			outputImg = ofxuGetImage(outputClip, time, dstRowBytes, dstBitDepth, dstIsAlpha, dstRect, dstPtr);
+			if (!outputImg) throw NoImageEx();
 
 
 			RenderAssInstanceData *myData = getMyInstanceData(instance);
 			if (!myData) throw(new NoImageEx());
+
+			time_p = time + myData->Offset;
 
 			bool blend = false;
 			if (myData->context != eIsGenerator) {
@@ -931,14 +951,13 @@ public:
 				gEffectHost->clipGetHandle(instance, kOfxImageEffectSimpleSourceClipName, &sourceClip, 0);
 
 				// fetch image at render time from that clip
-				if (gEffectHost->clipGetImage(sourceClip, time, NULL, &sourceImg) != kOfxStatOK) {
-					throw NoImageEx();
-				}
-
-				// fetch image info out of that handle
-				int srcRowBytes = ofxuGetImageRowBytes(sourceImg);
-				OfxRectI srcRect = ofxuGetImageBounds(sourceImg);
-				void *srcPtr = ofxuGetImageData(sourceImg);
+				int srcRowBytes;
+				int srcBitDepth;
+				bool srcIsAlpha;
+				OfxRectI srcRect;
+				void *srcPtr;
+				sourceImg = ofxuGetImage(sourceClip, time, srcRowBytes, srcBitDepth, srcIsAlpha, srcRect, srcPtr);
+				if (!sourceImg) throw NoImageEx();
 
 				copy_source(instance, renderWindow, srcPtr, srcRect, srcRowBytes, dstPtr, dstRect, dstRowBytes);
 				blend = true;
@@ -948,7 +967,7 @@ public:
 			}
 
 			if (myData->ass)
-				myData->ass->GetAss((double)time, renderWindow.x2 - renderWindow.x1, renderWindow.y2 - renderWindow.y1, colorDepth, dstPtr, blend);
+				myData->ass->GetAss((double)time_p, renderWindow.x2 - renderWindow.x1, renderWindow.y2 - renderWindow.y1, colorDepth, dstPtr, blend);
 		}
 		catch (NoImageEx &) {
 			// if we were interrupted, the failed fetch is fine, just return kOfxStatOK

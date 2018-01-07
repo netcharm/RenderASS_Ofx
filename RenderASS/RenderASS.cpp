@@ -45,9 +45,32 @@ OfxInteractSuiteV1    *gInteractHost = 0;
 // some flags about the host's behaviour
 int gHostSupportsMultipleBitDepths = false;
 
+const char* PluginAuthor = "NetCharm";
+#ifdef _DEBUG
+const char* PluginLabel = "Render ASS Debug";
+#else
+const char* PluginLabel = "Render ASS";
+#endif
+const char* PluginDescription = " ASS/SSA (Advanced Substation Alpha/Substation Alpha) Render Filter";
+#ifdef _DEBUG
+const char* PluginIdentifier = "cn.netcharm.Ofx.RenderASS-D";
+#else
+const char* PluginIdentifier = "cn.netcharm.Ofx.RenderASS";
+#endif
+
+const unsigned int Version_Majon = 1;
+const unsigned int Version_Minor = 0;
+const unsigned int Version_Revision = 3;
+const unsigned int Version_BuildNo = 33;
+
+int PluginVersion[4] = { Version_Majon, Version_Minor, Version_Revision, Version_BuildNo };
+
+
+
 /* mandatory function to set up the host structures */
 class RenderASS {
 private:
+
 	// Convinience wrapper to get private data 
 	static MyInstanceData * getMyInstanceData(OfxImageEffectHandle effect)
 	{
@@ -273,12 +296,14 @@ public:
 		myData = getMyInstanceData(effect);
 		if (!myData) return kOfxStatReplyDefault;
 
-		char *propType;
-		char *propName;
+		char *propType = NULL;
+		char *propName = NULL;
 		gPropHost->propGetString(inArgs, kOfxPropType, 0, &propType);
 		gPropHost->propGetString(inArgs, kOfxPropName, 0, &propName);
 
-		if (strcmp(propName, "assFileName") == 0) {
+		if(!propType || !propName) return kOfxStatReplyDefault;
+
+		if      (strcmp(propName, "assFileName") == 0) {
 			//char fn[MAX_PATH];
 			//memset(fn, 0, MAX_PATH);
 			char *fn;
@@ -397,6 +422,7 @@ public:
 				}
 			}
 		}
+		
 		// don't trap any others
 		return kOfxStatReplyDefault;
 	}
@@ -415,9 +441,16 @@ public:
 		return kOfxStatOK;
 	}
 
+	static OfxStatus syncData(OfxImageEffectHandle effect, 
+		                      OfxPropertySetHandle inArgs, 
+		                      OfxPropertySetHandle outArgs)
+	{
+		return kOfxStatOK;
+	}
+
 	////////////////////////////////////////////////////////////////////////////////
 	// the plugin's description routine
-	static OfxStatus describe(OfxImageEffectHandle effect) 
+	static OfxStatus describe(OfxImageEffectHandle effect)
 	{
 		// first fetch the host APIs, this cannot be done before this call
 		OfxStatus stat;
@@ -441,13 +474,16 @@ public:
 		//gPropHost->propSetString(effectProps, kOfxImageEffectPropSupportedPixelDepths, 2, kOfxBitDepthFloat);
 
 		// set plugin label and the group it belongs to
-#ifdef _DEBUG
-		gPropHost->propSetString(effectProps, kOfxPropLabel, 0, "Render ASS Debug");
-#else
-		gPropHost->propSetString(effectProps, kOfxPropLabel, 0, "Render ASS");
-#endif
-		gPropHost->propSetString(effectProps, kOfxImageEffectPluginPropGrouping, 0, "NetCharm");
+		gPropHost->propSetString(effectProps, kOfxPropLabel, 0, PluginLabel);
+		gPropHost->propSetString(effectProps, kOfxImageEffectPluginPropGrouping, 0, PluginAuthor);
 		//gPropHost->propSetInt(effectProps, kOfxImageEffectPropSupportsOverlays, 0, 1);
+
+		char ver_str[64] = "";
+		sprintf_s(ver_str, "%d.%d.%d.%d", PluginVersion[0], PluginVersion[1], PluginVersion[2], PluginVersion[3]);
+		gPropHost->propSetIntN(effectProps, kOfxPropVersion, 4, PluginVersion);
+		gPropHost->propSetString(effectProps, kOfxPropVersionLabel, 0, ver_str);
+		gPropHost->propSetString(effectProps, kOfxPropPluginDescription, 0, PluginDescription);
+		
 
 		// define the contexts we can be used in
 		gPropHost->propSetString(effectProps, kOfxImageEffectPropSupportedContexts, 0, kOfxImageEffectContextFilter);
@@ -887,6 +923,8 @@ public:
 		                        OfxPropertySetHandle inArgs, 
 		                        OfxPropertySetHandle outArgs)
 	{
+		if (!action) return kOfxStatReplyDefault;
+
 		try {
 			// cast to appropriate type
 			OfxImageEffectHandle effect = (OfxImageEffectHandle)handle;
@@ -915,9 +953,9 @@ public:
 			else if (strcmp(action, kOfxImageEffectActionIsIdentity) == 0) {
 				return isIdentity(effect, inArgs, outArgs);
 			}
-			//else if (strcmp(action, "OfxActionSyncPrivateData") == 0) {
-			//	return syncData(effect, inArgs, outArgs);
-			//}
+			else if (strcmp(action, kOfxActionSyncPrivateData) == 0) {
+				//return syncData(effect, inArgs, outArgs);
+			}
 			else if (strcmp(action, kOfxImageEffectActionGetClipPreferences) == 0) {
 				return getClipPreferences(effect, inArgs, outArgs);
 			}
@@ -964,13 +1002,9 @@ static OfxPlugin RenderAssPlugin =
 {
 	kOfxImageEffectPluginApi,
 	1,
-#ifdef _DEBUG
-	"cn.netcharm.Ofx.RenderASS-D",
-#else
-	"cn.netcharm.Ofx.RenderASS",
-#endif
-	1,
-	0,
+	PluginIdentifier,
+	Version_Majon,
+	Version_Minor,
 	RenderASS::setHostFunc,
 	RenderASS::pluginMain
 };

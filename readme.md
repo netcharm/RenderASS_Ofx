@@ -28,6 +28,7 @@
 ### feature
 
 1. support as VideoFX add to video track
+1. support clip frame position only
 1. ass only support utf-8
 
 ### to-do

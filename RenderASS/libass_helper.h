@@ -107,7 +107,7 @@ private:
 	double spacing = 2, position = 2;
 
 	inline RGBA * pixelAddress(RGBA *img, ARECT rect, int x, int y, int bytesPerLine);
-	inline bool blend_image(ASS_Image* img, const void* image);
+	inline bool blend_image(ASS_Image* img, const void* image, bool blend);
 public:
 	AssRender(ASS_Hinting hints, double scale, const char *charset);
 	~AssRender();
@@ -141,7 +141,7 @@ public:
 
 	bool __stdcall LoadAss(const char* assfile, const char *_charset);
 
-	int __stdcall GetAss(double n, int width, int height, int depth, const void* image);
+	int __stdcall GetAss(double n, int width, int height, int depth, const void* image, bool blend);
 	ASS_Image* __stdcall GetAss(double n, int width, int height);
 	ASS_Image* __stdcall GetAss(double n, const ASS_Image* src);
 	ASS_Image* __stdcall GetAss(int64_t n, const ASS_Image* src);

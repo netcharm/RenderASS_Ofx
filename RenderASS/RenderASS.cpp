@@ -32,15 +32,37 @@ The main features are
 //#include <ass.h>
 #include "libass_helper.h"
 
-// pointers to various bits of the host
-OfxHost               *gHost;
-OfxImageEffectSuiteV1 *gEffectHost = 0;
-OfxPropertySuiteV1    *gPropHost = 0;
-OfxParameterSuiteV1   *gParamHost = 0;
-OfxMemorySuiteV1      *gMemoryHost = 0;
-OfxMultiThreadSuiteV1 *gThreadHost = 0;
-OfxMessageSuiteV1     *gMessageSuite = 0;
-OfxInteractSuiteV1    *gInteractHost = 0;
+// private instance data type
+struct RenderAssInstanceData {
+	ContextEnum context;
+	AssRender * ass;
+
+	double FrameStart;
+	double FrameEnd;
+
+	// handles to the clips we deal with
+	OfxImageClipHandle sourceClip;
+	OfxImageClipHandle outputClip;
+
+	// handles to a our parameters
+	OfxParamHandle assFileName;
+
+	OfxParamHandle assUseMargin;
+	OfxParamHandle assMarginT;
+	OfxParamHandle assMarginB;
+	OfxParamHandle assMarginL;
+	OfxParamHandle assMarginR;
+	OfxParamHandle assSpace;
+	OfxParamHandle assPosition;
+	OfxParamHandle assFontScale;
+	OfxParamHandle assFontHints;
+
+	OfxParamHandle assDefaultFontName;
+	OfxParamHandle assDefaultFontSize;
+	OfxParamHandle assDefaultFontColor;
+	OfxParamHandle assDefaultFontOutline;
+	OfxParamHandle assDefaultBackground;
+};
 
 // some flags about the host's behaviour
 int gHostSupportsMultipleBitDepths = false;
@@ -72,13 +94,13 @@ class RenderASS {
 private:
 
 	// Convinience wrapper to get private data 
-	static MyInstanceData * getMyInstanceData(OfxImageEffectHandle effect)
+	static RenderAssInstanceData * getMyInstanceData(OfxImageEffectHandle effect)
 	{
-		MyInstanceData *myData = (MyInstanceData *)ofxuGetEffectInstanceData(effect);
+		RenderAssInstanceData *myData = (RenderAssInstanceData *)ofxuGetEffectInstanceData(effect);
 		return myData;
 	}
 
-	static MyInstanceData * getMyInstanceParam(OfxImageEffectHandle effect) {
+	static RenderAssInstanceData * getMyInstanceParam(OfxImageEffectHandle effect) {
 
 		// get a pointer to the effect properties
 		OfxPropertySetHandle effectProps;
@@ -92,8 +114,8 @@ private:
 		OfxParamHandle param;
 
 		//MyInstanceData *myData = new MyInstanceData;
-		MyInstanceData *myData = getMyInstanceData(effect);
-		if(!myData) myData = new MyInstanceData;
+		RenderAssInstanceData *myData = getMyInstanceData(effect);
+		if(!myData) myData = new RenderAssInstanceData;
 
 		myData->ass = new AssRender(ASS_HINTING_NONE, 1.0, "UTF-8");
 
@@ -210,8 +232,11 @@ private:
 		if (strcmp(context, kOfxImageEffectContextGenerator) == 0) {
 			myData->context = eIsGenerator;
 		}
+		else if (strcmp(context, kOfxImageEffectContextPaint) == 0) {
+			myData->context = eIsGenerator;
+		}
 		else if (strcmp(context, kOfxImageEffectContextFilter) == 0) {
-			myData->context = eIsFilter;
+			myData->context = eIsPaint;
 		}
 		else {
 			myData->context = eIsGeneral;
@@ -235,10 +260,25 @@ private:
 		double fps = 0;
 		gPropHost->propGetDouble(props, kOfxImageEffectPropFrameRate, 0, &fps);
 
-		MyInstanceData *myData = getMyInstanceData(effect);
+		RenderAssInstanceData *myData = getMyInstanceData(effect);
 		if (myData && myData->ass) myData->ass->SetFPS(fps);
 		return(fps);
 	}
+
+	static void getFrameRange(OfxImageEffectHandle effect, OfxImageClipHandle clip)
+	{
+		OfxPropertySetHandle props;
+		gEffectHost->clipGetPropertySet(clip, &props);
+		double frames[2];
+		gPropHost->propGetDouble(props, kOfxImageEffectPropFrameRange, 0, &frames[0]);
+
+		RenderAssInstanceData *myData = getMyInstanceData(effect);
+		if (myData) {
+			myData->FrameStart = frames[0];
+			myData->FrameEnd = frames[1];
+		}
+	}
+
 	/** @brief Called at load */
 
 public:
@@ -254,9 +294,7 @@ public:
 		if (!gEffectHost || !gPropHost)
 			return kOfxStatErrMissingHostFeature;
 
-		//if (myData->ass == NULL) {
-		//	ass = new AssRender(ASS_HINTING_NONE, 1.0, "UTF-8");
-		//}
+		return ofxuFetchHostSuites();
 
 		return kOfxStatOK;
 	}
@@ -274,7 +312,7 @@ public:
 	static OfxStatus createInstance(OfxImageEffectHandle effect) 
 	{
 		// make my private instance data
-		MyInstanceData *myData = getMyInstanceParam(effect);
+		RenderAssInstanceData *myData = getMyInstanceParam(effect);
 
 		// set my private instance data
 		ofxuSetEffectInstanceData(effect, (void *)myData);
@@ -292,8 +330,8 @@ public:
 		char *changeReason;
 		gPropHost->propGetString(inArgs, kOfxPropChangeReason, 0, &changeReason);
 
-		MyInstanceData *myData = new MyInstanceData;
-		myData = getMyInstanceData(effect);
+		//RenderAssInstanceData *myData = new RenderAssInstanceData;
+		RenderAssInstanceData *myData = getMyInstanceData(effect);
 		if (!myData) return kOfxStatReplyDefault;
 
 		char *propType = NULL;
@@ -431,7 +469,7 @@ public:
 	static OfxStatus destroyInstance(OfxImageEffectHandle effect) 
 	{
 		// get my instance data
-		MyInstanceData *myData = getMyInstanceData(effect);
+		RenderAssInstanceData *myData = getMyInstanceData(effect);
 
 		// and delete it
 		if (myData) {
@@ -487,8 +525,10 @@ public:
 
 		// define the contexts we can be used in
 		gPropHost->propSetString(effectProps, kOfxImageEffectPropSupportedContexts, 0, kOfxImageEffectContextFilter);
+#ifdef _DEBUG
 		gPropHost->propSetString(effectProps, kOfxImageEffectPropSupportedContexts, 1, kOfxImageEffectContextGenerator);
-		//gPropHost->propSetString(effectProps, kOfxImageEffectPropSupportedContexts, 2, kOfxImageEffectContextGeneral);
+		//gPropHost->propSetString(effectProps, kOfxImageEffectPropSupportedContexts, 2, kOfxImageEffectContextPaint);
+#endif // _DEBUG
 
 		return kOfxStatOK;
 	}
@@ -744,7 +784,7 @@ public:
 			                    OfxPropertySetHandle outArgs)
 	{
 		// retrieve any instance data associated with this effect
-		MyInstanceData *myData = getMyInstanceData(effect);
+		RenderAssInstanceData *myData = getMyInstanceData(effect);
 		if (!myData) return kOfxStatReplyDefault;
 
 		// fetch a handle to the point param from the parameter set
@@ -786,7 +826,7 @@ public:
 	{
 		try {
 			// retrieve any instance data associated with this effect
-			MyInstanceData *myData = getMyInstanceData(effect);
+			RenderAssInstanceData *myData = getMyInstanceData(effect);
 
 			OfxPropertySetHandle props;
 			//OfxImageClipHandle clipHandle;
@@ -797,13 +837,6 @@ public:
 			OfxImageClipHandle outputClip;
 			gEffectHost->clipGetHandle(effect, kOfxImageEffectOutputClipName, &outputClip, 0);
 			gEffectHost->clipGetPropertySet(outputClip, &props);
-
-			//double fps = 29.970;
-			double fps = 30.000;
-			//gPropHost->propGetDouble(props, kOfxImageEffectPropFrameRate, 0, &fps);
-			gPropHost->propGetDouble(props, kOfxImageEffectPropFrameRate, 0, &fps);
-
-			if (myData->ass) myData->ass->SetFPS(fps);
 
 			if (myData) {
 				if (myData->context != eIsGenerator) {
@@ -820,7 +853,17 @@ public:
 					gPropHost->propSetString(outArgs, "OfxImageClipPropComponents_Output", 0, componentStr);
 					if (gHostSupportsMultipleBitDepths)
 						gPropHost->propSetString(outArgs, "OfxImageClipPropDepth_Output", 0, bitDepthStr);
+				} else {
+					// set out output to be the same same as the input, component and bitdepth
+					gPropHost->propSetString(outArgs, "OfxImageClipPropComponents_Output", 0, kOfxBitDepthByte);
+					if (gHostSupportsMultipleBitDepths)
+						gPropHost->propSetString(outArgs, "OfxImageClipPropDepth_Output", 0, kOfxImageComponentRGBA);
+
+					// as a generator we create premultiplied output
+					//gPropHost->propSetString(outArgs, kOfxImageEffectPropPreMultiplication, 0, kOfxImagePreMultiplied);
+					gPropHost->propSetString(outArgs, kOfxImageEffectPropPreMultiplication, 0, kOfxImageOpaque);
 				}
+
 			}
 		}
 		catch (std::exception ex) {
@@ -837,12 +880,15 @@ public:
 	{
 		// get the render window and the time from the inArgs
 		OfxTime time;
+		OfxTime time_p;
 		OfxRectI renderWindow;
 		char* renderDepth;
 		int colorDepth = 4;
 		OfxStatus status = kOfxStatOK;
 
-		gPropHost->propGetDouble(inArgs, kOfxPropTime, 0, &time);
+		time_p = ofxuGetTime(instance);
+		time = ofxuGetTime(inArgs);
+
 		gPropHost->propGetIntN(inArgs, kOfxImageEffectPropRenderWindow, 4, &renderWindow.x1);
 		gPropHost->propGetString(inArgs, kOfxImageEffectPropComponents, 0, &renderDepth);
 
@@ -863,18 +909,22 @@ public:
 				throw NoImageEx();
 			}
 
-			// fetch output image info from that handle
-			int dstRowBytes;
-			OfxRectI dstRect;
-			void *dstPtr;
-			gPropHost->propGetInt(outputImg, kOfxImagePropRowBytes, 0, &dstRowBytes);
-			gPropHost->propGetIntN(outputImg, kOfxImagePropBounds, 4, &dstRect.x1);
-			gPropHost->propGetInt(outputImg, kOfxImagePropRowBytes, 0, &dstRowBytes);
-			gPropHost->propGetPointer(outputImg, kOfxImagePropData, 0, &dstPtr);
+			//getFrameRange(instance, outputClip);
 
-			MyInstanceData *myData = getMyInstanceData(instance);
+			// fetch output image info from that handle
+			int dstRowBytes = ofxuGetImageRowBytes(outputImg);
+			OfxRectI dstRect = ofxuGetImageBounds(outputImg);
+			void *dstPtr = ofxuGetImageData(outputImg);
+			int bitDepth;
+			bool isAlpha;
+
+			outputImg = ofxuGetImage(outputClip, time, dstRowBytes, bitDepth, isAlpha, dstRect, dstPtr);
+
+
+			RenderAssInstanceData *myData = getMyInstanceData(instance);
 			if (!myData) throw(new NoImageEx());
 
+			bool blend = false;
 			if (myData->context != eIsGenerator) {
 				// fetch main input clip
 				OfxImageClipHandle sourceClip;
@@ -886,19 +936,19 @@ public:
 				}
 
 				// fetch image info out of that handle
-				int srcRowBytes;
-				OfxRectI srcRect;
-				void *srcPtr;
-				gPropHost->propGetInt(sourceImg, kOfxImagePropRowBytes, 0, &srcRowBytes);
-				gPropHost->propGetIntN(sourceImg, kOfxImagePropBounds, 4, &srcRect.x1);
-				gPropHost->propGetInt(sourceImg, kOfxImagePropRowBytes, 0, &srcRowBytes);
-				gPropHost->propGetPointer(sourceImg, kOfxImagePropData, 0, &srcPtr);
+				int srcRowBytes = ofxuGetImageRowBytes(sourceImg);
+				OfxRectI srcRect = ofxuGetImageBounds(sourceImg);
+				void *srcPtr = ofxuGetImageData(sourceImg);
 
 				copy_source(instance, renderWindow, srcPtr, srcRect, srcRowBytes, dstPtr, dstRect, dstRowBytes);
+				blend = true;
+			} else {
+				copy_source(instance, renderWindow, NULL, dstRect, 0, dstPtr, dstRect, dstRowBytes);
+				blend = false;
 			}
 
 			if (myData->ass)
-				myData->ass->GetAss((double)time, renderWindow.x2 - renderWindow.x1, renderWindow.y2 - renderWindow.y1, colorDepth, dstPtr);
+				myData->ass->GetAss((double)time, renderWindow.x2 - renderWindow.x1, renderWindow.y2 - renderWindow.y1, colorDepth, dstPtr, blend);
 		}
 		catch (NoImageEx &) {
 			// if we were interrupted, the failed fetch is fine, just return kOfxStatOK
@@ -915,6 +965,26 @@ public:
 
 		// all was well
 		return status;
+	}
+
+	static OfxStatus renderSeqBegin(OfxImageEffectHandle instance,
+								    OfxPropertySetHandle inArgs,
+		                            OfxPropertySetHandle /*outArgs*/)
+	{
+		//if (myData->ass != NULL) {
+		//	myData->ass->~AssRender();
+		//}
+		return kOfxStatOK;
+	}
+
+	static OfxStatus renderSeqEnd(OfxImageEffectHandle instance,
+		OfxPropertySetHandle inArgs,
+		OfxPropertySetHandle /*outArgs*/)
+	{
+		//if (myData->ass != NULL) {
+		//	myData->ass->~AssRender();
+		//}
+		return kOfxStatOK;
 	}
 
 	////////////////////////////////////////////////////////////////////////////////
@@ -962,6 +1032,13 @@ public:
 			else if (strcmp(action, kOfxImageEffectActionRender) == 0) {
 				return render(effect, inArgs, outArgs);
 			}
+			else if (strcmp(action, kOfxImageEffectActionBeginSequenceRender) == 0) {
+				return renderSeqBegin(effect, inArgs, outArgs);
+			}
+			else if (strcmp(action, kOfxImageEffectActionEndSequenceRender) == 0) {
+				return renderSeqEnd(effect, inArgs, outArgs);
+			}
+
 		}
 		catch (std::bad_alloc) {
 			// catch memory

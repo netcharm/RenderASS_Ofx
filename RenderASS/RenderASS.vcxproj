@@ -102,8 +102,8 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(SolutionDir)..\libass-msvc\$(PlatformTarget)\$(Configuration)\lib;$(SolutionDir)..\libass-msvc\$(PlatformTarget)\$(Configuration);$(SolutionDir)..\libass-msvc\\libiconv-1.15-msvc\$(PlatformTarget)\$(Configuration)\;D:\develop\lib\zlib-1.2.5-dll\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>fontconfig.lib;freetype.lib;fribidi.lib;harfbuzz.lib;libiconv.lib;libass-s.lib;zlib1.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)..\libass-msvc\$(PlatformTarget)\$(Configuration);$(SolutionDir)..\libass-msvc\libiconv-1.15-msvc\$(PlatformTarget)\$(Configuration)\;$(SolutionDir)..\libass-msvc\libxml2-2.9.7\win32\bin.msvc\;D:\develop\lib\zlib-1.2.5-dll\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>libass-s.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>if not exist "$(OutDir)$(ProjectName).ofx.bundle\Contents\Resources" mkdir "$(OutDir)$(ProjectName).ofx.bundle\Contents\Resources"
@@ -135,7 +135,7 @@ copy /Y "$(TargetPath)" /B "$(OutDir)$(ProjectName).ofx.bundle\Contents\$(Platfo
       <SubSystem>
       </SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(SolutionDir)..\libass-msvc\$(PlatformTarget)\$(Configuration)\lib;$(SolutionDir)..\libass-msvc\$(PlatformTarget)\$(Configuration);$(SolutionDir)..\libass-msvc\\libiconv-1.15-msvc\$(PlatformTarget)\$(Configuration)\;$(SolutionDir)..\libass-msvc\libxml2-2.9.7\win32\bin.msvc\;D:\develop\lib\zlib-1.2.5-dll\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)..\libass-msvc\$(PlatformTarget)\$(Configuration);$(SolutionDir)..\libass-msvc\libiconv-1.15-msvc\$(PlatformTarget)\$(Configuration)\;$(SolutionDir)..\libass-msvc\libxml2-2.9.7\win32\bin.msvc\;D:\develop\lib\zlib-1.2.5-dll\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>libass-s.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
@@ -164,8 +164,8 @@ copy /Y "$(TargetPath)" /B "$(OutDir)$(ProjectName).ofx.bundle\Contents\Win64\$(
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>$(SolutionDir)..\libass-msvc\$(PlatformTarget)\$(Configuration)\lib;$(SolutionDir)..\libass-msvc\$(PlatformTarget)\$(Configuration);$(SolutionDir)..\libass-msvc\\libiconv-1.15-msvc\$(PlatformTarget)\$(Configuration)\;D:\develop\lib\zlib-1.2.5-dll\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>fontconfig.lib;freetype.lib;fribidi.lib;harfbuzz.lib;libiconv.lib;libass-s.lib;zlib1.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)..\libass-msvc\$(PlatformTarget)\$(Configuration);$(SolutionDir)..\libass-msvc\libiconv-1.15-msvc\$(PlatformTarget)\$(Configuration)\;$(SolutionDir)..\libass-msvc\libxml2-2.9.7\win32\bin.msvc\;D:\develop\lib\zlib-1.2.5-dll\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>libass-s.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>if not exist "$(OutDir)$(ProjectName).ofx.bundle\Contents\Resources" mkdir "$(OutDir)$(ProjectName).ofx.bundle\Contents\Resources"
@@ -197,7 +197,7 @@ copy /Y "$(TargetPath)" /B "$(OutDir)$(ProjectName).ofx.bundle\Contents\$(Platfo
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>$(SolutionDir)..\libass-msvc\$(PlatformTarget)\$(Configuration)\lib;$(SolutionDir)..\libass-msvc\$(PlatformTarget)\$(Configuration);$(SolutionDir)..\libass-msvc\libiconv-1.15-msvc\$(PlatformTarget)\$(Configuration)\;$(SolutionDir)..\libass-msvc\libxml2-2.9.7\win32\bin.msvc\;D:\develop\lib\zlib-1.2.5-dll\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)..\libass-msvc\$(PlatformTarget)\$(Configuration);$(SolutionDir)..\libass-msvc\libiconv-1.15-msvc\$(PlatformTarget)\$(Configuration)\;$(SolutionDir)..\libass-msvc\libxml2-2.9.7\win32\bin.msvc\;D:\develop\lib\zlib-1.2.5-dll\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>libass-s.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
@@ -211,6 +211,9 @@ copy /Y "$(TargetPath)" /B "$(OutDir)$(ProjectName).ofx.bundle\Contents\Win64\$(
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\include\ofxsImageBlender.H" />
+    <ClInclude Include="..\include\ofxsprocessing.h" />
+    <ClInclude Include="..\include\ofxUtilities.H" />
     <ClInclude Include="common_ofx.h" />
     <ClInclude Include="libass_helper.h" />
     <ClInclude Include="stdafx.h" />

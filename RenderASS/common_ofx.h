@@ -12,12 +12,27 @@
 #endif
 
 #include <math.h>
-#include "ofxImageEffect.h"
-#include "ofxMemory.h"
-#include "ofxMultiThread.h"
-#include "ofxPixels.h"
-#include "../include/ofxUtilities.H"
 
+#include "ofxCore.h"
+#include "ofxDialog.h"
+#include "ofxImageEffect.h"
+#include "ofxInteract.h"
+#include "ofxKeySyms.h"
+#include "ofxMemory.h"
+#include "ofxMessage.h"
+#include "ofxMultiThread.h"
+#include "ofxOld.h"
+#include "ofxOpenGLRender.h"
+#include "ofxParam.h"
+#include "ofxParametricParam.h"
+#include "ofxPixels.h"
+#include "ofxProgress.h"
+#include "ofxProperty.h"
+#include "ofxTimeLine.h"
+
+#include "../include/ofxUtilities.H"
+//#include "../include/ofxsImageBlender.H"
+//#include "../include/ofxsProcessing.H"
 
 //extern "C" {
 #  include <ass.h>
@@ -25,40 +40,38 @@
 
 #include "libass_helper.h"
 
+typedef struct OfxTimeLineSuiteV2 {
+
+	OfxStatus(*getProjectTime)(void *instance, double EffectTime, double *ProjectTime);
+	// converts what host displays in it's user interface to local effect time, could be a large number if host project starts at 12:00:00:00)
+
+	OfxStatus(*getEffectTrimPoints)(void *instance, double *InPoint, double *OutPoint);
+	//  for example in an NLE this refers to In and out point handles of the video track on which the effect is applied, this is in effects local time. This is different then frame range and 0 to Duration.
+
+	OfxStatus(*gotoEffectTime)(void *instance, double *time);  // this is in effects local time, if one asks to go to time -5000, it might not be defined
+															   // because of this not being supported a lot, this is example of wanting to check if function pointer is NULL as means of seeing if supported
+
+} OfxTimeLineSuiteV2;
+
 enum ContextEnum {
 	eIsGenerator,
 	eIsFilter,
+	eIsPaint,
 	eIsGeneral
 };
 
-// private instance data type
-struct MyInstanceData {
-	ContextEnum context;
-	AssRender * ass;
+// pointers to various bits of the host
+OfxHost               *gHost;
+OfxImageEffectSuiteV1 *gEffectHost = 0;
+OfxPropertySuiteV1    *gPropHost = 0;
+OfxParameterSuiteV1   *gParamHost = 0;
+OfxMemorySuiteV1      *gMemoryHost = 0;
+OfxMultiThreadSuiteV1 *gThreadHost = 0;
+OfxMessageSuiteV1     *gMessageSuite = 0;
+OfxInteractSuiteV1    *gInteractHost = 0;
+OfxTimeLineSuiteV1    *gTimeLineHost1 = 0;
+OfxTimeLineSuiteV2    *gTimeLineHost2 = 0;
 
-	// handles to the clips we deal with
-	OfxImageClipHandle sourceClip;
-	OfxImageClipHandle outputClip;
-
-	// handles to a our parameters
-	OfxParamHandle assFileName;
-
-	OfxParamHandle assUseMargin;
-	OfxParamHandle assMarginT;
-	OfxParamHandle assMarginB;
-	OfxParamHandle assMarginL;
-	OfxParamHandle assMarginR;
-	OfxParamHandle assSpace;
-	OfxParamHandle assPosition;
-	OfxParamHandle assFontScale;
-	OfxParamHandle assFontHints;
-
-	OfxParamHandle assDefaultFontName;
-	OfxParamHandle assDefaultFontSize;
-	OfxParamHandle assDefaultFontColor;
-	OfxParamHandle assDefaultFontOutline;
-	OfxParamHandle assDefaultBackground;
-};
 
 // throws this if it can't fetch an image
 class NoImageEx {};
@@ -134,27 +147,26 @@ inline void blend_frame(OfxImageEffectHandle instance,
 	}
 }
 
-
 inline void copy_source(OfxImageEffectHandle instance,
-	const OfxRectI renderWindow,
-	const void *srcPtr, const OfxRectI srcRect, const int srcRowBytes,
-	const void *dstPtr, const OfxRectI dstRect, const int dstRowBytes) {
+	const OfxRectI rw,
+	const void *sp, const OfxRectI sr, const int srb,
+	const void *dp, const OfxRectI dr, const int drb) {
 
 	// cast data pointers to 8 bit RGBA
-	OfxRGBAColourB *src = (OfxRGBAColourB *)srcPtr;
-	OfxRGBAColourB *dst = (OfxRGBAColourB *)dstPtr;
+	OfxRGBAColourB *src = (OfxRGBAColourB *)sp;
+	OfxRGBAColourB *dst = (OfxRGBAColourB *)dp;
 
 	// and do some inverting
-	for (int y = renderWindow.y1; y < renderWindow.y2; y++) {
+	for (int y = rw.y1; y < rw.y2; y++) {
 		if (gEffectHost->abort(instance)) break;
 
-		OfxRGBAColourB *dstPix = pixelAddress(dst, dstRect, renderWindow.x1, y, dstRowBytes);
+		OfxRGBAColourB *dstPix = pixelAddress(dst, dr, rw.x1, y, drb);
 
-		for (int x = renderWindow.x1; x < renderWindow.x2; x++) {
+		for (int x = rw.x1; x < rw.x2; x++) {
 
-			OfxRGBAColourB *srcPix = pixelAddress(src, srcRect, x, y, srcRowBytes);
+			OfxRGBAColourB *srcPix = pixelAddress(src, sr, x, y, srb);
 
-			if (srcPix) {
+			if (src && srcPix) {
 				dstPix->r = srcPix->r;
 				dstPix->g = srcPix->g;
 				dstPix->b = srcPix->b;

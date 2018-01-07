@@ -184,7 +184,7 @@ inline RGBA *AssRender::pixelAddress(RGBA *img, ARECT rect, int x, int y, int by
 }
 
 // render ass image to source clip frame
-inline bool AssRender::blend_image(ASS_Image* img, const void* image) {
+inline bool AssRender::blend_image(ASS_Image* img, const void* image, bool blend=true) {
 
 	int dstRowBytes = renderWidth*renderDepth;
 	ARECT dstRect;
@@ -227,11 +227,18 @@ inline bool AssRender::blend_image(ASS_Image* img, const void* image) {
 					if (idx >= imglen) break;
 					ok = (unsigned)src_map[idx];
 					ak = ok*a / 255;
-					sk = 255 - ak;
-					dstPix->a = (unsigned char)ak;
-					dstPix->b = (unsigned char)((ak*b + sk*dstPix->b) / 255);
-					dstPix->g = (unsigned char)((ak*g + sk*dstPix->g) / 255);
-					dstPix->r = (unsigned char)((ak*r + sk*dstPix->r) / 255);
+					if (blend) {
+						sk = 255 - ak;
+						dstPix->a = (unsigned char)ak;
+						dstPix->b = (unsigned char)((ak*b + sk*dstPix->b) / 255);
+						dstPix->g = (unsigned char)((ak*g + sk*dstPix->g) / 255);
+						dstPix->r = (unsigned char)((ak*r + sk*dstPix->r) / 255);
+					} else {
+						dstPix->a = (unsigned char)ak;
+						dstPix->b = b;
+						dstPix->g = g;
+						dstPix->r = r;
+					}
 				}
 			}
 			catch (const std::exception&)
@@ -566,7 +573,7 @@ ASS_Image* AssRender::GetAss(double n, int width, int height)
 	}
 }
 
-int AssRender::GetAss(double n, int width, int height, int depth, const void* image)
+int AssRender::GetAss(double n, int width, int height, int depth, const void* image, bool blend=true)
 {
 	renderDepth = depth;
 	ASS_Image* assImg = GetAss(n, width, height);
@@ -578,7 +585,7 @@ int AssRender::GetAss(double n, int width, int height, int depth, const void* im
 			continue;
 		}
 
-		blend_image(assImg, image);
+		blend_image(assImg, image, blend);
 
 		if (assImg->next && (__int64)assImg->next < 0xcccccccccccc0000) {
 			if (!assImg->next->w || !assImg->next->h) break;

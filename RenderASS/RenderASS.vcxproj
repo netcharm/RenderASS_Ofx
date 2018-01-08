@@ -211,9 +211,6 @@ copy /Y "$(TargetPath)" /B "$(OutDir)$(ProjectName).ofx.bundle\Contents\Win64\$(
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\include\ofxsImageBlender.H" />
-    <ClInclude Include="..\include\ofxsprocessing.h" />
-    <ClInclude Include="..\include\ofxUtilities.H" />
     <ClInclude Include="common_ofx.h" />
     <ClInclude Include="libass_helper.h" />
     <ClInclude Include="stdafx.h" />

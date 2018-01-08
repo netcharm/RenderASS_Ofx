@@ -73,14 +73,9 @@ public:
 	ASS_Image *img_shadow = NULL;
 };
 
-///
-void msg_callback(const int level, const char *fmt, const va_list args, const void *);
-
 //
 class AssRender {
 private:
-	bool InitLibass(const ASS_Hinting hints, const double scale, const int width, const int height);
-
 	ASS_Library *al = NULL;
 	ASS_Renderer *ar = NULL;
 	ASS_Track *at = NULL;
@@ -106,9 +101,12 @@ private:
 	double margin_t = 0, margin_b = 0, margin_l = 0, margin_r = 0;
 	double spacing = 2, position = 2;
 
+	void msg_callback(const int level, const char *fmt, const va_list args, const void *);
+	bool InitLibass(const ASS_Hinting hints, const double scale, const int width, const int height);
 	inline RGBA * pixelAddress(RGBA *img, ARECT rect, int x, int y, int bytesPerLine);
 	inline bool blend_image(ASS_Image* img, const void* image, bool blend);
 public:
+	AssRender(void);
 	AssRender(ASS_Hinting hints, double scale, const char *charset);
 	~AssRender();
 

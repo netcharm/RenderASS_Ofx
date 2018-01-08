@@ -30,15 +30,6 @@
     <ClInclude Include="common_ofx.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\ofxsImageBlender.H">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\ofxsprocessing.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\ofxUtilities.H">
-      <Filter>头文件</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="RenderASS.cpp">

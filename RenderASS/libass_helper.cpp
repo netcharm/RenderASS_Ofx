@@ -158,19 +158,25 @@ ASS_Image_List::~ASS_Image_List()
 //
 // 
 //
+AssRender::AssRender(void) {
+	memset(ass_file, 0, MAX_PATH);
+	if (!InitLibass(ASS_HINTING_NONE, 1.0, 100, 60)) {
+		//throw("AssRender: failed to initialize libass");
+	}
+}
+
 AssRender::AssRender(ASS_Hinting hints, double scale, const char *charset) {
 	memset(ass_file, 0, MAX_PATH);
-	//if (!InitLibass(ASS_HINTING_LIGHT, scale, 1280, 720))
-	if (!InitLibass(hints, scale, 1280, 720))
+	if (!InitLibass(hints, scale, 100, 60))
 	{
 		//throw("AssRender: failed to initialize libass");
 	}		
 }
 
 AssRender::~AssRender() {
-	ass_free_track(at);
-	ass_renderer_done(ar);
-	ass_library_done(al);
+	if(at) ass_free_track(at);
+	if(ar) ass_renderer_done(ar);
+	if(al) ass_library_done(al);
 }
 
 // look up a pixel in the image, does bounds checking to see if it is in the image rectangle
@@ -254,9 +260,10 @@ inline bool AssRender::blend_image(ASS_Image* img, const void* image, bool blend
 
 bool AssRender::InitLibass(ASS_Hinting hints, double scale, int width, int height) {
 	al = ass_library_init();
-	if (!al)
-		return false;
-	ass_set_message_cb(al, msg_callback, nullptr);
+	if (!al) return false;
+
+	//ass_set_message_cb(al, msg_callback, nullptr);
+
 	//char tmp[MAX_PATH];
 	//SHGetFolderPath(NULL, CSIDL_LOCAL_APPDATA, NULL, 0, tmp);
 
@@ -267,8 +274,7 @@ bool AssRender::InitLibass(ASS_Hinting hints, double scale, int width, int heigh
 	ass_set_style_overrides(al, NULL);
 
 	ar = ass_renderer_init(al);
-	if (!ar)
-		return false;
+	if (!ar) return false;
 
 	ass_set_frame_size(ar, width, height);
 	//ass_set_margins(ar, 0, 0, 0, 0);
@@ -288,12 +294,10 @@ bool AssRender::InitLibass(ASS_Hinting hints, double scale, int width, int heigh
 	ass_set_hinting(ar, hints);
 	ass_set_font_scale(ar, scale);
 	ass_set_fonts(ar, default_fontname, "Sans", 1, fontconf, 1);
-	//ass_set_fonts(ar, "Arial", "Sans", 1, w2c(path), 1);
-	//ass_set_fonts(ar, "C:\\Windows\\Fonts\\Arial.ttf", "Sans", 1, fontconf, 1);
-	//ass_set_fonts(ar, "Arial", "Sans", 0, NULL, 0);
-	//ass_renderer_done(ar);
+	
 	ass_fonts_update(ar);
 	
+	// Key: if comment this line, maybe crashed the host app
 	//ass_set_cache_limits(ar, 2048, 64);
 	ass_set_cache_limits(ar, 0, 0);
 
@@ -552,18 +556,19 @@ ASS_Image_List* AssRender::GetAss(double n, int width, int height, bool ass_type
 
 ASS_Image* AssRender::GetAss(double n, int width, int height)
 {
-	if (!ar || !al || !at) return(NULL);
+	if (!ar || !al || !at) return NULL;
+	renderWidth = width < 0 ? 0 : width;
+	renderHeight = height < 0 ? 0 : height;
+	if (renderWidth <= 0 || renderHeight <= 0) return NULL;
+	if (fps <= 0) return NULL;
+	int detChange = 0;
 	try
 	{
-		if (fps <= 0) return NULL;
-		//ass_set_storage_size(ar, width, height);
-		renderWidth = width;
-		renderHeight = height;
-		ass_set_frame_size(ar, width, height);
+		//ass_set_storage_size(ar, renderHeight, renderHeight);
+		ass_set_frame_size(ar, renderWidth, renderHeight);
 		//int64_t now = (int64_t)(n * 1000);
 		int64_t ts = (int64_t)(n / fps * 1000);
-		//if (!t) return NULL;
-		int detChange = 0;
+		if (ts < 0) ts = 0;
 		//ASS_Image *img = ass_render_frame(ar, at, ts, &detChange);
 		ASS_Image *img = ass_render_frame(ar, at, ts, NULL);
 		return img;

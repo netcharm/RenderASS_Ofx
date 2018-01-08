@@ -116,24 +116,38 @@ private:
 		// get the parameter from the parameter set
 		OfxParamHandle param;
 
-		//MyInstanceData *myData = new MyInstanceData;
-		RenderAssInstanceData *myData = getMyInstanceData(effect);
-		if(!myData) myData = new RenderAssInstanceData;
+		RenderAssInstanceData *myData = new RenderAssInstanceData;
 
-		myData->ass = new AssRender(ASS_HINTING_NONE, 1.0, "UTF-8");
+		gParamHost->paramGetHandle(paramSet, "assFileName", &myData->assFileName, 0);
+		gParamHost->paramGetHandle(paramSet, "assOffset", &myData->assOffset, 0);
+		gParamHost->paramGetHandle(paramSet, "assDefaultFontName", &myData->assDefaultFontName, 0);
+		gParamHost->paramGetHandle(paramSet, "assDefaultFontSize", &myData->assDefaultFontSize, 0);
+		gParamHost->paramGetHandle(paramSet, "assDefaultFontColor", &myData->assDefaultFontColor, 0);
+		gParamHost->paramGetHandle(paramSet, "assDefaultFontOutline", &myData->assDefaultFontOutline, 0);
+		gParamHost->paramGetHandle(paramSet, "assDefaultBackground", &myData->assDefaultBackground, 0);
+		gParamHost->paramGetHandle(paramSet, "assUseMargin", &myData->assUseMargin, 0);
+		gParamHost->paramGetHandle(paramSet, "assMarginT", &myData->assMarginT, 0);
+		gParamHost->paramGetHandle(paramSet, "assMarginB", &myData->assMarginB, 0);
+		gParamHost->paramGetHandle(paramSet, "assMarginL", &myData->assMarginL, 0);
+		gParamHost->paramGetHandle(paramSet, "assMarginR", &myData->assMarginR, 0);
+		gParamHost->paramGetHandle(paramSet, "assSpace", &myData->assSpace, 0);
+		gParamHost->paramGetHandle(paramSet, "assPosition", &myData->assPosition, 0);
+		gParamHost->paramGetHandle(paramSet, "assFontScale", &myData->assFontScale, 0);
+		gParamHost->paramGetHandle(paramSet, "assFontHints", &myData->assFontHints, 0);
+
+
+		myData->ass = new AssRender();
 
 		// cache away param handles
 		char *str_ass;
 		gParamHost->paramGetHandle(paramSet, "assFileName", &param, 0);
 		gParamHost->paramGetValue(param, &str_ass);
 		myData->ass->LoadAss(str_ass, "UTF-8");
-		gParamHost->paramGetHandle(paramSet, "assFileName", &myData->assFileName, 0);
 
 		myData->Offset = ofxuGetTime(effect);
 		if (myData->Offset > 0.5) myData->Offset = 0;
 		gParamHost->paramGetHandle(paramSet, "assOffset", &param, 0);
 		gParamHost->paramGetValue(param, &myData->Offset);
-		gParamHost->paramGetHandle(paramSet, "assOffset", &myData->assOffset, 0);
 
 		gParamHost->paramGetHandle(paramSet, "assDefaultFontName", &param, 0);
 		char* str_fontname;
@@ -145,26 +159,21 @@ private:
 		if (myData->ass && fontsize < 256) {
 			myData->ass->SetDefaultFont(str_fontname, fontsize);
 		}
-		gParamHost->paramGetHandle(paramSet, "assDefaultFontName", &myData->assDefaultFontName, 0);
-		gParamHost->paramGetHandle(paramSet, "assDefaultFontSize", &myData->assDefaultFontSize, 0);
 
 
 		gParamHost->paramGetHandle(paramSet, "assDefaultFontColor", &param, 0);
 		RGBAColourD fc = { 0, 0, 0, 1 };
 		gParamHost->paramGetValue(param, &fc.r, &fc.g, &fc.b, &fc.a);
-		gParamHost->paramGetHandle(paramSet, "assDefaultFontColor", &myData->assDefaultFontColor, 0);
 		if (myData->ass) myData->ass->SetDefaultFontColor(fc);
 
 		gParamHost->paramGetHandle(paramSet, "assDefaultFontOutline", &param, 0);
 		RGBAColourD fo = { 0, 0, 0, 1 };
 		gParamHost->paramGetValue(param, &fo.r, &fo.g, &fo.b, &fo.a);
-		gParamHost->paramGetHandle(paramSet, "assDefaultFontOutline", &myData->assDefaultFontOutline, 0);
 		if (myData->ass) myData->ass->SetDefaultFontOutline(fo);
 
 		gParamHost->paramGetHandle(paramSet, "assDefaultBackground", &param, 0);
 		RGBAColourD fb = { 0, 0, 0, 1 };
 		gParamHost->paramGetValue(param, &fb.r, &fb.g, &fb.b, &fb.a);
-		gParamHost->paramGetHandle(paramSet, "assDefaultBackground", &myData->assDefaultBackground, 0);
 		if (myData->ass) myData->ass->SetDefaultFontBG(fb);
 
 
@@ -186,31 +195,21 @@ private:
 		gParamHost->paramGetValue(param, &margin_r);
 		if (myData->ass) myData->ass->SetMargin(margin_t, margin_b, margin_l, margin_r);
 
-		gParamHost->paramGetHandle(paramSet, "assUseMargin", &myData->assUseMargin, 0);
-		gParamHost->paramGetHandle(paramSet, "assMarginT", &myData->assMarginT, 0);
-		gParamHost->paramGetHandle(paramSet, "assMarginB", &myData->assMarginB, 0);
-		gParamHost->paramGetHandle(paramSet, "assMarginL", &myData->assMarginL, 0);
-		gParamHost->paramGetHandle(paramSet, "assMarginR", &myData->assMarginR, 0);
-
-
 		gParamHost->paramGetHandle(paramSet, "assSpace", &param, 0);
 		double spacing = 0.0;
 		gParamHost->paramGetValue(param, &spacing);
 		if (myData->ass) myData->ass->SetSpace(spacing);
-		gParamHost->paramGetHandle(paramSet, "assSpace", &myData->assSpace, 0);
 
 		gParamHost->paramGetHandle(paramSet, "assPosition", &param, 0);
 		double position = 0.0;
 		gParamHost->paramGetValue(param, &position);
 		if (myData->ass) myData->ass->SetSpace(position);
-		gParamHost->paramGetHandle(paramSet, "assPosition", &myData->assPosition, 0);
 
 
 		gParamHost->paramGetHandle(paramSet, "assFontScale", &param, 0);
 		double scale = 1.0;
 		gParamHost->paramGetValue(param, &scale);
 		if (myData->ass) myData->ass->SetSpace(scale);
-		gParamHost->paramGetHandle(paramSet, "assFontScale", &myData->assFontScale, 0);
 
 		gParamHost->paramGetHandle(paramSet, "assFontHints", &param, 0);
 		int hints = 0;
@@ -232,7 +231,6 @@ private:
 				break;
 			}
 		}
-		gParamHost->paramGetHandle(paramSet, "assFontHints", &myData->assFontHints, 0);
 
 		char *context = 0;
 
@@ -315,9 +313,6 @@ public:
 	/// called at unload
 	static OfxStatus onUnLoad(void)
 	{
-		//if (myData->ass != NULL) {
-		//	myData->ass->~AssRender();
-		//}
 		return kOfxStatOK;
 	}
 
@@ -495,6 +490,7 @@ public:
 
 		// and delete it
 		if (myData) {
+			if (myData->ass) myData->ass->~AssRender();
 			delete myData;
 		}
 
@@ -1048,6 +1044,7 @@ public:
 		try {
 			// cast to appropriate type
 			OfxImageEffectHandle effect = (OfxImageEffectHandle)handle;
+			if (!effect) return kOfxStatReplyDefault;
 
 			if (strcmp(action, kOfxActionLoad) == 0) {
 				return onLoad();
@@ -1073,20 +1070,20 @@ public:
 			else if (strcmp(action, kOfxImageEffectActionIsIdentity) == 0) {
 				return isIdentity(effect, inArgs, outArgs);
 			}
-			else if (strcmp(action, kOfxActionSyncPrivateData) == 0) {
-				//return syncData(effect, inArgs, outArgs);
-			}
 			else if (strcmp(action, kOfxImageEffectActionGetClipPreferences) == 0) {
 				return getClipPreferences(effect, inArgs, outArgs);
 			}
 			else if (strcmp(action, kOfxImageEffectActionRender) == 0) {
 				return render(effect, inArgs, outArgs);
 			}
+			else if (strcmp(action, kOfxActionSyncPrivateData) == 0) {
+				//return syncData(effect, inArgs, outArgs);
+			}
 			else if (strcmp(action, kOfxImageEffectActionBeginSequenceRender) == 0) {
-				return renderSeqBegin(effect, inArgs, outArgs);
+				//return renderSeqBegin(effect, inArgs, outArgs);
 			}
 			else if (strcmp(action, kOfxImageEffectActionEndSequenceRender) == 0) {
-				return renderSeqEnd(effect, inArgs, outArgs);
+				//return renderSeqEnd(effect, inArgs, outArgs);
 			}
 			else if (strcmp(action, kOfxImageEffectActionGetRegionOfDefinition) == 0) {
 				//return renderSeqEnd(effect, inArgs, outArgs);
@@ -1099,8 +1096,7 @@ public:
 			}
 			else if (strcmp(action, kOfxImageEffectActionGetFramesNeeded) == 0) {
 				//return renderSeqEnd(effect, inArgs, outArgs);
-			}
-			
+			}		
 		}
 		catch (std::bad_alloc) {
 			// catch memory

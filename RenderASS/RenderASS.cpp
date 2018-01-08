@@ -37,9 +37,10 @@ struct RenderAssInstanceData {
 	ContextEnum context;
 	AssRender * ass;
 
-	double Offset;
-	double FrameStart;
-	double FrameEnd;
+	double Offset = 0;
+	double FrameStart = 0;
+	double FrameEnd = 0;
+	double FPS = 0;
 
 	// handles to the clips we deal with
 	OfxImageClipHandle sourceClip;
@@ -129,6 +130,7 @@ private:
 		gParamHost->paramGetHandle(paramSet, "assFileName", &myData->assFileName, 0);
 
 		myData->Offset = ofxuGetTime(effect);
+		if (myData->Offset > 0.5) myData->Offset = 0;
 		gParamHost->paramGetHandle(paramSet, "assOffset", &param, 0);
 		gParamHost->paramGetValue(param, &myData->Offset);
 		gParamHost->paramGetHandle(paramSet, "assOffset", &myData->assOffset, 0);
@@ -240,10 +242,10 @@ private:
 			myData->context = eIsGenerator;
 		}
 		else if (strcmp(context, kOfxImageEffectContextPaint) == 0) {
-			myData->context = eIsGenerator;
+			myData->context = eIsPaint;
 		}
 		else if (strcmp(context, kOfxImageEffectContextFilter) == 0) {
-			myData->context = eIsPaint;
+			myData->context = eIsGeneral;
 		}
 		else {
 			myData->context = eIsGeneral;
@@ -268,7 +270,10 @@ private:
 		gPropHost->propGetDouble(props, kOfxImageEffectPropFrameRate, 0, &fps);
 
 		RenderAssInstanceData *myData = getMyInstanceData(effect);
-		if (myData && myData->ass) myData->ass->SetFPS(fps);
+		if (myData) {
+			myData->FPS = fps;
+			if (myData->ass) myData->ass->SetFPS(fps);
+		}
 		return(fps);
 	}
 
@@ -276,13 +281,14 @@ private:
 	{
 		OfxPropertySetHandle props;
 		gEffectHost->clipGetPropertySet(clip, &props);
-		double frames[2];
-		gPropHost->propGetDouble(props, kOfxImageEffectPropFrameRange, 0, &frames[0]);
+		OfxRangeD frame;
+		gPropHost->propGetDouble(props, kOfxImageEffectPropFrameRange, 0, &frame.min);
+		gPropHost->propGetDouble(props, kOfxImageEffectPropFrameRange, 1, &frame.max);
 
 		RenderAssInstanceData *myData = getMyInstanceData(effect);
 		if (myData) {
-			myData->FrameStart = frames[0];
-			myData->FrameEnd = frames[1];
+			myData->FrameStart = frame.min;
+			myData->FrameEnd = frame.max;
 		}
 	}
 
@@ -348,131 +354,135 @@ public:
 
 		if(!propType || !propName) return kOfxStatReplyDefault;
 
-		if      (strcmp(propName, "assFileName") == 0) {
-			//char fn[MAX_PATH];
-			//memset(fn, 0, MAX_PATH);
-			char *fn;
-			gParamHost->paramGetValue(myData->assFileName, &fn);
-			if (myData->ass && fn[0] != 0) {
-				myData->ass->LoadAss(fn, "UTF-8");
-			}
-		}
-		else if (strcmp(propName, "assOffset") == 0) {
-			int offset = 0;
-			gParamHost->paramGetValue(myData->assOffset, &offset);
-			if (myData->ass) myData->Offset = offset;
-		}
-		else if (strcmp(propName, "assDefaultFontName") == 0) {
-			char* fontname = NULL;
-			gParamHost->paramGetValue(myData->assDefaultFontName, &fontname);
-			try
-			{
-				if (myData->ass) {
-					char fn[512];
-					memset(fn, 0, 512);
-					strcpy_s(fn, fontname);
-					utf2gbk(fn, strlen(fontname));
-					myData->ass->SetDefaultFont(fn, 24);
-				}
-			}
-			catch (const std::exception&)
-			{
+		if (strcmp(propType, kOfxTypeClip) == 0) {
 
+		}
+		else if (strcmp(propType, kOfxTypeParameter) == 0) {
+			if (strcmp(propName, "assFileName") == 0) {
+				//char fn[MAX_PATH];
+				//memset(fn, 0, MAX_PATH);
+				char *fn;
+				gParamHost->paramGetValue(myData->assFileName, &fn);
+				if (myData->ass && fn[0] != 0) {
+					myData->ass->LoadAss(fn, "UTF-8");
+				}
 			}
-		}
-		else if (strcmp(propName, "assDefaultFontSize") == 0) {
-			int fsize = 0;
-			gParamHost->paramGetValue(myData->assDefaultFontSize, &fsize);
-			if (myData->ass) myData->ass->SetDefaultFontSize(fsize);
-		}
-		else if (strcmp(propName, "assDefaultFontColor") == 0) {
-			RGBAColourD fc = { 0, 0, 0, 1 };
-			gParamHost->paramGetValue(myData->assDefaultFontColor, &fc.r, &fc.g, &fc.b, &fc.a);
-			if (myData->ass) myData->ass->SetDefaultFontColor(fc);
-		}
-		else if (strcmp(propName, "assDefaultFontOutline") == 0) {
-			RGBAColourD fo = { 0, 0, 0, 1 };
-			gParamHost->paramGetValue(myData->assDefaultFontColor, &fo.r, &fo.g, &fo.b, &fo.a);
-			if (myData->ass) myData->ass->SetDefaultFontOutline(fo);
-		}
-		else if (strcmp(propName, "assDefaultBackground") == 0) {
-			RGBAColourD fb = { 0, 0, 0, 1 };
-			if (myData->ass) myData->ass->SetDefaultFontBG(fb);
-		}
-		else if (strcmp(propName, "assUseMargin") == 0) {
-			int used_margin = 0;
-			gParamHost->paramGetValue(myData->assUseMargin, &used_margin);
-			if (myData->ass) myData->ass->SetMargin(used_margin);
-		}
-		else if (strcmp(propName, "assMarginT") == 0) {
-			double margin_t = 0, margin_b = 0, margin_l = 0, margin_r = 0;
-			gParamHost->paramGetValue(myData->assMarginT, &margin_t);
-			gParamHost->paramGetValue(myData->assMarginB, &margin_b);
-			gParamHost->paramGetValue(myData->assMarginL, &margin_l);
-			gParamHost->paramGetValue(myData->assMarginR, &margin_r);
-			if (myData->ass) myData->ass->SetMargin(margin_t, margin_b, margin_l, margin_r);
-		}
-		else if (strcmp(propName, "assMarginB") == 0) {
-			double margin_t = 0, margin_b = 0, margin_l = 0, margin_r = 0;
-			gParamHost->paramGetValue(myData->assMarginT, &margin_t);
-			gParamHost->paramGetValue(myData->assMarginB, &margin_b);
-			gParamHost->paramGetValue(myData->assMarginL, &margin_l);
-			gParamHost->paramGetValue(myData->assMarginR, &margin_r);
-			if (myData->ass) myData->ass->SetMargin(margin_t, margin_b, margin_l, margin_r);
-		}
-		else if (strcmp(propName, "assMarginL") == 0) {
-			double margin_t = 0, margin_b = 0, margin_l = 0, margin_r = 0;
-			gParamHost->paramGetValue(myData->assMarginT, &margin_t);
-			gParamHost->paramGetValue(myData->assMarginB, &margin_b);
-			gParamHost->paramGetValue(myData->assMarginL, &margin_l);
-			gParamHost->paramGetValue(myData->assMarginR, &margin_r);
-			if (myData->ass) myData->ass->SetMargin(margin_t, margin_b, margin_l, margin_r);
-		}
-		else if (strcmp(propName, "assMarginR") == 0) {
-			double margin_t = 0, margin_b = 0, margin_l = 0, margin_r = 0;
-			gParamHost->paramGetValue(myData->assMarginT, &margin_t);
-			gParamHost->paramGetValue(myData->assMarginB, &margin_b);
-			gParamHost->paramGetValue(myData->assMarginL, &margin_l);
-			gParamHost->paramGetValue(myData->assMarginR, &margin_r);
-			if (myData->ass) myData->ass->SetMargin(margin_t, margin_b, margin_l, margin_r);
-		}
-		else if (strcmp(propName, "assSpace") == 0) {
-			double spacing = 0;
-			gParamHost->paramGetValue(myData->assSpace, &spacing);
-			if (myData->ass) myData->ass->SetSpace(spacing);
-		}
-		else if (strcmp(propName, "assPosition") == 0) {
-			double position = 0;
-			gParamHost->paramGetValue(myData->assPosition, &position);
-			if (myData->ass) myData->ass->SetSpace(position);
-		}
-		else if (strcmp(propName, "assFontScale") == 0) {
-			double scale = 1.0;
-			gParamHost->paramGetValue(myData->assFontScale, &scale);
-			if (myData->ass) myData->ass->SetSpace(scale);
-		}
-		else if (strcmp(propName, "assFontHints") == 0) {
-			int hints = 0;
-			gParamHost->paramGetValue(myData->assFontHints, &hints);
-			if (myData->ass) {
-				switch (hints)
+			else if (strcmp(propName, "assOffset") == 0) {
+				int offset = 0;
+				gParamHost->paramGetValue(myData->assOffset, &offset);
+				if (myData->ass) myData->Offset = offset;
+			}
+			else if (strcmp(propName, "assDefaultFontName") == 0) {
+				char* fontname = NULL;
+				gParamHost->paramGetValue(myData->assDefaultFontName, &fontname);
+				try
 				{
-				case 1:
-					myData->ass->SetHints(ASS_HINTING_LIGHT);
-					break;
-				case 2:
-					myData->ass->SetHints(ASS_HINTING_NORMAL);
-					break;
-				case 3:
-					myData->ass->SetHints(ASS_HINTING_NATIVE);
-					break;
-				default:
-					myData->ass->SetHints(ASS_HINTING_NONE);
-					break;
+					if (myData->ass) {
+						char fn[512];
+						memset(fn, 0, 512);
+						strcpy_s(fn, fontname);
+						utf2gbk(fn, strlen(fontname));
+						myData->ass->SetDefaultFont(fn, 24);
+					}
+				}
+				catch (const std::exception&)
+				{
+
+				}
+			}
+			else if (strcmp(propName, "assDefaultFontSize") == 0) {
+				int fsize = 0;
+				gParamHost->paramGetValue(myData->assDefaultFontSize, &fsize);
+				if (myData->ass) myData->ass->SetDefaultFontSize(fsize);
+			}
+			else if (strcmp(propName, "assDefaultFontColor") == 0) {
+				RGBAColourD fc = { 0, 0, 0, 1 };
+				gParamHost->paramGetValue(myData->assDefaultFontColor, &fc.r, &fc.g, &fc.b, &fc.a);
+				if (myData->ass) myData->ass->SetDefaultFontColor(fc);
+			}
+			else if (strcmp(propName, "assDefaultFontOutline") == 0) {
+				RGBAColourD fo = { 0, 0, 0, 1 };
+				gParamHost->paramGetValue(myData->assDefaultFontColor, &fo.r, &fo.g, &fo.b, &fo.a);
+				if (myData->ass) myData->ass->SetDefaultFontOutline(fo);
+			}
+			else if (strcmp(propName, "assDefaultBackground") == 0) {
+				RGBAColourD fb = { 0, 0, 0, 1 };
+				if (myData->ass) myData->ass->SetDefaultFontBG(fb);
+			}
+			else if (strcmp(propName, "assUseMargin") == 0) {
+				int used_margin = 0;
+				gParamHost->paramGetValue(myData->assUseMargin, &used_margin);
+				if (myData->ass) myData->ass->SetMargin(used_margin);
+			}
+			else if (strcmp(propName, "assMarginT") == 0) {
+				double margin_t = 0, margin_b = 0, margin_l = 0, margin_r = 0;
+				gParamHost->paramGetValue(myData->assMarginT, &margin_t);
+				gParamHost->paramGetValue(myData->assMarginB, &margin_b);
+				gParamHost->paramGetValue(myData->assMarginL, &margin_l);
+				gParamHost->paramGetValue(myData->assMarginR, &margin_r);
+				if (myData->ass) myData->ass->SetMargin(margin_t, margin_b, margin_l, margin_r);
+			}
+			else if (strcmp(propName, "assMarginB") == 0) {
+				double margin_t = 0, margin_b = 0, margin_l = 0, margin_r = 0;
+				gParamHost->paramGetValue(myData->assMarginT, &margin_t);
+				gParamHost->paramGetValue(myData->assMarginB, &margin_b);
+				gParamHost->paramGetValue(myData->assMarginL, &margin_l);
+				gParamHost->paramGetValue(myData->assMarginR, &margin_r);
+				if (myData->ass) myData->ass->SetMargin(margin_t, margin_b, margin_l, margin_r);
+			}
+			else if (strcmp(propName, "assMarginL") == 0) {
+				double margin_t = 0, margin_b = 0, margin_l = 0, margin_r = 0;
+				gParamHost->paramGetValue(myData->assMarginT, &margin_t);
+				gParamHost->paramGetValue(myData->assMarginB, &margin_b);
+				gParamHost->paramGetValue(myData->assMarginL, &margin_l);
+				gParamHost->paramGetValue(myData->assMarginR, &margin_r);
+				if (myData->ass) myData->ass->SetMargin(margin_t, margin_b, margin_l, margin_r);
+			}
+			else if (strcmp(propName, "assMarginR") == 0) {
+				double margin_t = 0, margin_b = 0, margin_l = 0, margin_r = 0;
+				gParamHost->paramGetValue(myData->assMarginT, &margin_t);
+				gParamHost->paramGetValue(myData->assMarginB, &margin_b);
+				gParamHost->paramGetValue(myData->assMarginL, &margin_l);
+				gParamHost->paramGetValue(myData->assMarginR, &margin_r);
+				if (myData->ass) myData->ass->SetMargin(margin_t, margin_b, margin_l, margin_r);
+			}
+			else if (strcmp(propName, "assSpace") == 0) {
+				double spacing = 0;
+				gParamHost->paramGetValue(myData->assSpace, &spacing);
+				if (myData->ass) myData->ass->SetSpace(spacing);
+			}
+			else if (strcmp(propName, "assPosition") == 0) {
+				double position = 0;
+				gParamHost->paramGetValue(myData->assPosition, &position);
+				if (myData->ass) myData->ass->SetSpace(position);
+			}
+			else if (strcmp(propName, "assFontScale") == 0) {
+				double scale = 1.0;
+				gParamHost->paramGetValue(myData->assFontScale, &scale);
+				if (myData->ass) myData->ass->SetSpace(scale);
+			}
+			else if (strcmp(propName, "assFontHints") == 0) {
+				int hints = 0;
+				gParamHost->paramGetValue(myData->assFontHints, &hints);
+				if (myData->ass) {
+					switch (hints)
+					{
+					case 1:
+						myData->ass->SetHints(ASS_HINTING_LIGHT);
+						break;
+					case 2:
+						myData->ass->SetHints(ASS_HINTING_NORMAL);
+						break;
+					case 3:
+						myData->ass->SetHints(ASS_HINTING_NATIVE);
+						break;
+					default:
+						myData->ass->SetHints(ASS_HINTING_NONE);
+						break;
+					}
 				}
 			}
 		}
-		
 		// don't trap any others
 		return kOfxStatReplyDefault;
 	}
@@ -537,6 +547,8 @@ public:
 
 		// define the contexts we can be used in
 		gPropHost->propSetString(effectProps, kOfxImageEffectPropSupportedContexts, 0, kOfxImageEffectContextFilter);
+		//gPropHost->propSetString(effectProps, kOfxImageEffectPropSupportedContexts, 1, kOfxImageEffectContextGeneral);
+
 #ifdef _DEBUG
 		gPropHost->propSetString(effectProps, kOfxImageEffectPropSupportedContexts, 1, kOfxImageEffectContextGenerator);
 		//gPropHost->propSetString(effectProps, kOfxImageEffectPropSupportedContexts, 2, kOfxImageEffectContextPaint);
@@ -897,6 +909,25 @@ public:
 		return kOfxStatOK;
 	}
 
+	// Tells the host how many frames we can fill, only called in the general context.
+	// This is actually redundant as this is the default behaviour, but for illustrative
+	// purposes.
+	static OfxStatus getTimeDomain(OfxImageEffectHandle  effect, OfxPropertySetHandle /*inArgs*/, OfxPropertySetHandle outArgs)
+	{
+		RenderAssInstanceData *myData = getMyInstanceData(effect);
+
+		double sourceRange[2];
+
+		// get the frame range of the source clip
+		OfxPropertySetHandle props; gEffectHost->clipGetPropertySet(myData->sourceClip, &props);
+		gPropHost->propGetDoubleN(props, kOfxImageEffectPropFrameRange, 2, sourceRange);
+
+		// set it on the out args
+		gPropHost->propSetDoubleN(outArgs, kOfxImageEffectPropFrameRange, 2, sourceRange);
+
+		return kOfxStatOK;
+	}
+
 	// the process code that the host sees
 	static OfxStatus render(OfxImageEffectHandle instance,
 		                    OfxPropertySetHandle inArgs,
@@ -941,7 +972,7 @@ public:
 
 			RenderAssInstanceData *myData = getMyInstanceData(instance);
 			if (!myData) throw(new NoImageEx());
-
+			getFrameRange(instance, outputClip);
 			time_p = time + myData->Offset;
 
 			bool blend = false;
@@ -1057,7 +1088,19 @@ public:
 			else if (strcmp(action, kOfxImageEffectActionEndSequenceRender) == 0) {
 				return renderSeqEnd(effect, inArgs, outArgs);
 			}
-
+			else if (strcmp(action, kOfxImageEffectActionGetRegionOfDefinition) == 0) {
+				//return renderSeqEnd(effect, inArgs, outArgs);
+			}
+			else if (strcmp(action, kOfxImageEffectActionGetRegionsOfInterest) == 0) {
+				//return renderSeqEnd(effect, inArgs, outArgs);
+			}
+			else if (strcmp(action, kOfxImageEffectActionGetTimeDomain) == 0) {
+				return getTimeDomain(effect, inArgs, outArgs);
+			}
+			else if (strcmp(action, kOfxImageEffectActionGetFramesNeeded) == 0) {
+				//return renderSeqEnd(effect, inArgs, outArgs);
+			}
+			
 		}
 		catch (std::bad_alloc) {
 			// catch memory

@@ -564,7 +564,8 @@ ASS_Image* AssRender::GetAss(double n, int width, int height)
 		int64_t ts = (int64_t)(n / fps * 1000);
 		//if (!t) return NULL;
 		int detChange = 0;
-		ASS_Image *img = ass_render_frame(ar, at, ts, &detChange);
+		//ASS_Image *img = ass_render_frame(ar, at, ts, &detChange);
+		ASS_Image *img = ass_render_frame(ar, at, ts, NULL);
 		return img;
 	}
 	catch (const std::exception&)

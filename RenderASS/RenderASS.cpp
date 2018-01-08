@@ -1,5 +1,6 @@
 // RenderASS.cpp : 定义 DLL 应用程序的导出函数。
 //
+#pragma once
 #include "stdafx.h"
 
 /*
@@ -13,23 +14,7 @@ The main features are
 - basic property usage
 - basic image access and rendering
 */
-#include <cstring>
-#include <stdexcept>
-#include <new>
-#include <tchar.h>
-#include <windows.h>
-#include <math.h>
-#include <Shlobj.h>
-#include "ofxImageEffect.h"
-#include "ofxMemory.h"
-#include "ofxMultiThread.h"
-#include "ofxPixels.h"
-#include "../include/ofxUtilities.H"
-
-
 #include "common_ofx.h"
-
-//#include <ass.h>
 #include "libass_helper.h"
 
 // private instance data type
@@ -67,34 +52,31 @@ struct RenderAssInstanceData {
 	OfxParamHandle assDefaultBackground;
 };
 
-// some flags about the host's behaviour
-int gHostSupportsMultipleBitDepths = false;
-
-const char* PluginAuthor = "NetCharm";
+static const char* PluginAuthor = "NetCharm";
 #ifdef _DEBUG
-const char* PluginLabel = "Render ASS Debug";
+static const char* PluginLabel = "Render ASS Debug";
 #else
-const char* PluginLabel = "Render ASS";
+static const char* PluginLabel = "Render ASS";
 #endif
-const char* PluginDescription = " ASS/SSA (Advanced Substation Alpha/Substation Alpha) Render Filter";
+static const char* PluginDescription = "ASS/SSA (Advanced Substation Alpha/Substation Alpha) Render Filter";
 #ifdef _DEBUG
-const char* PluginIdentifier = "cn.netcharm.Ofx.RenderASS-D";
+static const char* PluginIdentifier = "cn.netcharm.Ofx.RenderASS-d";
 #else
-const char* PluginIdentifier = "cn.netcharm.Ofx.RenderASS";
+static const char* PluginIdentifier = "cn.netcharm.Ofx.RenderASS";
 #endif
 
-const unsigned int Version_Majon = 1;
-const unsigned int Version_Minor = 0;
-const unsigned int Version_Revision = 3;
-const unsigned int Version_BuildNo = 33;
+static const int Version_Majon = 1;
+static const int Version_Minor = 0;
+static const int Version_Revision = 3;
+static const int Version_BuildNo = 39;
 
-int PluginVersion[4] = { Version_Majon, Version_Minor, Version_Revision, Version_BuildNo };
-
-
+//static const int PluginVersion[4] = { Version_Majon, Version_Minor, Version_Revision, Version_BuildNo };
 
 /* mandatory function to set up the host structures */
 class RenderASS {
 private:
+	// some flags about the host's behaviour
+	static const int gHostSupportsMultipleBitDepths = false;
 
 	// Convinience wrapper to get private data 
 	static RenderAssInstanceData * getMyInstanceData(OfxImageEffectHandle effect)
@@ -145,9 +127,9 @@ private:
 		myData->ass->LoadAss(str_ass, "UTF-8");
 
 		myData->Offset = ofxuGetTime(effect);
-		if (myData->Offset > 0.5) myData->Offset = 0;
 		gParamHost->paramGetHandle(paramSet, "assOffset", &param, 0);
 		gParamHost->paramGetValue(param, &myData->Offset);
+		if (myData->Offset < 0.5) myData->Offset = 0;
 
 		gParamHost->paramGetHandle(paramSet, "assDefaultFontName", &param, 0);
 		char* str_fontname;
@@ -291,7 +273,6 @@ private:
 	}
 
 	/** @brief Called at load */
-
 public:
 	////////////////////////////////////////////////////////////////////////////////
 	// Called at load
@@ -535,8 +516,13 @@ public:
 		//gPropHost->propSetInt(effectProps, kOfxImageEffectPropSupportsOverlays, 0, 1);
 
 		char ver_str[64] = "";
-		sprintf_s(ver_str, "%d.%d.%d.%d", PluginVersion[0], PluginVersion[1], PluginVersion[2], PluginVersion[3]);
-		gPropHost->propSetIntN(effectProps, kOfxPropVersion, 4, PluginVersion);
+		//sprintf_s(ver_str, "%d.%d.%d.%d", PluginVersion[0], PluginVersion[1], PluginVersion[2], PluginVersion[3]);
+		//gPropHost->propSetIntN(effectProps, kOfxPropVersion, 4, PluginVersion);
+		sprintf_s(ver_str, "%d.%d.%d.%d", Version_Majon, Version_Minor, Version_Revision, Version_BuildNo);
+		gPropHost->propSetInt(effectProps, kOfxPropVersion, 0, Version_Majon);
+		gPropHost->propSetInt(effectProps, kOfxPropVersion, 1, Version_Minor);
+		gPropHost->propSetInt(effectProps, kOfxPropVersion, 2, Version_Revision);
+		gPropHost->propSetInt(effectProps, kOfxPropVersion, 3, Version_BuildNo);
 		gPropHost->propSetString(effectProps, kOfxPropVersionLabel, 0, ver_str);
 		gPropHost->propSetString(effectProps, kOfxPropPluginDescription, 0, PluginDescription);
 		
@@ -965,7 +951,6 @@ public:
 			outputImg = ofxuGetImage(outputClip, time, dstRowBytes, dstBitDepth, dstIsAlpha, dstRect, dstPtr);
 			if (!outputImg) throw NoImageEx();
 
-
 			RenderAssInstanceData *myData = getMyInstanceData(instance);
 			if (!myData) throw(new NoImageEx());
 			getFrameRange(instance, outputClip);
@@ -1129,9 +1114,25 @@ public:
 		gHost = hostStruct;
 	}
 
+	static OfxPlugin * GetPlugin(void)
+	{
+		OfxPlugin plugin = {
+			kOfxImageEffectPluginApi,
+			1,
+			PluginIdentifier,
+			Version_Majon,
+			Version_Minor,
+			setHostFunc,
+			pluginMain
+		};
+		return &plugin;
+	}
+
+
 };
 
-////////////////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////////////
 // the plugin struct 
 static OfxPlugin RenderAssPlugin =
 {
@@ -1144,7 +1145,9 @@ static OfxPlugin RenderAssPlugin =
 	RenderASS::pluginMain
 };
 
+
 static OfxPlugin * GetRenderASS(void)
 {
+	//return RenderASS::GetPlugin();
 	return &RenderAssPlugin;
 }

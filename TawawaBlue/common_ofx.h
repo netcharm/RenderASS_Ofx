@@ -11,13 +11,6 @@
 #  error Not building on your operating system quite yet
 #endif
 
-#include <cstring>
-#include <stdexcept>
-#include <new>
-#include <tchar.h>
-#include <windows.h>
-#include <math.h>
-#include <Shlobj.h>
 #include <math.h>
 
 #include "ofxCore.h"
@@ -41,6 +34,11 @@
 //#include "../include/ofxsImageBlender.H"
 //#include "../include/ofxsProcessing.H"
 
+//extern "C" {
+//#  include <ass.h>
+//}
+
+//#include "libass_helper.h"
 
 typedef struct OfxTimeLineSuiteV2 {
 
@@ -67,30 +65,6 @@ enum ContextEnum {
 	eIsGeneral
 };
 
-// throws this if it can't fetch an image
-class NoImageEx {};
-
-typedef struct OfxPluginInfo {
-	const int Version_Majon;
-	const int Version_Minor;
-	const int Version_Revision;
-	const int Version_BuildNo;
-
-	const char* PluginAuthor;
-#ifdef _DEBUG
-	const char* PluginLabel;
-#else
-	const char* PluginLabel;
-#endif
-	const char* PluginDescription;
-#ifdef _DEBUG
-	const char* PluginIdentifier;
-#else
-	const char* PluginIdentifier;
-#endif
-}OfxPluginInfo;
-
-
 // pointers to various bits of the host
 OfxHost               *gHost;
 OfxImageEffectSuiteV1 *gEffectHost = 0;
@@ -102,6 +76,10 @@ OfxMessageSuiteV1     *gMessageSuite = 0;
 OfxInteractSuiteV1    *gInteractHost = 0;
 OfxTimeLineSuiteV1    *gTimeLineHost1 = 0;
 OfxTimeLineSuiteV2    *gTimeLineHost2 = 0;
+
+
+// throws this if it can't fetch an image
+class NoImageEx {};
 
 // look up a pixel in the image, does bounds checking to see if it is in the image rectangle
 inline OfxRGBAColourB * pixelAddress(OfxRGBAColourB *img, OfxRectI rect, int x, int y, int bytesPerLine) {
@@ -148,13 +126,12 @@ inline void copy_source(OfxImageEffectHandle instance,
 	}
 }
 
-static OfxPlugin * GetRenderASS(void);
+extern OfxPlugin * GetTawawa(void);
 
 EXPORT OfxPlugin * OfxGetPlugin(int nth)
 {
 	if (nth == 0)
-		//return RenderASS::GetPlugin();
-		return GetRenderASS();
+		return GetTawawa();
 	return 0;
 }
 

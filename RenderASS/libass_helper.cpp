@@ -37,7 +37,7 @@ char* w2c(const std::wstring ws) {
 
 bool s2c(const std::string s, char* c) {
 	memset(c, 0, sizeof(c));
-	for (int i = 0; i < s.length(); i++) {
+	for (unsigned int i = 0; i < s.length(); i++) {
 		c[i] = s[i];
 	}
 	return true;

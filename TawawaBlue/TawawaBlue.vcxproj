@@ -19,9 +19,9 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{BEEF9E5D-0E9C-466E-A170-1C9F5EA07B3A}</ProjectGuid>
+    <ProjectGuid>{DB21CE40-397E-45D3-8E24-D214F0C09FDA}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>RenderASS</RootNamespace>
+    <RootNamespace>TawawaBlue</RootNamespace>
     <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -103,7 +103,7 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(SolutionDir)..\libass-msvc\$(PlatformTarget)\$(Configuration);$(SolutionDir)..\libass-msvc\libiconv-1.15-msvc\$(PlatformTarget)\$(Configuration)\;$(SolutionDir)..\libass-msvc\libxml2-2.9.7\win32\bin.msvc\;D:\develop\lib\zlib-1.2.5-dll\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>libass-s.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>if not exist "$(OutDir)$(ProjectName).ofx.bundle\Contents\Resources" mkdir "$(OutDir)$(ProjectName).ofx.bundle\Contents\Resources"
@@ -136,7 +136,7 @@ copy /Y "$(TargetPath)" /B "$(OutDir)$(ProjectName).ofx.bundle\Contents\$(Platfo
       </SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(SolutionDir)..\libass-msvc\$(PlatformTarget)\$(Configuration);$(SolutionDir)..\libass-msvc\libiconv-1.15-msvc\$(PlatformTarget)\$(Configuration)\;$(SolutionDir)..\libass-msvc\libxml2-2.9.7\win32\bin.msvc\;D:\develop\lib\zlib-1.2.5-dll\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>libass-s.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>if not exist "$(OutDir)$(ProjectName).ofx.bundle\Contents\Resources" mkdir "$(OutDir)$(ProjectName).ofx.bundle\Contents\Resources"
@@ -165,7 +165,7 @@ copy /Y "$(TargetPath)" /B "$(OutDir)$(ProjectName).ofx.bundle\Contents\Win64\$(
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalLibraryDirectories>$(SolutionDir)..\libass-msvc\$(PlatformTarget)\$(Configuration);$(SolutionDir)..\libass-msvc\libiconv-1.15-msvc\$(PlatformTarget)\$(Configuration)\;$(SolutionDir)..\libass-msvc\libxml2-2.9.7\win32\bin.msvc\;D:\develop\lib\zlib-1.2.5-dll\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>libass-s.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>if not exist "$(OutDir)$(ProjectName).ofx.bundle\Contents\Resources" mkdir "$(OutDir)$(ProjectName).ofx.bundle\Contents\Resources"
@@ -198,7 +198,7 @@ copy /Y "$(TargetPath)" /B "$(OutDir)$(ProjectName).ofx.bundle\Contents\$(Platfo
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalLibraryDirectories>$(SolutionDir)..\libass-msvc\$(PlatformTarget)\$(Configuration);$(SolutionDir)..\libass-msvc\libiconv-1.15-msvc\$(PlatformTarget)\$(Configuration)\;$(SolutionDir)..\libass-msvc\libxml2-2.9.7\win32\bin.msvc\;D:\develop\lib\zlib-1.2.5-dll\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>libass-s.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>if not exist "$(OutDir)$(ProjectName).ofx.bundle\Contents\Resources" mkdir "$(OutDir)$(ProjectName).ofx.bundle\Contents\Resources"
@@ -212,8 +212,6 @@ copy /Y "$(TargetPath)" /B "$(OutDir)$(ProjectName).ofx.bundle\Contents\Win64\$(
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="common_ofx.h" />
-    <ClInclude Include="libass_helper.h" />
-    <ClInclude Include="RenderASS.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
   </ItemGroup>
@@ -232,8 +230,7 @@ copy /Y "$(TargetPath)" /B "$(OutDir)$(ProjectName).ofx.bundle\Contents\Win64\$(
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="libass_helper.cpp" />
-    <ClCompile Include="RenderASS.cpp" />
+    <ClCompile Include="tawawablue.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

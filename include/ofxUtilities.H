@@ -1,6 +1,8 @@
 #ifndef __ofxUtilities_H_
 #define __ofxUtilities_H_
 
+#include <string.h>
+
 #include "ofxMessage.h"
 #include "ofxPixels.h"
 

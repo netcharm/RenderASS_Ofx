@@ -24,24 +24,15 @@
     <ClInclude Include="stdafx.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="libass_helper.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="common_ofx.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="RenderASS.h">
-      <Filter>源文件</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="RenderASS.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="dllmain.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="libass_helper.cpp">
+    <ClCompile Include="tawawablue.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

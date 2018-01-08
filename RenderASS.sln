@@ -17,6 +17,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		readme.md = readme.md
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TawawaBlue", "TawawaBlue\TawawaBlue.vcxproj", "{DB21CE40-397E-45D3-8E24-D214F0C09FDA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -79,6 +81,18 @@ Global
 		{EB16BB28-FE54-4C55-906D-B399DE2DDAA4}.Release|Win64.ActiveCfg = Release|Win32
 		{EB16BB28-FE54-4C55-906D-B399DE2DDAA4}.Release|x64.ActiveCfg = Release|x64
 		{EB16BB28-FE54-4C55-906D-B399DE2DDAA4}.Release|x64.Build.0 = Release|x64
+		{DB21CE40-397E-45D3-8E24-D214F0C09FDA}.Debug|Any CPU.ActiveCfg = Debug|Win32
+		{DB21CE40-397E-45D3-8E24-D214F0C09FDA}.Debug|Win32.ActiveCfg = Debug|Win32
+		{DB21CE40-397E-45D3-8E24-D214F0C09FDA}.Debug|Win32.Build.0 = Debug|Win32
+		{DB21CE40-397E-45D3-8E24-D214F0C09FDA}.Debug|Win64.ActiveCfg = Debug|Win32
+		{DB21CE40-397E-45D3-8E24-D214F0C09FDA}.Debug|x64.ActiveCfg = Debug|x64
+		{DB21CE40-397E-45D3-8E24-D214F0C09FDA}.Debug|x64.Build.0 = Debug|x64
+		{DB21CE40-397E-45D3-8E24-D214F0C09FDA}.Release|Any CPU.ActiveCfg = Release|Win32
+		{DB21CE40-397E-45D3-8E24-D214F0C09FDA}.Release|Win32.ActiveCfg = Release|Win32
+		{DB21CE40-397E-45D3-8E24-D214F0C09FDA}.Release|Win32.Build.0 = Release|Win32
+		{DB21CE40-397E-45D3-8E24-D214F0C09FDA}.Release|Win64.ActiveCfg = Release|Win32
+		{DB21CE40-397E-45D3-8E24-D214F0C09FDA}.Release|x64.ActiveCfg = Release|x64
+		{DB21CE40-397E-45D3-8E24-D214F0C09FDA}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

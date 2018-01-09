@@ -126,10 +126,13 @@ private:
 		gParamHost->paramGetValue(param, &str_ass);
 		myData->ass->LoadAss(str_ass, "UTF-8");
 
+		int offset = (int)myData->Offset;
 		myData->Offset = ofxuGetTime(effect);
 		gParamHost->paramGetHandle(paramSet, "assOffset", &param, 0);
-		gParamHost->paramGetValue(param, &myData->Offset);
-		if (myData->Offset < 0.5) myData->Offset = 0;
+		gParamHost->paramGetValue(param, &offset);
+		if (offset < 1) offset = 0;
+		if (myData) myData->Offset = (double)offset;
+
 
 		gParamHost->paramGetHandle(paramSet, "assDefaultFontName", &param, 0);
 		char* str_fontname;
@@ -344,9 +347,10 @@ public:
 				}
 			}
 			else if (strcmp(propName, "assOffset") == 0) {
-				int offset = 0;
+				int offset = (int)myData->Offset;
 				gParamHost->paramGetValue(myData->assOffset, &offset);
-				if (myData->ass) myData->Offset = offset;
+				if (offset < 1) offset = 0;
+				if (myData) myData->Offset = (double)offset;				if (myData) myData->Offset = (double)offset;
 			}
 			else if (strcmp(propName, "assDefaultFontName") == 0) {
 				char* fontname = NULL;
@@ -818,6 +822,11 @@ public:
 		gPropHost->propGetString(inArgs, kOfxPropType, 0, &propType);
 		gPropHost->propGetString(inArgs, kOfxPropName, 0, &propName);
 
+		int offset = (int)myData->Offset;
+		gParamHost->paramGetValue(myData->assOffset, &offset);
+		if (offset < 1) myData->Offset = 0;
+		if (myData) myData->Offset = offset;
+
 		// we should not be called on a generator
 		if (myData->context != eIsGenerator) {
 
@@ -941,6 +950,13 @@ public:
 
 		OfxPropertySetHandle outputImg = NULL, sourceImg = NULL;
 		try {
+			bool blend = false;
+			RenderAssInstanceData *myData = getMyInstanceData(instance);
+			if (!myData) throw(new NoImageEx());
+			getFrameRange(instance, outputClip);
+			if (myData->Offset < 0.5) time_p = time;
+			else time_p = time + myData->Offset;
+
 			//getFrameRange(instance, outputClip);
 			// fetch image to render into from that clip
 			int dstRowBytes;
@@ -951,12 +967,6 @@ public:
 			outputImg = ofxuGetImage(outputClip, time, dstRowBytes, dstBitDepth, dstIsAlpha, dstRect, dstPtr);
 			if (!outputImg) throw NoImageEx();
 
-			RenderAssInstanceData *myData = getMyInstanceData(instance);
-			if (!myData) throw(new NoImageEx());
-			getFrameRange(instance, outputClip);
-			time_p = time + myData->Offset;
-
-			bool blend = false;
 			if (myData->context != eIsGenerator) {
 				// fetch main input clip
 				OfxImageClipHandle sourceClip;
@@ -1131,7 +1141,6 @@ public:
 
 };
 
-
 //////////////////////////////////////////////////////////////////////////////
 // the plugin struct 
 static OfxPlugin RenderAssPlugin =
@@ -1144,7 +1153,6 @@ static OfxPlugin RenderAssPlugin =
 	RenderASS::setHostFunc,
 	RenderASS::pluginMain
 };
-
 
 static OfxPlugin * GetRenderASS(void)
 {

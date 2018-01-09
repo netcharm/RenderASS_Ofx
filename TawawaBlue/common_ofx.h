@@ -34,12 +34,6 @@
 //#include "../include/ofxsImageBlender.H"
 //#include "../include/ofxsProcessing.H"
 
-//extern "C" {
-//#  include <ass.h>
-//}
-
-//#include "libass_helper.h"
-
 typedef struct OfxTimeLineSuiteV2 {
 
 	OfxStatus(*getProjectTime)(void *instance, double EffectTime, double *ProjectTime);
@@ -126,7 +120,7 @@ inline void copy_source(OfxImageEffectHandle instance,
 	}
 }
 
-extern OfxPlugin * GetTawawa(void);
+static OfxPlugin * GetTawawa(void);
 
 EXPORT OfxPlugin * OfxGetPlugin(int nth)
 {

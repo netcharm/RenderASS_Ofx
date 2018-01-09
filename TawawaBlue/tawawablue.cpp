@@ -94,13 +94,15 @@ private:
 
 		// get the parameter from the parameter set
 		//OfxParamHandle param;
+		OfxParamHandle param;
 
 		TawawaInstanceData *myData = new TawawaInstanceData;
 
 		gParamHost->paramGetHandle(paramSet, "Strength", &myData->Strength, 0);
+		gParamHost->paramGetHandle(paramSet, "Strength", &param, 0);
 		double Strength = 0;
-		gParamHost->paramGetValue(myData->Strength, &Strength);
-		myData->strength = Strength / 1000;
+		gParamHost->paramGetValue(param, &Strength);
+		myData->strength = Strength / 100;
 
 		char *context = 0;
 
@@ -223,7 +225,7 @@ public:
 				double Strength = 0;
 				gParamHost->paramGetValue(myData->Strength, &Strength);
 				if (Strength < 0.0001) Strength = 0;
-				myData->strength = Strength / 1000;
+				myData->strength = Strength / 100;
 			}
 		}
 		// don't trap any others
@@ -338,11 +340,11 @@ public:
 			gPropHost->propSetString(paramProps, kOfxPropLabel, 0, "Strength");
 			gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, "Modify Strength");
 			gPropHost->propSetDouble(paramProps, kOfxParamPropDefault, 0, 0.0);
-			gPropHost->propSetDouble(paramProps, kOfxParamPropMin, 0, -5.0);
-			gPropHost->propSetDouble(paramProps, kOfxParamPropMax, 0, 5.0);
-			gPropHost->propSetDouble(paramProps, kOfxParamPropDisplayMin, 0, -5.0);
-			gPropHost->propSetDouble(paramProps, kOfxParamPropDisplayMax, 0, 5.0);
-			gPropHost->propSetDouble(paramProps, kOfxParamPropIncrement, 0, 0.05);
+			gPropHost->propSetDouble(paramProps, kOfxParamPropMin, 0, -25.0);
+			gPropHost->propSetDouble(paramProps, kOfxParamPropMax, 0, 25.0);
+			gPropHost->propSetDouble(paramProps, kOfxParamPropDisplayMin, 0, -25.0);
+			gPropHost->propSetDouble(paramProps, kOfxParamPropDisplayMax, 0, 25.0);
+			gPropHost->propSetDouble(paramProps, kOfxParamPropIncrement, 0, 0.1);
 			gPropHost->propSetInt(paramProps, kOfxParamPropDigits, 0, 2);
 		}
 		return kOfxStatOK;
@@ -451,7 +453,7 @@ public:
 	}
 
 
-	inline static void blend_frame(OfxImageEffectHandle instance,
+	static inline void blend_frame(OfxImageEffectHandle instance,
 		double strength,
 		const OfxRectI renderWindow,
 		const void *srcPtr, const OfxRectI srcRect, const int srcRowBytes,
@@ -466,6 +468,18 @@ public:
 		unsigned char R, G, B, A;
 		double Y, U, V;
 
+		/*
+		Y = 0.257R + 0.504G + 0.098B + 16
+		U = 0.148R - 0.291G + 0.439B + 128
+		V = 0.439R - 0.368G - 0.071B + 128
+		B = 1.164(Y - 16)                   + 2.018(U - 128)
+		G = 1.164(Y - 16) - 0.813(V - 128)  - 0.391(U - 128)
+		R = 1.164(Y - 16) + 1.596(V - 128)
+
+		from Keith Jack's excellent book "Video Demystified" (ISBN 1-878707-09-4).
+		*/
+
+		double offset = 1.0 + strength;
 		for (int y = renderWindow.y1; y < renderWindow.y2; y++) {
 			if (gEffectHost->abort(instance)) break;
 
@@ -481,7 +495,7 @@ public:
 						G = srcPix->g;
 						B = srcPix->b;
 
-						Y = (0.30*R + 0.59*G + 0.11*B)*(1 + strength);
+						Y = (0.30*R + 0.59*G + 0.11*B);
 						U = 0.493*(B - Y);
 						V = 0.877*(R - Y);
 
@@ -489,6 +503,20 @@ public:
 						G = (unsigned char)Y;
 						B = (unsigned char)(Y > 135 ? 255 : Y + 120);
 
+						int offset_r = (int)((double)R*offset);
+						int offset_g = (int)((double)G*offset);
+						int offset_b = (int)((double)B*offset);
+
+						if (offset_r > 255) R = 255;
+						else if (offset_r < 0) R = 0;
+						else R = (unsigned char)offset_r;
+						if (offset_g > 255) G = 255;
+						else if (offset_g < 0) G = 0;
+						else G = (unsigned char)offset_g;
+						if (offset_b > 255) B = 255;
+						else if (offset_b < 0) B = 0;
+						else B = (unsigned char)offset_b;
+					
 						dstPix->a = (unsigned char)A;
 						dstPix->b = (unsigned char)B;
 						dstPix->g = (unsigned char)G;

@@ -27,9 +27,11 @@
 
 ### feature
 
-1. support as VideoFX add to video track
+1. support as VideoFX filter add to video track
+1. support as VideoFX filter add to static image clip
 1. support clip frame position only
 1. ass only support utf-8
+1. add a simple Tawawa Blue filter :P
 
 ### to-do
 
@@ -39,6 +41,6 @@
 
 ### bugs
 
-1. maybe not **render out**/**crashed host** as a fx in on generator.
+1. maybe not **render out**/**crashed host** as a fx with generator.
 1. sometime will crashed the host when loading ass file with cjk contents
 1. sometime will not render subtitles content when loading ass file with cjk filename

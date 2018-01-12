@@ -73,27 +73,31 @@ int utf2gbk(char *buf, size_t len)
 	return 0;
 }
 
-inline
-unsigned char d2b(double value)
+inline unsigned char d2b(double value)
 {
 	return (unsigned char)floor(value);
 }
 
 RGBA color_d2b(RGBAColourD color)
 {
-	return{ d2b(color.r * 256), d2b(color.g * 256), d2b(color.b * 256), d2b(color.a * 256) };
+	return{ d2b(color.r * 255), d2b(color.g * 255), d2b(color.b * 255), d2b(color.a * 255) };
 }
 
-unsigned int color_b2i(RGBA color)
+uint32_t color_b2i(RGBA color)
 {
-	//return((color.a << 24) + (color.b << 16) + (color.g << 8) + color.r);
-	return((color.r << 24) + (color.g << 16) + (color.b << 8) + color.a);
+	uint32_t r = (color.r << 24) & 0xFF000000;
+	uint32_t g = (color.g << 16) & 0x00FF0000;
+	uint32_t b = (color.b <<  8) & 0x0000FF00;
+	uint32_t a = (255 - color.a) & 0x000000FF;
+	return(r + g + b + a);
+	//return( + (color.g << 16) & 0x00FF0000 + (color.b << 8) & 0x0000FF00 + (255 - color.a) & 0x000000FF);
+	return(((255 - color.r) << 24) + ((255 - color.g) << 16) + ((255 - color.b) << 8) + (255 - color.a));
 }
 
-unsigned int color_d2i(RGBAColourD color)
+uint32_t color_d2i(RGBAColourD color)
 {
 	return(color_b2i(color_d2b(color)));
-	//return((d2b(color.a * 256) << 24) + (d2b(color.b * 256) << 16) + (d2b(color.g * 256) << 8) + d2b(color.r * 256));
+	//return((d2b(color.a * 255) << 24) + (d2b(color.b * 255) << 16) + (d2b(color.g * 255) << 8) + d2b(color.r * 255));
 }
 
 void msg_callback(int level, const char *fmt, va_list args, void *) {
@@ -319,128 +323,43 @@ bool AssRender::InitLibass(ASS_Hinting hints, double scale, int width, int heigh
 	return true;
 }
 
-bool AssRender::SetUseDefaultStyle(int used)
-{
-	if (!al || !ar) return false;
-	use_defaultstyle = used;
-	/*
-	//char buf_fontname[128];
-	//char buf_fontsize[128];
-
-	//char buf_fontcolor[128];
-	//char buf_fontcoloralt[128];
-	//char buf_outlinecolor[128];
-	//char buf_backcolor[128];
-
-	//char buf_bold[128];
-	//char buf_italic[128];
-	//char buf_underline[128];
-	//char buf_strikeout[128];
-
-	//char buf_scalex[128];
-	//char buf_scaley[128];
-	//char buf_spacing[128];
-	//char buf_angle[128];
-
-	//char buf_borderstyle[128];
-	//char buf_outline[128];
-	//char buf_shadow[128];
-	//char buf_alignment[128];
-
-	//char buf_marginl[128];
-	//char buf_marginr[128];
-	//char buf_marginv[128];
-
-	//char buf_encoding[128];
-
-	//sprintf_s(buf_fontname, sizeof(buf_fontname), "Fontname=%s", default_style.FontName);
-	//sprintf_s(buf_fontsize, sizeof(buf_fontsize), "Fontsize=%0.2f", default_style.FontSize);
-
-	//sprintf_s(buf_fontcolor, sizeof(buf_fontcolor), "PrimaryColour=&H%08X", default_style.PrimaryColour);
-	//sprintf_s(buf_fontcoloralt, sizeof(buf_fontcoloralt), "SecondaryColour=&H%08X", default_style.SecondaryColour);
-	//sprintf_s(buf_outlinecolor, sizeof(buf_outlinecolor), "OutlineColour=&H%08X", default_style.OutlineColour);
-	//sprintf_s(buf_backcolor, sizeof(buf_backcolor), "BackColour=&H%08X", default_style.BackColour);
-
-	//sprintf_s(buf_bold, sizeof(buf_bold), "Bold=%d", default_style.Bold);
-	//sprintf_s(buf_italic, sizeof(buf_italic), "Italic=%d", default_style.Italic);
-	//sprintf_s(buf_underline, sizeof(buf_underline), "Underline=%d", default_style.Underline);
-	//sprintf_s(buf_strikeout, sizeof(buf_strikeout), "Strikeout=%d", default_style.StrikeOut);
-
-	//sprintf_s(buf_scalex, sizeof(buf_scalex), "ScaleX=%0.2f", default_style.ScaleX);
-	//sprintf_s(buf_scaley, sizeof(buf_scaley), "ScaleY=%0.2f", default_style.ScaleY);
-	//sprintf_s(buf_spacing, sizeof(buf_spacing), "Spacing=%0.2f", default_style.Spacing);
-	//sprintf_s(buf_angle, sizeof(buf_angle), "Angle=%0.2f", default_style.Angle);
-
-	//sprintf_s(buf_borderstyle, sizeof(buf_borderstyle), "BorderStyle=%d", default_style.BorderStyle);
-	//sprintf_s(buf_outline, sizeof(buf_outline), "Outline=%0.2f", default_style.Outline);
-	//sprintf_s(buf_shadow, sizeof(buf_shadow), "Shadow=%0.2f", default_style.Shadow);
-	//sprintf_s(buf_alignment, sizeof(buf_alignment), "Alignment=%d", default_style.Alignment);
-
-	//sprintf_s(buf_marginl, sizeof(buf_marginl), "MarginL=%d", default_style.MarginL);
-	//sprintf_s(buf_marginr, sizeof(buf_marginr), "MarginR=%d", default_style.MarginR);
-	//sprintf_s(buf_marginv, sizeof(buf_marginv), "MarginV=%d", default_style.MarginV);
-	//sprintf_s(buf_encoding, sizeof(buf_encoding), "Encoding=%d", default_style.Encoding);
-
-	//char * style[23] = {
-	//	buf_fontname, buf_fontsize, 
-	//	buf_fontcolor, buf_fontcoloralt, buf_outlinecolor, buf_backcolor,
-	//	buf_bold, buf_italic, buf_underline, buf_strikeout,
-	//	buf_scalex, buf_scaley, buf_spacing, buf_angle, 
-	//	buf_borderstyle, buf_outline, buf_shadow, buf_alignment,
-	//	buf_marginl, buf_marginr, buf_marginv, 
-	//	buf_encoding,
-	//	NULL
-	//};
-	*/
-	if (use_defaultstyle) {
-		//ass_set_selective_style_override_enabled(ar, ASS_OVERRIDE_BIT_STYLE);
-		ass_set_selective_style_override_enabled(ar, ASS_OVERRIDE_BIT_FONT_SIZE + ASS_OVERRIDE_BIT_COLORS + ASS_OVERRIDE_BIT_ATTRIBUTES + ASS_OVERRIDE_BIT_BORDER);
-		ass_set_selective_style_override(ar, &default_style);
-		//ass_set_style_overrides(al, style);
-	}
-	else {
-		ass_set_selective_style_override_enabled(ar, ASS_OVERRIDE_DEFAULT);
-		ass_set_style_overrides(al, NULL);
-	}
-
-	return true;
-}
-
 bool AssRender::SetDefaultStyle(void)
 {
-	default_style.Name = "Default";
+	if (!default_style) default_style = new ASS_Style;
 
-	default_style.FontName = "Tahoma";
-	default_style.FontSize = 24;
+	default_style->Name = "Default";
 
-	default_style.PrimaryColour = 0xFF000000;
-	default_style.SecondaryColour = 0xFF808080;
-	default_style.OutlineColour = 0xFFFFFFFF;
-	default_style.BackColour = 0x80CCCCCC;
+	default_style->FontName = "Tahoma";
+	default_style->FontSize = 48;
 
-	default_style.Bold = 0;
-	default_style.Italic = 0;
-	default_style.Underline = 0;
-	default_style.StrikeOut = 0;
+	default_style->PrimaryColour = 0x00000000;
+	default_style->SecondaryColour = 0xFFFFFFC0;
+	default_style->OutlineColour = 0xFFFFFFCC;
+	default_style->BackColour = 0x66666680;
 
-	default_style.ScaleX = 100;
-	default_style.ScaleY = 100;
-	default_style.Spacing = 0;
-	default_style.Angle = 0;
+	default_style->Bold = 0;
+	default_style->Italic = 0;
+	default_style->Underline = 0;
+	default_style->StrikeOut = 0;
 
-	default_style.BorderStyle = 1;
-	default_style.Outline = 2;
-	default_style.Shadow = 2;
-	default_style.Alignment = 1;
+	default_style->ScaleX = 100.0;
+	default_style->ScaleY = 100.0;
+	default_style->Spacing = 0.0;
+	default_style->Angle = 0.0;
 
-	default_style.MarginL = 0;
-	default_style.MarginR = 0;
-	default_style.MarginV = 0;
-	default_style.Encoding = 1;
+	default_style->BorderStyle = 1;
+	default_style->Outline = 2.0;
+	default_style->Shadow = 2.0;
+	default_style->Alignment = 1;
 
-	default_style.treat_fontname_as_pattern = 1;
-	default_style.Blur = 1;
-	default_style.Justify = 0;
+	default_style->MarginL = 0;
+	default_style->MarginR = 0;
+	default_style->MarginV = 0;
+	default_style->Encoding = 1;
+
+	default_style->treat_fontname_as_pattern = 1;
+	default_style->Blur = 0;
+	default_style->Justify = 0;
 
 	return false;
 }
@@ -454,7 +373,7 @@ bool AssRender::SetDefaultStyle(const char * fontname, int fontsize,
 	strcpy_s(default_fontname, fontname);
 	utf2gbk(default_fontname, strlen(default_fontname));
 	default_fontsize = fontsize;
-	
+
 	default_fontcolor = color_d2b(color);
 	default_fontcoloralt = color_d2b(coloralt);
 	default_outlinecolor = color_d2b(outlinecolor);
@@ -473,24 +392,42 @@ bool AssRender::SetDefaultStyle(const char * fontname, int fontsize,
 	if (default_shadow < 0) default_shadow = 0;
 	if (default_shadow > 4) default_shadow = 4;
 
-	default_style.FontName = default_fontname;
-	default_style.FontSize = fontsize;
+	default_style->FontName = default_fontname;
+	default_style->FontSize = fontsize;
 
-	default_style.PrimaryColour = color_d2i(color);
-	default_style.SecondaryColour = color_d2i(coloralt);
-	default_style.OutlineColour = color_d2i(outlinecolor);
-	default_style.BackColour = color_d2i(backcolor);
+	default_style->PrimaryColour = color_d2i(color);
+	default_style->SecondaryColour = color_d2i(coloralt);
+	default_style->OutlineColour = color_d2i(outlinecolor);
+	default_style->BackColour = color_d2i(backcolor);
 
-	default_style.Bold = bold;
-	default_style.Italic = italic;
-	default_style.Underline = underline;
-	default_style.StrikeOut = strikeout;
+	default_style->Bold = bold;
+	default_style->Italic = italic;
+	default_style->Underline = underline;
+	default_style->StrikeOut = strikeout;
 
-	default_style.BorderStyle = borderstyle;
-	default_style.Outline = outline;
-	default_style.Shadow = shadow;
-	
+	default_style->BorderStyle = borderstyle;
+	default_style->Outline = outline;
+	default_style->Shadow = shadow;
+
 	if (use_defaultstyle) SetUseDefaultStyle(use_defaultstyle);
+	return true;
+}
+
+bool AssRender::SetUseDefaultStyle(int used)
+{
+	if (!al || !ar) return false;
+	use_defaultstyle = used;
+
+	if (use_defaultstyle) {
+		//ass_set_selective_style_override_enabled(ar, ASS_OVERRIDE_BIT_STYLE);
+		ass_set_selective_style_override_enabled(ar, ASS_OVERRIDE_BIT_FONT_NAME + ASS_OVERRIDE_BIT_COLORS + ASS_OVERRIDE_BIT_ATTRIBUTES + ASS_OVERRIDE_BIT_BORDER);
+		ass_set_selective_style_override(ar, default_style);
+	}
+	else {
+		ass_set_selective_style_override_enabled(ar, ASS_OVERRIDE_DEFAULT);
+		ass_set_style_overrides(al, NULL);
+	}
+
 	return true;
 }
 
@@ -507,9 +444,10 @@ bool AssRender::SetDefaultFontName(const char * fontname)
 	if (strlen(fontname) > 0 && strcmp(fontname, default_fontname) != 0) {
 		memset(default_fontname, 0, 512);
 		strcpy_s(default_fontname, fontname);
-		utf2gbk(default_fontname, strlen(default_fontname));
-		ass_set_fonts(ar, default_fontname, "Sans", 1, fontconf, 1);
-		default_style.FontName = default_fontname;
+		//utf2gbk(default_fontname, strlen(fontname));
+		ass_set_fonts(ar, default_fontname, NULL, 1, fontconf, 1);
+		ass_fonts_update(ar);
+		default_style->FontName = default_fontname;
 		if (use_defaultstyle) SetUseDefaultStyle(use_defaultstyle);
 	}
 	return false;
@@ -519,7 +457,7 @@ bool AssRender::SetDefaultFontSize(int fontsize)
 {
 	if (fontsize > 0 && fontsize < 256) {
 		default_fontsize = fontsize;
-		default_style.FontSize = fontsize;
+		default_style->FontSize = fontsize;
 		if (use_defaultstyle) SetUseDefaultStyle(use_defaultstyle);
 		return true;
 	}
@@ -529,7 +467,7 @@ bool AssRender::SetDefaultFontSize(int fontsize)
 bool AssRender::SetDefaultFontColor(RGBA color)
 {
 	default_fontcolor = color;	
-	default_style.PrimaryColour = color_b2i(color);
+	default_style->PrimaryColour = color_b2i(color);
 	if (use_defaultstyle) SetUseDefaultStyle(use_defaultstyle);
 	return true;
 }
@@ -542,7 +480,7 @@ bool AssRender::SetDefaultFontColor(RGBAColourD color)
 bool AssRender::SetDefaultFontColorAlt(RGBA color)
 {
 	default_fontcoloralt = color;
-	default_style.SecondaryColour = color_b2i(color);
+	default_style->SecondaryColour = color_b2i(color);
 	if (use_defaultstyle) SetUseDefaultStyle(use_defaultstyle);
 	return true;
 }
@@ -555,7 +493,7 @@ bool AssRender::SetDefaultFontColorAlt(RGBAColourD color)
 bool AssRender::SetDefaultOutlineColor(RGBA color)
 {
 	default_outlinecolor = color;
-	default_style.OutlineColour = color_b2i(color);
+	default_style->OutlineColour = color_b2i(color);
 	if (use_defaultstyle) SetUseDefaultStyle(use_defaultstyle);
 	return true;
 }
@@ -568,7 +506,7 @@ bool AssRender::SetDefaultOutlineColor(RGBAColourD color)
 bool AssRender::SetDefaultBackColor(RGBA color)
 {
 	default_backcolor = color;
-	default_style.BackColour = color_b2i(color);
+	default_style->BackColour = color_b2i(color);
 	if (use_defaultstyle) SetUseDefaultStyle(use_defaultstyle);
 	return false;
 }
@@ -585,7 +523,7 @@ bool AssRender::SetDefaultBold(int bold)
 		default_bold = 1;
 	else
 		default_bold = 0;
-	default_style.Bold = default_bold;
+	default_style->Bold = default_bold;
 	if (use_defaultstyle) SetUseDefaultStyle(use_defaultstyle);
 	return true;
 }
@@ -596,7 +534,7 @@ bool AssRender::SetDefaultItalic(int italic)
 		default_italic = 1;
 	else
 		default_italic = 0;
-	default_style.Italic = default_italic;
+	default_style->Italic = default_italic;
 	if (use_defaultstyle) SetUseDefaultStyle(use_defaultstyle);
 	return true;
 }
@@ -607,7 +545,7 @@ bool AssRender::SetDefaultUnderline(int underline)
 		default_underline = 1;
 	else
 		default_underline = 0;
-	default_style.Underline = default_underline;
+	default_style->Underline = default_underline;
 	if (use_defaultstyle) SetUseDefaultStyle(use_defaultstyle);
 	return true;
 }
@@ -618,7 +556,7 @@ bool AssRender::SetDefaultStrikeOut(int strikeout)
 		default_strikeout = 1;
 	else
 		default_strikeout = 0;
-	default_style.StrikeOut = default_strikeout;
+	default_style->StrikeOut = default_strikeout;
 	if (use_defaultstyle) SetUseDefaultStyle(use_defaultstyle);
 	return true;
 }
@@ -636,7 +574,7 @@ bool AssRender::SetDefaultBorderStyle(int borderstyle)
 		default_borderstyle = 0;
 		break;
 	}
-	default_style.BorderStyle = default_borderstyle;
+	default_style->BorderStyle = default_borderstyle;
 	if (use_defaultstyle) SetUseDefaultStyle(use_defaultstyle);
 	return true;
 }
@@ -646,7 +584,7 @@ bool AssRender::SetDefaultOutline(int outline)
 	default_outline = outline;
 	if (default_outline < 0) default_outline = 0;
 	if (default_outline > 4) default_outline = 4;
-	default_style.Outline = default_outline;
+	default_style->Outline = default_outline;
 	if (use_defaultstyle) SetUseDefaultStyle(use_defaultstyle);
 	return true;
 }
@@ -656,7 +594,7 @@ bool AssRender::SetDefaultShadow(int shadow)
 	default_shadow = shadow;
 	if (default_shadow < 0) default_shadow = 0;
 	if (default_shadow > 4) default_shadow = 4;
-	default_style.Shadow = default_shadow;
+	default_style->Shadow = default_shadow;
 	if (use_defaultstyle) SetUseDefaultStyle(use_defaultstyle);
 	return true;
 }
@@ -665,7 +603,9 @@ bool AssRender::SetMargin(int used)
 {
 	if (!ar) return false;
 	margin = used;
-	ass_set_use_margins(ar, margin);
+	//ass_set_use_margins(ar, margin);
+	if (margin) SetMargin(margin_t, margin_b, margin_l, margin_r);
+	else ass_set_margins(ar, 0, 0, 0, 0);
 	return true;
 }
 
@@ -680,7 +620,8 @@ bool AssRender::SetMargin(int t, int b, int l, int r)
 		margin_l = (double)l / (double)(renderHeight) * 100;
 		margin_r = (double)r / (double)(renderHeight) * 100;
 	}
-	ass_set_margins(ar, t, b, l, r);
+	if (margin) ass_set_margins(ar, t, b, l, r);
+	else ass_set_margins(ar, 0, 0, 0, 0);
 	return true;
 }
 
@@ -697,7 +638,7 @@ bool AssRender::SetMargin(double t, double b, double l, double r)
 		tl = (int)(renderWidth*margin_l / 100);
 		tr = (int)(renderWidth*margin_r / 100);
 	}
-	ass_set_margins(ar, tt, tb, tl, tr);
+	if(margin) ass_set_margins(ar, tt, tb, tl, tr);
 	return true;
 }
 
@@ -795,7 +736,7 @@ bool AssRender::SetPosition(double percentage)
 bool AssRender::SetPosition(int pixels)
 {
 	if (!ar) return false;
-	if (renderHeight >= 0) {
+	if (renderHeight > 0) {
 		position = pixels / renderHeight * 100;
 		ass_set_line_position(ar, position);
 		return true;

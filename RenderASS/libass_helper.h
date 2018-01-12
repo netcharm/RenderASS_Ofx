@@ -94,7 +94,7 @@ private:
 	ASS_Hinting fonthinting = ASS_HINTING_NONE;
 	double fontscale = 1.0;
 
-	ASS_Style default_style;
+	ASS_Style * default_style = NULL;
 	int use_defaultstyle = 0;
 	char default_fontname[512];
 	int default_fontsize = 24;

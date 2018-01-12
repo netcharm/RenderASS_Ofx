@@ -10,3 +10,4 @@ Release
 *.bmp
 *.7z
 /RenderASS/RenderASS-.cpp
+/packages/DllExport.1.6.0

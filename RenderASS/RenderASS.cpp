@@ -22,6 +22,8 @@ struct RenderAssInstanceData {
 	ContextEnum context;
 	AssRender * ass;
 
+	int use_margin = 0;
+	int use_defaultstyle = 0;
 	double Offset = 0;
 	double FrameStart = 0;
 	double FrameEnd = 0;
@@ -45,11 +47,28 @@ struct RenderAssInstanceData {
 	OfxParamHandle assFontScale;
 	OfxParamHandle assFontHints;
 
+	OfxParamHandle assUseDefaultStyle;
 	OfxParamHandle assDefaultFontName;
 	OfxParamHandle assDefaultFontSize;
 	OfxParamHandle assDefaultFontColor;
-	OfxParamHandle assDefaultFontOutline;
-	OfxParamHandle assDefaultBackground;
+	OfxParamHandle assDefaultFontColorAlt;
+	OfxParamHandle assDefaultOutlineColor;
+	OfxParamHandle assDefaultBackColor;
+	OfxParamHandle assDefaultBold;
+	OfxParamHandle assDefaultItalic;
+	OfxParamHandle assDefaultUnderline;
+	OfxParamHandle assDefaultStrikeOut;
+	//OfxParamHandle assDefaultScaleX;
+	//OfxParamHandle assDefaultScaleY;
+	//OfxParamHandle assDefaultSpacing;
+	//OfxParamHandle assDefaultAngle;
+	OfxParamHandle assDefaultBorderStyle;
+	OfxParamHandle assDefaultOutline;
+	OfxParamHandle assDefaultShadow;
+	//OfxParamHandle assDefaultAlignment;
+	//OfxParamHandle assDefaultMarginL;
+	//OfxParamHandle assDefaultMarginR;
+	//OfxParamHandle assDefaultMarginV;
 };
 
 static const char* PluginAuthor = "NetCharm";
@@ -102,11 +121,7 @@ private:
 
 		gParamHost->paramGetHandle(paramSet, "assFileName", &myData->assFileName, 0);
 		gParamHost->paramGetHandle(paramSet, "assOffset", &myData->assOffset, 0);
-		gParamHost->paramGetHandle(paramSet, "assDefaultFontName", &myData->assDefaultFontName, 0);
-		gParamHost->paramGetHandle(paramSet, "assDefaultFontSize", &myData->assDefaultFontSize, 0);
-		gParamHost->paramGetHandle(paramSet, "assDefaultFontColor", &myData->assDefaultFontColor, 0);
-		gParamHost->paramGetHandle(paramSet, "assDefaultFontOutline", &myData->assDefaultFontOutline, 0);
-		gParamHost->paramGetHandle(paramSet, "assDefaultBackground", &myData->assDefaultBackground, 0);
+
 		gParamHost->paramGetHandle(paramSet, "assUseMargin", &myData->assUseMargin, 0);
 		gParamHost->paramGetHandle(paramSet, "assMarginT", &myData->assMarginT, 0);
 		gParamHost->paramGetHandle(paramSet, "assMarginB", &myData->assMarginB, 0);
@@ -114,8 +129,24 @@ private:
 		gParamHost->paramGetHandle(paramSet, "assMarginR", &myData->assMarginR, 0);
 		gParamHost->paramGetHandle(paramSet, "assSpace", &myData->assSpace, 0);
 		gParamHost->paramGetHandle(paramSet, "assPosition", &myData->assPosition, 0);
+
 		gParamHost->paramGetHandle(paramSet, "assFontScale", &myData->assFontScale, 0);
 		gParamHost->paramGetHandle(paramSet, "assFontHints", &myData->assFontHints, 0);
+
+		gParamHost->paramGetHandle(paramSet, "assUseDefaultStyle", &myData->assUseDefaultStyle, 0);
+		gParamHost->paramGetHandle(paramSet, "assDefaultFontName", &myData->assDefaultFontName, 0);
+		gParamHost->paramGetHandle(paramSet, "assDefaultFontSize", &myData->assDefaultFontSize, 0);
+		gParamHost->paramGetHandle(paramSet, "assDefaultFontColor", &myData->assDefaultFontColor, 0);
+		gParamHost->paramGetHandle(paramSet, "assDefaultFontColorAlt", &myData->assDefaultFontColorAlt, 0);
+		gParamHost->paramGetHandle(paramSet, "assDefaultOutlineColor", &myData->assDefaultOutlineColor, 0);
+		gParamHost->paramGetHandle(paramSet, "assDefaultBackColor", &myData->assDefaultBackColor, 0);
+		gParamHost->paramGetHandle(paramSet, "assDefaultBold", &myData->assDefaultBold, 0);
+		gParamHost->paramGetHandle(paramSet, "assDefaultItalic", &myData->assDefaultItalic, 0);
+		gParamHost->paramGetHandle(paramSet, "assDefaultUnderline", &myData->assDefaultUnderline, 0);
+		gParamHost->paramGetHandle(paramSet, "assDefaultStrikeOut", &myData->assDefaultStrikeOut, 0);
+		gParamHost->paramGetHandle(paramSet, "assDefaultBorderStyle", &myData->assDefaultBorderStyle, 0);
+		gParamHost->paramGetHandle(paramSet, "assDefaultOutline", &myData->assDefaultOutline, 0);
+		gParamHost->paramGetHandle(paramSet, "assDefaultShadow", &myData->assDefaultShadow, 0);
 
 
 		myData->ass = new AssRender();
@@ -134,38 +165,12 @@ private:
 		if (myData) myData->Offset = (double)offset;
 
 
-		gParamHost->paramGetHandle(paramSet, "assDefaultFontName", &param, 0);
-		char* str_fontname;
-		gParamHost->paramGetValue(param, &str_fontname);
-		gParamHost->paramGetHandle(paramSet, "assDefaultFontSize", &param, 0);
-		int fontsize = 24;
-		gParamHost->paramGetValue(param, &fontsize);
-
-		if (myData->ass && fontsize < 256) {
-			myData->ass->SetDefaultFont(str_fontname, fontsize);
-		}
-
-
-		gParamHost->paramGetHandle(paramSet, "assDefaultFontColor", &param, 0);
-		RGBAColourD fc = { 0, 0, 0, 1 };
-		gParamHost->paramGetValue(param, &fc.r, &fc.g, &fc.b, &fc.a);
-		if (myData->ass) myData->ass->SetDefaultFontColor(fc);
-
-		gParamHost->paramGetHandle(paramSet, "assDefaultFontOutline", &param, 0);
-		RGBAColourD fo = { 0, 0, 0, 1 };
-		gParamHost->paramGetValue(param, &fo.r, &fo.g, &fo.b, &fo.a);
-		if (myData->ass) myData->ass->SetDefaultFontOutline(fo);
-
-		gParamHost->paramGetHandle(paramSet, "assDefaultBackground", &param, 0);
-		RGBAColourD fb = { 0, 0, 0, 1 };
-		gParamHost->paramGetValue(param, &fb.r, &fb.g, &fb.b, &fb.a);
-		if (myData->ass) myData->ass->SetDefaultFontBG(fb);
-
-
 		gParamHost->paramGetHandle(paramSet, "assUseMargin", &param, 0);
 		int margin_enabled = 0;
 		gParamHost->paramGetValue(param, &margin_enabled);
+		myData->use_margin = margin_enabled;
 		if (myData->ass) myData->ass->SetMargin(margin_enabled);
+
 		gParamHost->paramGetHandle(paramSet, "assMarginT", &param, 0);
 		double margin_t = 0.0;
 		gParamHost->paramGetValue(param, &margin_t);
@@ -217,6 +222,85 @@ private:
 			}
 		}
 
+
+		gParamHost->paramGetHandle(paramSet, "assUseDefaultStyle", &param, 0);
+		int defaultstyle_enabled = 0;
+		gParamHost->paramGetValue(param, &defaultstyle_enabled);
+		if (myData->ass) myData->ass->SetUseDefaultStyle(defaultstyle_enabled);
+		myData->use_defaultstyle = defaultstyle_enabled;
+
+		gParamHost->paramGetHandle(paramSet, "assDefaultFontName", &param, 0);
+		char* str_fontname;
+		gParamHost->paramGetValue(param, &str_fontname);
+		if (myData->ass) myData->ass->SetDefaultFontName(str_fontname);
+
+		gParamHost->paramGetHandle(paramSet, "assDefaultFontSize", &param, 0);
+		int fontsize = 24;
+		gParamHost->paramGetValue(param, &fontsize);
+		if (myData->ass) myData->ass->SetDefaultFontSize(fontsize);
+		//if (myData->ass && fontsize < 256) {
+		//	myData->ass->SetDefaultFont(str_fontname, fontsize);
+		//}
+
+		gParamHost->paramGetHandle(paramSet, "assDefaultFontColor", &param, 0);
+		RGBAColourD fc = { 0, 0, 0, 1 };
+		gParamHost->paramGetValue(param, &fc.r, &fc.g, &fc.b, &fc.a);
+		if (myData->ass) myData->ass->SetDefaultFontColor(fc);
+
+		gParamHost->paramGetHandle(paramSet, "assDefaultFontColorAlt", &param, 0);
+		RGBAColourD fca = { 1, 1, 1, 1 };
+		gParamHost->paramGetValue(param, &fca.r, &fca.g, &fca.b, &fca.a);
+		if (myData->ass) myData->ass->SetDefaultFontColorAlt(fca);
+
+		gParamHost->paramGetHandle(paramSet, "assDefaultOutlineColor", &param, 0);
+		RGBAColourD fo = { 0, 0, 0, 1 };
+		gParamHost->paramGetValue(param, &fo.r, &fo.g, &fo.b, &fo.a);
+		if (myData->ass) myData->ass->SetDefaultOutlineColor(fo);
+
+		gParamHost->paramGetHandle(paramSet, "assDefaultBackColor", &param, 0);
+		RGBAColourD fb = { 0, 0, 0, 1 };
+		gParamHost->paramGetValue(param, &fb.r, &fb.g, &fb.b, &fb.a);
+		if (myData->ass) myData->ass->SetDefaultBackColor(fb);
+
+		gParamHost->paramGetHandle(paramSet, "assDefaultBold", &param, 0);
+		int fbold = 0;
+		gParamHost->paramGetValue(param, &fbold);
+		if (myData->ass) myData->ass->SetDefaultBold(fbold);
+
+		gParamHost->paramGetHandle(paramSet, "assDefaultItalic", &param, 0);
+		int fitalic = 0;
+		gParamHost->paramGetValue(param, &fitalic);
+		if (myData->ass) myData->ass->SetDefaultItalic(fitalic);
+
+		gParamHost->paramGetHandle(paramSet, "assDefaultUnderline", &param, 0);
+		int funderline = 0;
+		gParamHost->paramGetValue(param, &funderline);
+		if (myData->ass) myData->ass->SetDefaultUnderline(funderline);
+
+		gParamHost->paramGetHandle(paramSet, "assDefaultStrikeOut", &param, 0);
+		int fstrikeout = 0;
+		gParamHost->paramGetValue(param, &fstrikeout);
+		if (myData->ass) myData->ass->SetDefaultStrikeOut(fstrikeout);
+
+		gParamHost->paramGetHandle(paramSet, "assDefaultBorderStyle", &param, 0);
+		int fborderstyle = 1;
+		gParamHost->paramGetValue(param, &fborderstyle);
+		if (myData->ass) myData->ass->SetDefaultBorderStyle(fborderstyle);
+
+		gParamHost->paramGetHandle(paramSet, "assDefaultOutline", &param, 0);
+		int foutline = 2;
+		gParamHost->paramGetValue(param, &foutline);
+		if (myData->ass) myData->ass->SetDefaultOutline(foutline);
+
+		gParamHost->paramGetHandle(paramSet, "assDefaultShadow", &param, 0);
+		int fshadow = 2;
+		gParamHost->paramGetValue(param, &fshadow);
+		if (myData->ass) myData->ass->SetDefaultShadow(fshadow);
+
+
+		//if (myData && myData->ass)
+		//  myData->ass->SetDefaultStyle(str_fontname, fontsize, fc, fca, fo, fb, fbold, fitalic, funderline, fstrikeout, fborderstyle, foutline, fshadow);
+
 		char *context = 0;
 
 		// is this instance a general effect ?
@@ -243,6 +327,202 @@ private:
 		gEffectHost->clipGetHandle(effect, kOfxImageEffectOutputClipName, &myData->outputClip, 0);
 
 		return myData;
+	}
+
+	static OfxStatus setMyInstanceParam(OfxImageEffectHandle effect,
+		                                OfxPropertySetHandle inArgs,
+		                                OfxPropertySetHandle outArgs)
+	{
+		//RenderAssInstanceData *myData = new RenderAssInstanceData;
+		RenderAssInstanceData *myData = getMyInstanceData(effect);
+		if (!myData) return kOfxStatReplyDefault;
+
+		char *propType = NULL;
+		char *propName = NULL;
+		gPropHost->propGetString(inArgs, kOfxPropType, 0, &propType);
+		gPropHost->propGetString(inArgs, kOfxPropName, 0, &propName);
+
+		if (!propType || !propName) return kOfxStatReplyDefault;
+
+		if (strcmp(propType, kOfxTypeClip) == 0) {
+
+		}
+		else if (strcmp(propType, kOfxTypeParameter) == 0) {
+			if (strcmp(propName, "assFileName") == 0) {
+				//char fn[MAX_PATH];
+				//memset(fn, 0, MAX_PATH);
+				char *fn;
+				gParamHost->paramGetValue(myData->assFileName, &fn);
+				if (myData->ass && fn[0] != 0) {
+					myData->ass->LoadAss(fn, "UTF-8");
+				}
+			}
+			else if (strcmp(propName, "assOffset") == 0) {
+				int offset = (int)myData->Offset;
+				gParamHost->paramGetValue(myData->assOffset, &offset);
+				if (offset < 1) offset = 0;
+				if (myData) myData->Offset = (double)offset;				if (myData) myData->Offset = (double)offset;
+			}
+			else if (strcmp(propName, "assUseDefaultStyle") == 0) {
+				int used_defaultstyle = 0;
+				gParamHost->paramGetValue(myData->assUseDefaultStyle, &used_defaultstyle);
+				if (myData->ass) myData->ass->SetUseDefaultStyle(used_defaultstyle);
+				myData->use_defaultstyle = used_defaultstyle;
+			}
+			else if (strcmp(propName, "assDefaultFontName") == 0) {
+				char* fontname = NULL;
+				gParamHost->paramGetValue(myData->assDefaultFontName, &fontname);
+				try
+				{
+					if (myData->ass) {
+						char fn[512];
+						memset(fn, 0, 512);
+						strcpy_s(fn, fontname);
+						utf2gbk(fn, strlen(fontname));
+						myData->ass->SetDefaultFontName(fn);
+					}
+				}
+				catch (const std::exception&)
+				{
+
+				}
+			}
+			else if (strcmp(propName, "assDefaultFontSize") == 0) {
+				int fsize = 0;
+				gParamHost->paramGetValue(myData->assDefaultFontSize, &fsize);
+				if (myData->ass) myData->ass->SetDefaultFontSize(fsize);
+			}
+			else if (strcmp(propName, "assDefaultFontColor") == 0) {
+				RGBAColourD fc = { 0, 0, 0, 1 };
+				gParamHost->paramGetValue(myData->assDefaultFontColor, &fc.r, &fc.g, &fc.b, &fc.a);
+				if (myData->ass) myData->ass->SetDefaultFontColor(fc);
+			}
+			else if (strcmp(propName, "assDefaultFontColorAlt") == 0) {
+				RGBAColourD fca = { 0, 0, 0, 1 };
+				gParamHost->paramGetValue(myData->assDefaultFontColorAlt, &fca.r, &fca.g, &fca.b, &fca.a);
+				if (myData->ass) myData->ass->SetDefaultFontColorAlt(fca);
+			}
+			else if (strcmp(propName, "assDefaultOutlineColor") == 0) {
+				RGBAColourD fo = { 0, 0, 0, 1 };
+				gParamHost->paramGetValue(myData->assDefaultOutlineColor, &fo.r, &fo.g, &fo.b, &fo.a);
+				if (myData->ass) myData->ass->SetDefaultOutlineColor(fo);
+			}
+			else if (strcmp(propName, "assDefaultBackColor") == 0) {
+				RGBAColourD fb = { 0, 0, 0, 1 };
+				gParamHost->paramGetValue(myData->assDefaultBackColor, &fb.r, &fb.g, &fb.b, &fb.a);
+				if (myData->ass) myData->ass->SetDefaultBackColor(fb);
+			}
+			else if (strcmp(propName, "assDefaultBold") == 0) {
+				int fbold = 0;
+				gParamHost->paramGetValue(myData->assDefaultBold, &fbold);
+				if (myData->ass) myData->ass->SetDefaultBold(fbold);
+			}
+			else if (strcmp(propName, "assDefaultItalic") == 0) {
+				int fitalic = 0;
+				gParamHost->paramGetValue(myData->assDefaultItalic, &fitalic);
+				if (myData->ass) myData->ass->SetDefaultItalic(fitalic);
+			}
+			else if (strcmp(propName, "assDefaultUnderline") == 0) {
+				int funderline = 0;
+				gParamHost->paramGetValue(myData->assDefaultUnderline, &funderline);
+				if (myData->ass) myData->ass->SetDefaultUnderline(funderline);
+			}
+			else if (strcmp(propName, "assDefaultStrikeOut") == 0) {
+				int fstrikeout = 0;
+				gParamHost->paramGetValue(myData->assDefaultStrikeOut, &fstrikeout);
+				if (myData->ass) myData->ass->SetDefaultStrikeOut(fstrikeout);
+			}
+			else if (strcmp(propName, "assDefaultBorderStyle") == 0) {
+				int fborderstyle = 0;
+				gParamHost->paramGetValue(myData->assDefaultBorderStyle, &fborderstyle);
+				if (myData->ass) myData->ass->SetDefaultBorderStyle(fborderstyle);
+			}
+			else if (strcmp(propName, "assDefaultOutline") == 0) {
+				int foutline = 0;
+				gParamHost->paramGetValue(myData->assDefaultOutline, &foutline);
+				if (myData->ass) myData->ass->SetDefaultOutline(foutline);
+			}
+			else if (strcmp(propName, "assDefaultShadow") == 0) {
+				int fshadow = 0;
+				gParamHost->paramGetValue(myData->assDefaultShadow, &fshadow);
+				if (myData->ass) myData->ass->SetDefaultShadow(fshadow);
+			}
+			else if (strcmp(propName, "assUseMargin") == 0) {
+				int used_margin = 0;
+				gParamHost->paramGetValue(myData->assUseMargin, &used_margin);
+				if (myData->ass) myData->ass->SetMargin(used_margin);
+				myData->use_margin = used_margin;
+			}
+			else if (strcmp(propName, "assMarginT") == 0) {
+				double margin_t = 0, margin_b = 0, margin_l = 0, margin_r = 0;
+				gParamHost->paramGetValue(myData->assMarginT, &margin_t);
+				gParamHost->paramGetValue(myData->assMarginB, &margin_b);
+				gParamHost->paramGetValue(myData->assMarginL, &margin_l);
+				gParamHost->paramGetValue(myData->assMarginR, &margin_r);
+				if (myData->ass) myData->ass->SetMargin(margin_t, margin_b, margin_l, margin_r);
+			}
+			else if (strcmp(propName, "assMarginB") == 0) {
+				double margin_t = 0, margin_b = 0, margin_l = 0, margin_r = 0;
+				gParamHost->paramGetValue(myData->assMarginT, &margin_t);
+				gParamHost->paramGetValue(myData->assMarginB, &margin_b);
+				gParamHost->paramGetValue(myData->assMarginL, &margin_l);
+				gParamHost->paramGetValue(myData->assMarginR, &margin_r);
+				if (myData->ass) myData->ass->SetMargin(margin_t, margin_b, margin_l, margin_r);
+			}
+			else if (strcmp(propName, "assMarginL") == 0) {
+				double margin_t = 0, margin_b = 0, margin_l = 0, margin_r = 0;
+				gParamHost->paramGetValue(myData->assMarginT, &margin_t);
+				gParamHost->paramGetValue(myData->assMarginB, &margin_b);
+				gParamHost->paramGetValue(myData->assMarginL, &margin_l);
+				gParamHost->paramGetValue(myData->assMarginR, &margin_r);
+				if (myData->ass) myData->ass->SetMargin(margin_t, margin_b, margin_l, margin_r);
+			}
+			else if (strcmp(propName, "assMarginR") == 0) {
+				double margin_t = 0, margin_b = 0, margin_l = 0, margin_r = 0;
+				gParamHost->paramGetValue(myData->assMarginT, &margin_t);
+				gParamHost->paramGetValue(myData->assMarginB, &margin_b);
+				gParamHost->paramGetValue(myData->assMarginL, &margin_l);
+				gParamHost->paramGetValue(myData->assMarginR, &margin_r);
+				if (myData->ass) myData->ass->SetMargin(margin_t, margin_b, margin_l, margin_r);
+			}
+			else if (strcmp(propName, "assSpace") == 0) {
+				double spacing = 0;
+				gParamHost->paramGetValue(myData->assSpace, &spacing);
+				if (myData->ass) myData->ass->SetSpace(spacing);
+			}
+			else if (strcmp(propName, "assPosition") == 0) {
+				double position = 0;
+				gParamHost->paramGetValue(myData->assPosition, &position);
+				if (myData->ass) myData->ass->SetSpace(position);
+			}
+			else if (strcmp(propName, "assFontScale") == 0) {
+				double scale = 1.0;
+				gParamHost->paramGetValue(myData->assFontScale, &scale);
+				if (myData->ass) myData->ass->SetSpace(scale);
+			}
+			else if (strcmp(propName, "assFontHints") == 0) {
+				int hints = 0;
+				gParamHost->paramGetValue(myData->assFontHints, &hints);
+				if (myData->ass) {
+					switch (hints)
+					{
+					case 1:
+						myData->ass->SetHints(ASS_HINTING_LIGHT);
+						break;
+					case 2:
+						myData->ass->SetHints(ASS_HINTING_NORMAL);
+						break;
+					case 3:
+						myData->ass->SetHints(ASS_HINTING_NATIVE);
+						break;
+					default:
+						myData->ass->SetHints(ASS_HINTING_NONE);
+						break;
+					}
+				}
+			}
+		}
+		return kOfxStatReplyDefault;
 	}
 
 	static double getFrameRate(OfxImageEffectHandle effect, OfxImageClipHandle clip)
@@ -331,137 +611,12 @@ public:
 		gPropHost->propGetString(inArgs, kOfxPropType, 0, &propType);
 		gPropHost->propGetString(inArgs, kOfxPropName, 0, &propName);
 
-		if(!propType || !propName) return kOfxStatReplyDefault;
+		if (!propType || !propName) return kOfxStatReplyDefault;
 
 		if (strcmp(propType, kOfxTypeClip) == 0) {
-
 		}
 		else if (strcmp(propType, kOfxTypeParameter) == 0) {
-			if (strcmp(propName, "assFileName") == 0) {
-				//char fn[MAX_PATH];
-				//memset(fn, 0, MAX_PATH);
-				char *fn;
-				gParamHost->paramGetValue(myData->assFileName, &fn);
-				if (myData->ass && fn[0] != 0) {
-					myData->ass->LoadAss(fn, "UTF-8");
-				}
-			}
-			else if (strcmp(propName, "assOffset") == 0) {
-				int offset = (int)myData->Offset;
-				gParamHost->paramGetValue(myData->assOffset, &offset);
-				if (offset < 1) offset = 0;
-				if (myData) myData->Offset = (double)offset;				if (myData) myData->Offset = (double)offset;
-			}
-			else if (strcmp(propName, "assDefaultFontName") == 0) {
-				char* fontname = NULL;
-				gParamHost->paramGetValue(myData->assDefaultFontName, &fontname);
-				try
-				{
-					if (myData->ass) {
-						char fn[512];
-						memset(fn, 0, 512);
-						strcpy_s(fn, fontname);
-						utf2gbk(fn, strlen(fontname));
-						myData->ass->SetDefaultFont(fn, 24);
-					}
-				}
-				catch (const std::exception&)
-				{
-
-				}
-			}
-			else if (strcmp(propName, "assDefaultFontSize") == 0) {
-				int fsize = 0;
-				gParamHost->paramGetValue(myData->assDefaultFontSize, &fsize);
-				if (myData->ass) myData->ass->SetDefaultFontSize(fsize);
-			}
-			else if (strcmp(propName, "assDefaultFontColor") == 0) {
-				RGBAColourD fc = { 0, 0, 0, 1 };
-				gParamHost->paramGetValue(myData->assDefaultFontColor, &fc.r, &fc.g, &fc.b, &fc.a);
-				if (myData->ass) myData->ass->SetDefaultFontColor(fc);
-			}
-			else if (strcmp(propName, "assDefaultFontOutline") == 0) {
-				RGBAColourD fo = { 0, 0, 0, 1 };
-				gParamHost->paramGetValue(myData->assDefaultFontColor, &fo.r, &fo.g, &fo.b, &fo.a);
-				if (myData->ass) myData->ass->SetDefaultFontOutline(fo);
-			}
-			else if (strcmp(propName, "assDefaultBackground") == 0) {
-				RGBAColourD fb = { 0, 0, 0, 1 };
-				if (myData->ass) myData->ass->SetDefaultFontBG(fb);
-			}
-			else if (strcmp(propName, "assUseMargin") == 0) {
-				int used_margin = 0;
-				gParamHost->paramGetValue(myData->assUseMargin, &used_margin);
-				if (myData->ass) myData->ass->SetMargin(used_margin);
-			}
-			else if (strcmp(propName, "assMarginT") == 0) {
-				double margin_t = 0, margin_b = 0, margin_l = 0, margin_r = 0;
-				gParamHost->paramGetValue(myData->assMarginT, &margin_t);
-				gParamHost->paramGetValue(myData->assMarginB, &margin_b);
-				gParamHost->paramGetValue(myData->assMarginL, &margin_l);
-				gParamHost->paramGetValue(myData->assMarginR, &margin_r);
-				if (myData->ass) myData->ass->SetMargin(margin_t, margin_b, margin_l, margin_r);
-			}
-			else if (strcmp(propName, "assMarginB") == 0) {
-				double margin_t = 0, margin_b = 0, margin_l = 0, margin_r = 0;
-				gParamHost->paramGetValue(myData->assMarginT, &margin_t);
-				gParamHost->paramGetValue(myData->assMarginB, &margin_b);
-				gParamHost->paramGetValue(myData->assMarginL, &margin_l);
-				gParamHost->paramGetValue(myData->assMarginR, &margin_r);
-				if (myData->ass) myData->ass->SetMargin(margin_t, margin_b, margin_l, margin_r);
-			}
-			else if (strcmp(propName, "assMarginL") == 0) {
-				double margin_t = 0, margin_b = 0, margin_l = 0, margin_r = 0;
-				gParamHost->paramGetValue(myData->assMarginT, &margin_t);
-				gParamHost->paramGetValue(myData->assMarginB, &margin_b);
-				gParamHost->paramGetValue(myData->assMarginL, &margin_l);
-				gParamHost->paramGetValue(myData->assMarginR, &margin_r);
-				if (myData->ass) myData->ass->SetMargin(margin_t, margin_b, margin_l, margin_r);
-			}
-			else if (strcmp(propName, "assMarginR") == 0) {
-				double margin_t = 0, margin_b = 0, margin_l = 0, margin_r = 0;
-				gParamHost->paramGetValue(myData->assMarginT, &margin_t);
-				gParamHost->paramGetValue(myData->assMarginB, &margin_b);
-				gParamHost->paramGetValue(myData->assMarginL, &margin_l);
-				gParamHost->paramGetValue(myData->assMarginR, &margin_r);
-				if (myData->ass) myData->ass->SetMargin(margin_t, margin_b, margin_l, margin_r);
-			}
-			else if (strcmp(propName, "assSpace") == 0) {
-				double spacing = 0;
-				gParamHost->paramGetValue(myData->assSpace, &spacing);
-				if (myData->ass) myData->ass->SetSpace(spacing);
-			}
-			else if (strcmp(propName, "assPosition") == 0) {
-				double position = 0;
-				gParamHost->paramGetValue(myData->assPosition, &position);
-				if (myData->ass) myData->ass->SetSpace(position);
-			}
-			else if (strcmp(propName, "assFontScale") == 0) {
-				double scale = 1.0;
-				gParamHost->paramGetValue(myData->assFontScale, &scale);
-				if (myData->ass) myData->ass->SetSpace(scale);
-			}
-			else if (strcmp(propName, "assFontHints") == 0) {
-				int hints = 0;
-				gParamHost->paramGetValue(myData->assFontHints, &hints);
-				if (myData->ass) {
-					switch (hints)
-					{
-					case 1:
-						myData->ass->SetHints(ASS_HINTING_LIGHT);
-						break;
-					case 2:
-						myData->ass->SetHints(ASS_HINTING_NORMAL);
-						break;
-					case 3:
-						myData->ass->SetHints(ASS_HINTING_NATIVE);
-						break;
-					default:
-						myData->ass->SetHints(ASS_HINTING_NONE);
-						break;
-					}
-				}
-			}
+			return setMyInstanceParam(effect, inArgs, outArgs);
 		}
 		// don't trap any others
 		return kOfxStatReplyDefault;
@@ -643,9 +798,15 @@ public:
 			gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, "Ass Margin Used");
 			gPropHost->propSetInt(paramProps, kOfxParamPropDefault, 0, 0);
 
+			// make ass properties group
+			gParamHost->paramDefine(paramSet, kOfxParamTypeGroup, "AssPosMarginProperties", &paramProps);
+			gPropHost->propSetString(paramProps, kOfxParamPropParent, 0, "AssPosProperties");
+			gPropHost->propSetString(paramProps, kOfxPropLabel, 0, "Margins");
+			gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, "Margin Properties");
+
 			// make an ass margin top
 			gParamHost->paramDefine(paramSet, kOfxParamTypeDouble, "assMarginT", &paramProps);
-			gPropHost->propSetString(paramProps, kOfxParamPropParent, 0, "AssPosProperties");
+			gPropHost->propSetString(paramProps, kOfxParamPropParent, 0, "AssPosMarginProperties");
 			gPropHost->propSetString(paramProps, kOfxParamPropScriptName, 0, "assMarginT");
 			gPropHost->propSetString(paramProps, kOfxPropLabel, 0, "Margin Top");
 			gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, "Ass Margin Top");
@@ -659,7 +820,7 @@ public:
 
 			// make an ass margin bottom
 			gParamHost->paramDefine(paramSet, kOfxParamTypeDouble, "assMarginB", &paramProps);
-			gPropHost->propSetString(paramProps, kOfxParamPropParent, 0, "AssPosProperties");
+			gPropHost->propSetString(paramProps, kOfxParamPropParent, 0, "AssPosMarginProperties");
 			gPropHost->propSetString(paramProps, kOfxParamPropScriptName, 0, "assMarginB");
 			gPropHost->propSetString(paramProps, kOfxPropLabel, 0, "Margin Bottom");
 			gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, "Ass Margin Bottom");
@@ -673,7 +834,7 @@ public:
 
 			// make an ass margin left
 			gParamHost->paramDefine(paramSet, kOfxParamTypeDouble, "assMarginL", &paramProps);
-			gPropHost->propSetString(paramProps, kOfxParamPropParent, 0, "AssPosProperties");
+			gPropHost->propSetString(paramProps, kOfxParamPropParent, 0, "AssPosMarginProperties");
 			gPropHost->propSetString(paramProps, kOfxParamPropScriptName, 0, "assMarginL");
 			gPropHost->propSetString(paramProps, kOfxPropLabel, 0, "Margin Left");
 			gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, "Ass Margin Left");
@@ -687,7 +848,7 @@ public:
 
 			// make an ass margin top
 			gParamHost->paramDefine(paramSet, kOfxParamTypeDouble, "assMarginR", &paramProps);
-			gPropHost->propSetString(paramProps, kOfxParamPropParent, 0, "AssPosProperties");
+			gPropHost->propSetString(paramProps, kOfxParamPropParent, 0, "AssPosMarginProperties");
 			gPropHost->propSetString(paramProps, kOfxParamPropScriptName, 0, "assMarginR");
 			gPropHost->propSetString(paramProps, kOfxPropLabel, 0, "Margin Right");
 			gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, "Ass Margin Right");
@@ -734,6 +895,13 @@ public:
 			/*
 			*  Default ASS Font Setings
 			*/
+			// make using default style
+			gParamHost->paramDefine(paramSet, kOfxParamTypeBoolean, "assUseDefaultStyle", &paramProps);
+			gPropHost->propSetString(paramProps, kOfxParamPropScriptName, 0, "assUseDefaultStyle");
+			gPropHost->propSetString(paramProps, kOfxPropLabel, 0, "Used Default Style");
+			gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, "Used Default Style to override ASS file");
+			gPropHost->propSetInt(paramProps, kOfxParamPropDefault, 0, 0);
+
 			// make default ass properties group
 			gParamHost->paramDefine(paramSet, kOfxParamTypeGroup, "defaultAssProperties", &paramProps);
 			gPropHost->propSetString(paramProps, kOfxPropLabel, 0, "Default ASS Properties");
@@ -767,35 +935,117 @@ public:
 			gPropHost->propSetString(paramProps, kOfxParamPropScriptName, 0, "assDefaultFontColor");
 			gPropHost->propSetString(paramProps, kOfxPropLabel, 0, "Font Color");
 			gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, "Default Font Color");
-			gPropHost->propSetString(paramProps, kOfxParamPropScriptName, 0, "assDefaultFontColor");
+			gPropHost->propSetDouble(paramProps, kOfxParamPropDefault, 0, 0.18);
+			gPropHost->propSetDouble(paramProps, kOfxParamPropDefault, 1, 0.18);
+			gPropHost->propSetDouble(paramProps, kOfxParamPropDefault, 2, 0.18);
+			gPropHost->propSetDouble(paramProps, kOfxParamPropDefault, 3, 0.90);
+
+			// make an rgba font alt colour parameter
+			gParamHost->paramDefine(paramSet, kOfxParamTypeRGBA, "assDefaultFontColorAlt", &paramProps);
+			gPropHost->propSetString(paramProps, kOfxParamPropParent, 0, "defaultAssProperties");
+			gPropHost->propSetString(paramProps, kOfxParamPropScriptName, 0, "assDefaultFontColorAlt");
+			gPropHost->propSetString(paramProps, kOfxPropLabel, 0, "Alternate Font Color");
+			gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, "Default Alternate Font Color");
 			gPropHost->propSetDouble(paramProps, kOfxParamPropDefault, 0, 0.18);
 			gPropHost->propSetDouble(paramProps, kOfxParamPropDefault, 1, 0.18);
 			gPropHost->propSetDouble(paramProps, kOfxParamPropDefault, 2, 0.18);
 			gPropHost->propSetDouble(paramProps, kOfxParamPropDefault, 3, 0.90);
 
 			// make an rgba font outline colour parameter
-			gParamHost->paramDefine(paramSet, kOfxParamTypeRGBA, "assDefaultFontOutline", &paramProps);
+			gParamHost->paramDefine(paramSet, kOfxParamTypeRGBA, "assDefaultOutlineColor", &paramProps);
 			gPropHost->propSetString(paramProps, kOfxParamPropParent, 0, "defaultAssProperties");
-			gPropHost->propSetString(paramProps, kOfxParamPropScriptName, 0, "assDefaultFontOutline");
+			gPropHost->propSetString(paramProps, kOfxParamPropScriptName, 0, "assDefaultOutlineColor");
 			gPropHost->propSetString(paramProps, kOfxPropLabel, 0, "Outline Color");
 			gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, "Default Outline Color");
-			gPropHost->propSetString(paramProps, kOfxParamPropScriptName, 0, "assDefaultFontOutline");
 			gPropHost->propSetDouble(paramProps, kOfxParamPropDefault, 0, 1.00);
 			gPropHost->propSetDouble(paramProps, kOfxParamPropDefault, 1, 0.85);
 			gPropHost->propSetDouble(paramProps, kOfxParamPropDefault, 2, 0.00);
 			gPropHost->propSetDouble(paramProps, kOfxParamPropDefault, 3, 0.75);
 
-			// make an rgba font background colour parameter
-			gParamHost->paramDefine(paramSet, kOfxParamTypeRGBA, "assDefaultBackground", &paramProps);
+			// make an outline size parameter
+			gParamHost->paramDefine(paramSet, kOfxParamTypeInteger, "assDefaultOutline", &paramProps);
 			gPropHost->propSetString(paramProps, kOfxParamPropParent, 0, "defaultAssProperties");
-			gPropHost->propSetString(paramProps, kOfxParamPropScriptName, 0, "assDefaultBackground");
-			gPropHost->propSetString(paramProps, kOfxPropLabel, 0, "Background Color");
-			gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, "Default Bacgground Color");
-			gPropHost->propSetString(paramProps, kOfxParamPropScriptName, 0, "assDefaultBackground");
+			gPropHost->propSetString(paramProps, kOfxParamPropScriptName, 0, "assDefaultOutline");
+			gPropHost->propSetString(paramProps, kOfxPropLabel, 0, "Outline Width");
+			gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, "Default Outline Width");
+			gPropHost->propSetInt(paramProps, kOfxParamPropDefault, 0, 2);
+			gPropHost->propSetInt(paramProps, kOfxParamPropMin, 0, 0);
+			gPropHost->propSetInt(paramProps, kOfxParamPropMax, 0, 4);
+			gPropHost->propSetInt(paramProps, kOfxParamPropDisplayMin, 0, 0);
+			gPropHost->propSetInt(paramProps, kOfxParamPropDisplayMax, 0, 4);
+			gPropHost->propSetInt(paramProps, kOfxParamPropIncrement, 0, 1);
+
+			// make an rgba font background colour parameter
+			gParamHost->paramDefine(paramSet, kOfxParamTypeRGBA, "assDefaultBackColor", &paramProps);
+			gPropHost->propSetString(paramProps, kOfxParamPropParent, 0, "defaultAssProperties");
+			gPropHost->propSetString(paramProps, kOfxParamPropScriptName, 0, "assDefaultBackColor");
+			gPropHost->propSetString(paramProps, kOfxPropLabel, 0, "Shadow Color");
+			gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, "Default Shadow Color");
 			gPropHost->propSetDouble(paramProps, kOfxParamPropDefault, 0, 0.50);
 			gPropHost->propSetDouble(paramProps, kOfxParamPropDefault, 1, 0.50);
 			gPropHost->propSetDouble(paramProps, kOfxParamPropDefault, 2, 0.50);
 			gPropHost->propSetDouble(paramProps, kOfxParamPropDefault, 3, 0.50);
+
+			// make an shadow size parameter
+			gParamHost->paramDefine(paramSet, kOfxParamTypeInteger, "assDefaultShadow", &paramProps);
+			gPropHost->propSetString(paramProps, kOfxParamPropParent, 0, "defaultAssProperties");
+			gPropHost->propSetString(paramProps, kOfxParamPropScriptName, 0, "assDefaultShadow");
+			gPropHost->propSetString(paramProps, kOfxPropLabel, 0, "Shadow Size");
+			gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, "Default Shadow Size");
+			gPropHost->propSetInt(paramProps, kOfxParamPropDefault, 0, 2);
+			gPropHost->propSetInt(paramProps, kOfxParamPropMin, 0, 0);
+			gPropHost->propSetInt(paramProps, kOfxParamPropMax, 0, 4);
+			gPropHost->propSetInt(paramProps, kOfxParamPropDisplayMin, 0, 0);
+			gPropHost->propSetInt(paramProps, kOfxParamPropDisplayMax, 0, 4);
+			gPropHost->propSetInt(paramProps, kOfxParamPropIncrement, 0, 1);
+
+			// make ass font style properties group
+			gParamHost->paramDefine(paramSet, kOfxParamTypeGroup, "AssFontStyleProperties", &paramProps);
+			gPropHost->propSetString(paramProps, kOfxParamPropParent, 0, "defaultAssProperties");
+			gPropHost->propSetString(paramProps, kOfxPropLabel, 0, "Font Style");
+			gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, "Default Font Style Properties");
+
+			// make default style with bold
+			gParamHost->paramDefine(paramSet, kOfxParamTypeBoolean, "assDefaultBold", &paramProps);
+			gPropHost->propSetString(paramProps, kOfxParamPropParent, 0, "AssFontStyleProperties");
+			gPropHost->propSetString(paramProps, kOfxParamPropScriptName, 0, "assDefaultBold");
+			gPropHost->propSetString(paramProps, kOfxPropLabel, 0, "Bold");
+			gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, "Default Font Bold Style");
+			gPropHost->propSetInt(paramProps, kOfxParamPropDefault, 0, 0);
+
+			// make default style with italic
+			gParamHost->paramDefine(paramSet, kOfxParamTypeBoolean, "assDefaultItalic", &paramProps);
+			gPropHost->propSetString(paramProps, kOfxParamPropParent, 0, "AssFontStyleProperties");
+			gPropHost->propSetString(paramProps, kOfxParamPropScriptName, 0, "assDefaultItalic");
+			gPropHost->propSetString(paramProps, kOfxPropLabel, 0, "Italic");
+			gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, "Default Font Italic Style");
+			gPropHost->propSetInt(paramProps, kOfxParamPropDefault, 0, 0);
+
+			// make default style with underline
+			gParamHost->paramDefine(paramSet, kOfxParamTypeBoolean, "assDefaultUnderline", &paramProps);
+			gPropHost->propSetString(paramProps, kOfxParamPropParent, 0, "AssFontStyleProperties");
+			gPropHost->propSetString(paramProps, kOfxParamPropScriptName, 0, "assDefaultUnderline");
+			gPropHost->propSetString(paramProps, kOfxPropLabel, 0, "Underline");
+			gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, "Default Font Underline Style");
+			gPropHost->propSetInt(paramProps, kOfxParamPropDefault, 0, 0);
+
+			// make default style with strike out
+			gParamHost->paramDefine(paramSet, kOfxParamTypeBoolean, "assDefaultStrikeOut", &paramProps);
+			gPropHost->propSetString(paramProps, kOfxParamPropParent, 0, "AssFontStyleProperties");
+			gPropHost->propSetString(paramProps, kOfxParamPropScriptName, 0, "assDefaultStrikeOut");
+			gPropHost->propSetString(paramProps, kOfxPropLabel, 0, "StrikeOut");
+			gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, "Default Font StrikeOut Style");
+			gPropHost->propSetInt(paramProps, kOfxParamPropDefault, 0, 0);
+
+			// make default style with border style
+			gParamHost->paramDefine(paramSet, kOfxParamTypeChoice, "assDefaultBorderStyle", &paramProps);
+			gPropHost->propSetString(paramProps, kOfxParamPropParent, 0, "defaultAssProperties");
+			gPropHost->propSetString(paramProps, kOfxParamPropScriptName, 0, "assDefaultBorderStyle");
+			gPropHost->propSetString(paramProps, kOfxPropLabel, 0, "Border Style");
+			gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, "Default Font Border Style Mode");
+			gPropHost->propSetString(paramProps, kOfxParamPropChoiceOption, 0, "Outline + Drop Shadow");
+			gPropHost->propSetString(paramProps, kOfxParamPropChoiceOption, 1, "Opaque Box");
+			gPropHost->propSetInt(paramProps, kOfxParamPropDefault, 0, 0);
 		}
 		return kOfxStatOK;
 	}

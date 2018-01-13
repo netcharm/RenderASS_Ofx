@@ -683,15 +683,14 @@ public:
 		gPropHost->propSetString(effectProps, kOfxPropVersionLabel, 0, ver_str);
 		gPropHost->propSetString(effectProps, kOfxPropPluginDescription, 0, PluginDescription);
 		
-
 		// define the contexts we can be used in
 		gPropHost->propSetString(effectProps, kOfxImageEffectPropSupportedContexts, 0, kOfxImageEffectContextFilter);
-		//gPropHost->propSetString(effectProps, kOfxImageEffectPropSupportedContexts, 1, kOfxImageEffectContextGeneral);
 
-#ifdef _DEBUG
+//#ifdef _DEBUG
 		gPropHost->propSetString(effectProps, kOfxImageEffectPropSupportedContexts, 1, kOfxImageEffectContextGenerator);
 		//gPropHost->propSetString(effectProps, kOfxImageEffectPropSupportedContexts, 2, kOfxImageEffectContextPaint);
-#endif // _DEBUG
+		//gPropHost->propSetString(effectProps, kOfxImageEffectPropSupportedContexts, 2, kOfxImageEffectContextGeneral);		
+//#endif // _DEBUG
 
 		return kOfxStatOK;
 	}
@@ -1135,8 +1134,11 @@ public:
 						gPropHost->propSetString(outArgs, "OfxImageClipPropDepth_Output", 0, kOfxImageComponentRGBA);
 
 					// as a generator we create premultiplied output
-					//gPropHost->propSetString(outArgs, kOfxImageEffectPropPreMultiplication, 0, kOfxImagePreMultiplied);
-					gPropHost->propSetString(outArgs, kOfxImageEffectPropPreMultiplication, 0, kOfxImageOpaque);
+					//gPropHost->propSetString(outArgs, kOfxImageEffectPropPreMultiplication, 0, kOfxImageUnPreMultiplied);
+					//gPropHost->propSetString(outArgs, kOfxImageEffectPropPreMultiplication, 0, kOfxImageOpaque);
+					gPropHost->propSetString(outArgs, kOfxImageEffectPropPreMultiplication, 0, kOfxImagePreMultiplied);
+					//gPropHost->propSetInt(effectProps, kOfxImageEffectFrameVarying, 0, 1);
+					gPropHost->propSetInt(outArgs, kOfxImageEffectFrameVarying, 0, 1);
 				}
 
 			}
@@ -1233,7 +1235,7 @@ public:
 				blend = true;
 			} else {
 				copy_source(instance, renderWindow, NULL, dstRect, 0, dstPtr, dstRect, dstRowBytes);
-				blend = false;
+				blend = true;
 			}
 
 			if (myData->ass)

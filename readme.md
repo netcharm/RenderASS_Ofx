@@ -44,3 +44,14 @@
 1. maybe not **render out**/**crashed host** as a fx with generator.
 1. sometime will crashed the host when loading ass file with cjk contents
 1. sometime will not render subtitles content when loading ass file with cjk filename
+
+### download
+
+#### source
+
+1. https://github.com/netcharm/renderass_ofx
+1. https://bitbucket.org/netcharm/renderass_ofx
+
+#### binary
+
+1. https://bitbucket.org/netcharm/renderass_ofx/downloads/

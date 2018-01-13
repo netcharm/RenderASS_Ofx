@@ -29,8 +29,9 @@
 
 1. support as VideoFX filter add to video track
 1. support as VideoFX filter add to static image clip
-1. support clip frame position only
-1. ass only support utf-8
+1. support as Generator, but need setting duration length manual
+1. support clip frame position only, but can set position offset in filter setup dialog
+1. ass only support utf-8 encoding
 1. add a simple Tawawa Blue filter :P
 
 ### to-do
@@ -41,6 +42,10 @@
 
 ### bugs
 
+1. spacing changing is no effect
+1. margins changing maybe with bugs
+1. override style with default style has much bugs, such can't live view when changing font name, 
+   font size no effect, color only alpha part effecive, and may crashing host app.
 1. maybe not **render out**/**crashed host** as a fx with generator.
 1. sometime will crashed the host when loading ass file with cjk contents
 1. sometime will not render subtitles content when loading ass file with cjk filename

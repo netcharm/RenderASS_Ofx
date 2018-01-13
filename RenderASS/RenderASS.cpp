@@ -349,8 +349,6 @@ private:
 		}
 		else if (strcmp(propType, kOfxTypeParameter) == 0) {
 			if (strcmp(propName, "assFileName") == 0) {
-				//char fn[MAX_PATH];
-				//memset(fn, 0, MAX_PATH);
 				char *fn;
 				gParamHost->paramGetValue(myData->assFileName, &fn);
 				if (myData->ass && fn[0] != 0) {
@@ -493,12 +491,12 @@ private:
 			else if (strcmp(propName, "assPosition") == 0) {
 				double position = 0;
 				gParamHost->paramGetValue(myData->assPosition, &position);
-				if (myData->ass) myData->ass->SetSpace(position);
+				if (myData->ass) myData->ass->SetPosition(position);
 			}
 			else if (strcmp(propName, "assFontScale") == 0) {
 				double scale = 1.0;
 				gParamHost->paramGetValue(myData->assFontScale, &scale);
-				if (myData->ass) myData->ass->SetSpace(scale);
+				if (myData->ass) myData->ass->SetFontScale(scale);
 			}
 			else if (strcmp(propName, "assFontHints") == 0) {
 				int hints = 0;

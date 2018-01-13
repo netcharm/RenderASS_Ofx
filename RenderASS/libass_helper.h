@@ -141,18 +141,6 @@ public:
 
 	double last_time = 0;
 
-	bool __stdcall Resize(int width, int height);
-	bool __stdcall ReScale(double scale);
-	bool __stdcall SetFPS(double fr);
-	bool __stdcall SetHints(ASS_Hinting hints);
-
-	bool __stdcall SetDefaultStyle(void);
-	bool __stdcall SetDefaultStyle(const char * fontname, int fontsize, 
-		RGBAColourD color, RGBAColourD coloralt, RGBAColourD outlinecolor, RGBAColourD backcolor,
-		int bold, int italic, int underline, int strikeout,
-		int bordestyle, int outline, int shadow);
-
-	bool __stdcall SetUseDefaultStyle(int used);
 	bool __stdcall SetDefaultFont(const char * fontname, int fontsize);
 	bool __stdcall SetDefaultFontName(const char * fontname);
 	bool __stdcall SetDefaultFontSize(int fontsize);
@@ -172,6 +160,13 @@ public:
 	bool __stdcall SetDefaultOutline(int outline);
 	bool __stdcall SetDefaultShadow(int shadow);
 
+	bool __stdcall SetDefaultStyle(void);
+	bool __stdcall SetDefaultStyle(const char * fontname, int fontsize,
+		RGBAColourD color, RGBAColourD coloralt, RGBAColourD outlinecolor, RGBAColourD backcolor,
+		int bold, int italic, int underline, int strikeout,
+		int bordestyle, int outline, int shadow);
+	bool __stdcall SetUseDefaultStyle(int used);
+
 	bool __stdcall SetSpace(int pixels);
 	bool __stdcall SetSpace(double percentage);
 	bool __stdcall SetPosition(int pixels);
@@ -181,6 +176,12 @@ public:
 	bool __stdcall SetMargin(double t, double b, double l, double r);
 	bool __stdcall SetMargin(int used, int t, const int b, int l, int r);
 	bool __stdcall SetMargin(int used, double t, double b, double l, double r);
+	bool __stdcall SetFontScale(double scale);
+	bool __stdcall SetHints(ASS_Hinting hints);
+
+	bool __stdcall Resize(int width, int height);
+	bool __stdcall ReScale(double scale);
+	bool __stdcall SetFPS(double fr);
 
 	bool __stdcall LoadAss(const char* assfile, const char *_charset);
 

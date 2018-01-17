@@ -20,6 +20,7 @@
 1. fribidi-0.19.7
 1. harfbuzz-1.3.4
 1. libass-0.14.0
+1. gettext-0.19.8.1
 
 ### test software
 
@@ -33,6 +34,7 @@
 1. support clip frame position only, but can set position offset in filter setup dialog
 1. ass only support utf-8 encoding
 1. add a simple Tawawa Blue filter :P
+1. RenderASS using GNU GetText to support I18N UI.
 
 ### to-do
 

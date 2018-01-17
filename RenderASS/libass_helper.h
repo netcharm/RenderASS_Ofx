@@ -33,11 +33,19 @@ extern "C" {
 }
 
 #define M_PI   3.14159265358979323846   // pi
-
+//
+#ifndef _R
 #define _R(c)  ((c)>>24)
+#endif
+#ifndef _G
 #define _G(c)  (((c)>>16)&0xFF)
+#endif
+#ifndef _B
 #define _B(c)  (((c)>>8)&0xFF)
+#endif
+#ifndef _A
 #define _A(c)  ((c)&0xFF)
+#endif
 
 extern TCHAR cur_dll_path[MAX_PATH];
 
@@ -56,18 +64,24 @@ typedef struct ARECT {
 //
 DWORD GetModulePath(HMODULE hModule, LPTSTR pszBuffer, DWORD dwSize);
 
-char* w2c(const wchar_t* wsp);
-char* w2c(const std::wstring ws);
-bool s2c(const std::string s, char* c);
-int utf2gbk(char *buf, size_t len);
-int gbk2utf(char *buf, size_t len);
-char* gbk(char *buf);
-char* utf(char *buf);
+extern char* w2c(const wchar_t* wsp);
+extern char* w2c(const std::wstring ws);
+extern bool s2c(const std::string s, char* c);
+extern int utf2gbk(char *buf, size_t len);
+extern int gbk2utf(char *buf, size_t len);
+extern char* gbk(char *buf);
+extern char* utf(char *buf);
 
-unsigned char d2b(double);
+inline unsigned char d2b(double value);
 RGBA color_d2b(RGBAColourD color);
-unsigned int color_b2i(RGBA color);
-unsigned int color_d2i(RGBAColourD color);
+uint32_t color_b2i(RGBA color);
+uint32_t color_d2i(RGBAColourD color);
+
+inline unsigned char d2b(double value)
+{
+	return (unsigned char)floor(value);
+}
+
 
 //
 class ASS_Image_List {

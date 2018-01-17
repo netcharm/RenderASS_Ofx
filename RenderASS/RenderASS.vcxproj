@@ -115,7 +115,9 @@
       <Command>if not exist "$(OutDir)$(ProjectName).ofx.bundle\Contents\Resources" mkdir "$(OutDir)$(ProjectName).ofx.bundle\Contents\Resources"
 if not exist "$(OutDir)$(ProjectName).ofx.bundle\Contents\$(PlatformTarget)" mkdir "$(OutDir)$(ProjectName).ofx.bundle\Contents\$(Platform)"
 copy /Y "$(TargetPath)" /B "$(OutDir)$(ProjectName).ofx.bundle\Contents\$(Platform)\$(ProjectName).ofx" /B
+xcopy /D /S /Y "$(ProjectDir)locale" /B "$(OutDir)$(ProjectName).ofx.bundle\Contents\$(Platform)\locale"
 </Command>
+      <Message>Creating bundle...</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -148,7 +150,7 @@ copy /Y "$(TargetPath)" /B "$(OutDir)$(ProjectName).ofx.bundle\Contents\$(Platfo
       <Command>if not exist "$(OutDir)$(ProjectName).ofx.bundle\Contents\Resources" mkdir "$(OutDir)$(ProjectName).ofx.bundle\Contents\Resources"
 if not exist "$(OutDir)$(ProjectName).ofx.bundle\Contents\$(Platform)" mkdir "$(OutDir)$(ProjectName).ofx.bundle\Contents\Win64"
 copy /Y "$(TargetPath)" /B "$(OutDir)$(ProjectName).ofx.bundle\Contents\Win64\$(ProjectName).ofx" /B
-</Command>
+xcopy /D /S /Y "$(ProjectDir)locale" /B "$(OutDir)$(ProjectName).ofx.bundle\Contents\Win64\locale"</Command>
     </PostBuildEvent>
     <PostBuildEvent>
       <Message>Creating bundle...</Message>
@@ -179,7 +181,9 @@ copy /Y "$(TargetPath)" /B "$(OutDir)$(ProjectName).ofx.bundle\Contents\Win64\$(
       <Command>if not exist "$(OutDir)$(ProjectName).ofx.bundle\Contents\Resources" mkdir "$(OutDir)$(ProjectName).ofx.bundle\Contents\Resources"
 if not exist "$(OutDir)$(ProjectName).ofx.bundle\Contents\$(PlatformTarget)" mkdir "$(OutDir)$(ProjectName).ofx.bundle\Contents\$(Platform)"
 copy /Y "$(TargetPath)" /B "$(OutDir)$(ProjectName).ofx.bundle\Contents\$(Platform)\$(ProjectName).ofx" /B
+xcopy /D /S /Y "$(ProjectDir)locale" /B "$(OutDir)$(ProjectName).ofx.bundle\Contents\$(Platform)\locale"
 </Command>
+      <Message>Creating bundle...</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -212,7 +216,8 @@ copy /Y "$(TargetPath)" /B "$(OutDir)$(ProjectName).ofx.bundle\Contents\$(Platfo
       <Command>if not exist "$(OutDir)$(ProjectName).ofx.bundle\Contents\Resources" mkdir "$(OutDir)$(ProjectName).ofx.bundle\Contents\Resources"
 if not exist "$(OutDir)$(ProjectName).ofx.bundle\Contents\$(Platform)" mkdir "$(OutDir)$(ProjectName).ofx.bundle\Contents\Win64"
 copy /Y "$(TargetPath)" /B "$(OutDir)$(ProjectName).ofx.bundle\Contents\Win64\$(ProjectName).ofx" /B
-</Command>
+xcopy /D /S /Y "$(ProjectDir)locale" /B "$(OutDir)$(ProjectName).ofx.bundle\Contents\Win64\locale"</Command>
+      <Message>Creating bundle...</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>

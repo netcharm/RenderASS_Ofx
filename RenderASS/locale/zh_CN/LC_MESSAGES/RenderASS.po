@@ -22,7 +22,7 @@ msgstr "ASS字幕渲染插件调试版"
 
 #: RenderASS.cpp:88
 msgid "Render ASS"
-msgstr "ASS字幕渲染"
+msgstr "ASS字幕渲染插件"
 
 #: RenderASS.cpp:90
 msgid "ASS/SSA (Advanced Substation Alpha/Substation Alpha) Render Filter"

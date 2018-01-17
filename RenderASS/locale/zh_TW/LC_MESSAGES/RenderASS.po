@@ -18,7 +18,7 @@ msgstr ""
 
 #: RenderASS.cpp:86
 msgid "Render ASS Debug"
-msgstr "ASS字幕渲染插件调试版"
+msgstr "ASS字幕渲染插件調試版"
 
 #: RenderASS.cpp:88
 msgid "Render ASS"
@@ -26,7 +26,7 @@ msgstr "ASS字幕渲染插件"
 
 #: RenderASS.cpp:90
 msgid "ASS/SSA (Advanced Substation Alpha/Substation Alpha) Render Filter"
-msgstr "ASS/SSA (Advanced Substation Alpha/Substation Alpha)字幕渲染滤镜"
+msgstr "ASS/SSA (Advanced Substation Alpha/Substation Alpha)字幕渲染濾鏡"
 
 #: RenderASS.cpp:750
 msgid "ASS File"
@@ -34,7 +34,7 @@ msgstr "ASS字幕文件"
 
 #: RenderASS.cpp:751
 msgid "Loaded ASS File"
-msgstr "已载入的ASS字幕文件"
+msgstr "已載入的ASS字幕文件"
 
 #: RenderASS.cpp:758
 msgid "ASS Offset"
@@ -42,7 +42,7 @@ msgstr "字幕起始"
 
 #: RenderASS.cpp:759
 msgid "ASS Time Offset"
-msgstr "字幕起始时间"
+msgstr "字幕起始時間"
 
 #: RenderASS.cpp:769 RenderASS.cpp:770
 msgid "ASS Positions"
@@ -50,11 +50,11 @@ msgstr "字幕位置"
 
 #: RenderASS.cpp:776
 msgid "Spacing"
-msgstr "字幕间距"
+msgstr "字幕間距"
 
 #: RenderASS.cpp:777
 msgid "Ass Spacing level bottom"
-msgstr "字幕和底部的间距"
+msgstr "字幕和底部的間距"
 
 #: RenderASS.cpp:790
 msgid "Position"
@@ -62,79 +62,79 @@ msgstr "位置"
 
 #: RenderASS.cpp:791
 msgid "Ass Position level bottom"
-msgstr "字幕相对底部的位置"
+msgstr "字幕相對底部的位置"
 
 #: RenderASS.cpp:804
 msgid "Used Margin"
-msgstr "启用边距"
+msgstr "啓用邊距"
 
 #: RenderASS.cpp:805
 msgid "Ass Margin Used"
-msgstr "字幕启用边距"
+msgstr "字幕啓用邊距"
 
 #: RenderASS.cpp:811
 msgid "Margins"
-msgstr "边距"
+msgstr "邊距"
 
 #: RenderASS.cpp:812
 msgid "Margin Properties"
-msgstr "边距设定"
+msgstr "邊距設定"
 
 #: RenderASS.cpp:818
 msgid "Margin Top"
-msgstr "顶边距"
+msgstr "頂邊距"
 
 #: RenderASS.cpp:819
 msgid "Ass Margin Top"
-msgstr "字幕顶部边距"
+msgstr "字幕頂部邊距"
 
 #: RenderASS.cpp:832
 msgid "Margin Bottom"
-msgstr "底边距"
+msgstr "底邊距"
 
 #: RenderASS.cpp:833
 msgid "Ass Margin Bottom"
-msgstr "字幕底部边距"
+msgstr "字幕底部邊距"
 
 #: RenderASS.cpp:846
 msgid "Margin Left"
-msgstr "左边距"
+msgstr "左邊距"
 
 #: RenderASS.cpp:847
 msgid "Ass Margin Left"
-msgstr "字幕左侧边距"
+msgstr "字幕左側邊距"
 
 #: RenderASS.cpp:860
 msgid "Margin Right"
-msgstr "右边距"
+msgstr "右邊距"
 
 #: RenderASS.cpp:861
 msgid "Ass Margin Right"
-msgstr "字幕侧右边距"
+msgstr "字幕側右邊距"
 
 #: RenderASS.cpp:872 RenderASS.cpp:873
 msgid "ASS Font Properties"
-msgstr "字幕字体设定"
+msgstr "字幕字體設定"
 
 #: RenderASS.cpp:879
 msgid "Font Scale"
-msgstr "字体缩放"
+msgstr "字體縮放"
 
 #: RenderASS.cpp:880
 msgid "ASS Font Scale"
-msgstr "字幕字体缩放倍率"
+msgstr "字幕字體縮放倍率"
 
 #: RenderASS.cpp:893
 msgid "Font Hinting"
-msgstr "字体呈现"
+msgstr "字體呈現"
 
 #: RenderASS.cpp:894
 msgid "Ass Font Hintint Mode"
-msgstr "字体呈现模式"
+msgstr "字體呈現模式"
 
 #: RenderASS.cpp:895
 msgid "None"
-msgstr "无"
+msgstr "無"
 
 #: RenderASS.cpp:896
 msgid "Light"
@@ -150,132 +150,133 @@ msgstr "原生"
 
 #: RenderASS.cpp:908
 msgid "Used Default Style"
-msgstr "启用默认风格"
+msgstr "啓用默認風格"
 
 #: RenderASS.cpp:909
 msgid "Used Default Style to override ASS file"
-msgstr "启用默认风格代替字幕文件的风格设定"
+msgstr "啓用默認風格代替字幕文件的風格設定"
 
 #: RenderASS.cpp:914 RenderASS.cpp:915
 msgid "Default ASS Properties"
-msgstr "默认字幕设定"
+msgstr "默認字幕設定"
 
 #: RenderASS.cpp:921
 msgid "Font Name"
-msgstr "字体名称"
+msgstr "字體名稱"
 
 #: RenderASS.cpp:922
 msgid "Default Font Name"
-msgstr "默认字体名称"
+msgstr "默認字體名稱"
 
 #: RenderASS.cpp:929
 msgid "Font Size"
-msgstr "字体大小"
+msgstr "字體大小"
 
 #: RenderASS.cpp:930
 msgid "Default Font Size"
-msgstr "默认字体大小"
+msgstr "默認字體大小"
 
 #: RenderASS.cpp:943
 msgid "Font Color"
-msgstr "主要字体颜色"
+msgstr "主要字體顏色"
 
 #: RenderASS.cpp:944
 msgid "Default Font Color"
-msgstr "默认的主要字体颜色"
+msgstr "默認的主要字體顏色"
 
 #: RenderASS.cpp:954
 msgid "Alternate Font Color"
-msgstr "备用字体颜色"
+msgstr "備用字體顏色"
 
 #: RenderASS.cpp:955
 msgid "Default Alternate Font Color"
-msgstr "默认的备用字体颜色"
+msgstr "默認的備用字體顏色"
 
 #: RenderASS.cpp:965
 msgid "Outline Color"
-msgstr "轮廓颜色"
+msgstr "輪廓顏色"
 
 #: RenderASS.cpp:966
 msgid "Default Outline Color"
-msgstr "默认的轮廓颜色"
+msgstr "默認的輪廓顏色"
 
 #: RenderASS.cpp:976
 msgid "Outline Width"
-msgstr "轮廓宽度"
+msgstr "輪廓寬度"
 
 #: RenderASS.cpp:977
 msgid "Default Outline Width"
-msgstr "默认的轮廓宽度"
+msgstr "默認的輪廓寬度"
 
 #: RenderASS.cpp:989
 msgid "Shadow Color"
-msgstr "阴影颜色"
+msgstr "陰影顏色"
 
 #: RenderASS.cpp:990
 msgid "Default Shadow Color"
-msgstr "默认的阴影颜色"
+msgstr "默認的陰影顏色"
 
 #: RenderASS.cpp:1000
 msgid "Shadow Size"
-msgstr "阴影宽度"
+msgstr "陰影寬度"
 
 #: RenderASS.cpp:1001
 msgid "Default Shadow Size"
-msgstr "默认的阴影宽度"
+msgstr "默認的陰影寬度"
 
 #: RenderASS.cpp:1012
 msgid "Font Style"
-msgstr "字体风格"
+msgstr "字體風格"
 
 #: RenderASS.cpp:1013
 msgid "Default Font Style Properties"
-msgstr "默认的字体风格设定"
+msgstr "默認的字體風格設定"
 
 #: RenderASS.cpp:1019
 msgid "Bold"
-msgstr "粗体"
+msgstr "粗體"
 
 #: RenderASS.cpp:1020
 msgid "Default Font Bold Style"
-msgstr "默认的字体粗体风格设定"
+msgstr "默認的字體粗體風格設定"
 
 #: RenderASS.cpp:1027
 msgid "Italic"
-msgstr "斜体"
+msgstr "斜體"
 
 #: RenderASS.cpp:1028
 msgid "Default Font Italic Style"
-msgstr "默认的字体斜体风格设定"
+msgstr "默認的字體斜體風格設定"
 
 #: RenderASS.cpp:1035
 msgid "Underline"
-msgstr "下划线"
+msgstr "下劃線"
 
 #: RenderASS.cpp:1036
 msgid "Default Font Underline Style"
-msgstr "默认的字体下划线风格设定"
+msgstr "默認的字體下劃線風格設定"
 
 #: RenderASS.cpp:1043
 msgid "StrikeOut"
-msgstr "删除线"
+msgstr "刪除線"
 
 #: RenderASS.cpp:1044
 msgid "Default Font StrikeOut Style"
-msgstr "默认的字体上删除线风格设定"
+msgstr "默認的字體上刪除線風格設定"
 
 #: RenderASS.cpp:1051
 msgid "Border Style"
-msgstr "边框风格"
+msgstr "邊框風格"
 
 #: RenderASS.cpp:1052
 msgid "Default Font Border Style Mode"
-msgstr "默认的字体边框风格模式"
+msgstr "默認的字體邊框風格模式"
 
 #: RenderASS.cpp:1053
 msgid "Outline + Drop Shadow"
-msgstr "轮廓+阴影"
+msgstr "輪廓+陰影"
 
 #: RenderASS.cpp:1054
 msgid "Opaque Box"
 msgstr "不透明方框"
+

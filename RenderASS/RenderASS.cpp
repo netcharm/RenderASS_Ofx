@@ -1,6 +1,7 @@
 // RenderASS.cpp : 定义 DLL 应用程序的导出函数。
 //
 #pragma once
+#define __STDC_WANT_LIB_EXT1__ 1
 #include "stdafx.h"
 
 /*
@@ -16,6 +17,15 @@ The main features are
 */
 #include "common_ofx.h"
 #include "libass_helper.h"
+#include <libgnuintl.h>
+
+/*使用gettext通常使用类似下面的一个带函数的宏定义
+*你完全可以不用，直接使用 gettext(字符串)
+*/
+#define _(S) gettext(S)
+
+/*PACKAGE是本程序最终的名字（运行时输入的命令）*/
+#define PACKAGE "RenderASS"
 
 // private instance data type
 struct RenderAssInstanceData {
@@ -73,11 +83,11 @@ struct RenderAssInstanceData {
 
 static const char* PluginAuthor = "NetCharm";
 #ifdef _DEBUG
-static const char* PluginLabel = "Render ASS Debug";
+static const char* PluginLabel = _("Render ASS Debug");
 #else
-static const char* PluginLabel = "Render ASS";
+static const char* PluginLabel = _("Render ASS");
 #endif
-static const char* PluginDescription = "ASS/SSA (Advanced Substation Alpha/Substation Alpha) Render Filter";
+static const char* PluginDescription = _("ASS/SSA (Advanced Substation Alpha/Substation Alpha) Render Filter");
 #ifdef _DEBUG
 static const char* PluginIdentifier = "cn.netcharm.Ofx.RenderASS-d";
 #else
@@ -668,7 +678,7 @@ public:
 		//gPropHost->propSetString(effectProps, kOfxImageEffectPropSupportedPixelDepths, 2, kOfxBitDepthFloat);
 
 		// set plugin label and the group it belongs to
-		gPropHost->propSetString(effectProps, kOfxPropLabel, 0, PluginLabel);
+		gPropHost->propSetString(effectProps, kOfxPropLabel, 0, utf(_(PluginLabel)));
 		gPropHost->propSetString(effectProps, kOfxImageEffectPluginPropGrouping, 0, PluginAuthor);
 		//gPropHost->propSetInt(effectProps, kOfxImageEffectPropSupportsOverlays, 0, 1);
 
@@ -681,7 +691,7 @@ public:
 		gPropHost->propSetInt(effectProps, kOfxPropVersion, 2, Version_Revision);
 		gPropHost->propSetInt(effectProps, kOfxPropVersion, 3, Version_BuildNo);
 		gPropHost->propSetString(effectProps, kOfxPropVersionLabel, 0, ver_str);
-		gPropHost->propSetString(effectProps, kOfxPropPluginDescription, 0, PluginDescription);
+		gPropHost->propSetString(effectProps, kOfxPropPluginDescription, 0, utf(_(PluginDescription)));
 		
 		// define the contexts we can be used in
 		gPropHost->propSetString(effectProps, kOfxImageEffectPropSupportedContexts, 0, kOfxImageEffectContextFilter);
@@ -737,16 +747,16 @@ public:
 			// make ass file name
 			gParamHost->paramDefine(paramSet, kOfxParamTypeString, "assFileName", &paramProps);
 			gPropHost->propSetString(paramProps, kOfxParamPropScriptName, 0, "assFileName");
-			gPropHost->propSetString(paramProps, kOfxPropLabel, 0, "ASS File");
-			gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, "Loaded ASS File");
+			gPropHost->propSetString(paramProps, kOfxPropLabel, 0, utf(_("ASS File")));
+			gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, utf(_("Loaded ASS File")));
 			gPropHost->propSetString(paramProps, kOfxParamPropStringMode, 0, kOfxParamStringIsFilePath);
 			gPropHost->propSetInt(paramProps, kOfxParamPropStringFilePathExists, 0, 1);
 
 			// make an font size parameter
 			gParamHost->paramDefine(paramSet, kOfxParamTypeInteger, "assOffset", &paramProps);
 			gPropHost->propSetString(paramProps, kOfxParamPropScriptName, 0, "assOffset");
-			gPropHost->propSetString(paramProps, kOfxPropLabel, 0, "ASS Offset");
-			gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, "ASS Time Offset");
+			gPropHost->propSetString(paramProps, kOfxPropLabel, 0, utf(_("ASS Offset")));
+			gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, utf(_("ASS Time Offset")));
 			gPropHost->propSetInt(paramProps, kOfxParamPropDefault, 0, 0);
 			gPropHost->propSetInt(paramProps, kOfxParamPropMin, 0, 0);
 			gPropHost->propSetInt(paramProps, kOfxParamPropMax, 0, 512000);
@@ -756,15 +766,15 @@ public:
 
 			// make ass properties group
 			gParamHost->paramDefine(paramSet, kOfxParamTypeGroup, "AssPosProperties", &paramProps);
-			gPropHost->propSetString(paramProps, kOfxPropLabel, 0, "ASS Positions");
-			gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, "ASS Positions");
+			gPropHost->propSetString(paramProps, kOfxPropLabel, 0, utf(_("ASS Positions")));
+			gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, utf(_("ASS Positions")));
 
 			// make an ass spacing
 			gParamHost->paramDefine(paramSet, kOfxParamTypeDouble, "assSpace", &paramProps);
 			gPropHost->propSetString(paramProps, kOfxParamPropParent, 0, "AssPosProperties");
 			gPropHost->propSetString(paramProps, kOfxParamPropScriptName, 0, "assSpace");
-			gPropHost->propSetString(paramProps, kOfxPropLabel, 0, "Spacing");
-			gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, "Ass Spacing level bottom");
+			gPropHost->propSetString(paramProps, kOfxPropLabel, 0, utf(_("Spacing")));
+			gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, utf(_("Ass Spacing level bottom")));
 			gPropHost->propSetDouble(paramProps, kOfxParamPropDefault, 0, 0.0);
 			gPropHost->propSetDouble(paramProps, kOfxParamPropMin, 0, 0.0);
 			gPropHost->propSetDouble(paramProps, kOfxParamPropMax, 0, 100.0);
@@ -777,8 +787,8 @@ public:
 			gParamHost->paramDefine(paramSet, kOfxParamTypeDouble, "assPosition", &paramProps);
 			gPropHost->propSetString(paramProps, kOfxParamPropParent, 0, "AssPosProperties");
 			gPropHost->propSetString(paramProps, kOfxParamPropScriptName, 0, "assPosition");
-			gPropHost->propSetString(paramProps, kOfxPropLabel, 0, "Position");
-			gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, "Ass Position level bottom");
+			gPropHost->propSetString(paramProps, kOfxPropLabel, 0, utf(_("Position")));
+			gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, utf(_("Ass Position level bottom")));
 			gPropHost->propSetDouble(paramProps, kOfxParamPropDefault, 0, 2.0);
 			gPropHost->propSetDouble(paramProps, kOfxParamPropMin, 0, 0.0);
 			gPropHost->propSetDouble(paramProps, kOfxParamPropMax, 0, 100.0);
@@ -791,22 +801,22 @@ public:
 			gParamHost->paramDefine(paramSet, kOfxParamTypeBoolean, "assUseMargin", &paramProps);
 			gPropHost->propSetString(paramProps, kOfxParamPropParent, 0, "AssPosProperties");
 			gPropHost->propSetString(paramProps, kOfxParamPropScriptName, 0, "assUseMargin");
-			gPropHost->propSetString(paramProps, kOfxPropLabel, 0, "Used Margin");
-			gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, "Ass Margin Used");
+			gPropHost->propSetString(paramProps, kOfxPropLabel, 0, utf(_("Used Margin")));
+			gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, utf(_("Ass Margin Used")));
 			gPropHost->propSetInt(paramProps, kOfxParamPropDefault, 0, 0);
 
 			// make ass properties group
 			gParamHost->paramDefine(paramSet, kOfxParamTypeGroup, "AssPosMarginProperties", &paramProps);
 			gPropHost->propSetString(paramProps, kOfxParamPropParent, 0, "AssPosProperties");
-			gPropHost->propSetString(paramProps, kOfxPropLabel, 0, "Margins");
-			gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, "Margin Properties");
+			gPropHost->propSetString(paramProps, kOfxPropLabel, 0, utf(_("Margins")));
+			gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, utf(_("Margin Properties")));
 
 			// make an ass margin top
 			gParamHost->paramDefine(paramSet, kOfxParamTypeDouble, "assMarginT", &paramProps);
 			gPropHost->propSetString(paramProps, kOfxParamPropParent, 0, "AssPosMarginProperties");
 			gPropHost->propSetString(paramProps, kOfxParamPropScriptName, 0, "assMarginT");
-			gPropHost->propSetString(paramProps, kOfxPropLabel, 0, "Margin Top");
-			gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, "Ass Margin Top");
+			gPropHost->propSetString(paramProps, kOfxPropLabel, 0, utf(_("Margin Top")));
+			gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, utf(_("Ass Margin Top")));
 			gPropHost->propSetDouble(paramProps, kOfxParamPropDefault, 0, 0.0);
 			gPropHost->propSetDouble(paramProps, kOfxParamPropMin, 0, 0.0);
 			gPropHost->propSetDouble(paramProps, kOfxParamPropMax, 0, 100.0);
@@ -819,8 +829,8 @@ public:
 			gParamHost->paramDefine(paramSet, kOfxParamTypeDouble, "assMarginB", &paramProps);
 			gPropHost->propSetString(paramProps, kOfxParamPropParent, 0, "AssPosMarginProperties");
 			gPropHost->propSetString(paramProps, kOfxParamPropScriptName, 0, "assMarginB");
-			gPropHost->propSetString(paramProps, kOfxPropLabel, 0, "Margin Bottom");
-			gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, "Ass Margin Bottom");
+			gPropHost->propSetString(paramProps, kOfxPropLabel, 0, utf(_("Margin Bottom")));
+			gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, utf(_("Ass Margin Bottom")));
 			gPropHost->propSetDouble(paramProps, kOfxParamPropDefault, 0, 0.0);
 			gPropHost->propSetDouble(paramProps, kOfxParamPropMin, 0, 0.0);
 			gPropHost->propSetDouble(paramProps, kOfxParamPropMax, 0, 100.0);
@@ -833,8 +843,8 @@ public:
 			gParamHost->paramDefine(paramSet, kOfxParamTypeDouble, "assMarginL", &paramProps);
 			gPropHost->propSetString(paramProps, kOfxParamPropParent, 0, "AssPosMarginProperties");
 			gPropHost->propSetString(paramProps, kOfxParamPropScriptName, 0, "assMarginL");
-			gPropHost->propSetString(paramProps, kOfxPropLabel, 0, "Margin Left");
-			gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, "Ass Margin Left");
+			gPropHost->propSetString(paramProps, kOfxPropLabel, 0, utf(_("Margin Left")));
+			gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, utf(_("Ass Margin Left")));
 			gPropHost->propSetDouble(paramProps, kOfxParamPropDefault, 0, 0.0);
 			gPropHost->propSetDouble(paramProps, kOfxParamPropMin, 0, 0.0);
 			gPropHost->propSetDouble(paramProps, kOfxParamPropMax, 0, 100.0);
@@ -847,8 +857,8 @@ public:
 			gParamHost->paramDefine(paramSet, kOfxParamTypeDouble, "assMarginR", &paramProps);
 			gPropHost->propSetString(paramProps, kOfxParamPropParent, 0, "AssPosMarginProperties");
 			gPropHost->propSetString(paramProps, kOfxParamPropScriptName, 0, "assMarginR");
-			gPropHost->propSetString(paramProps, kOfxPropLabel, 0, "Margin Right");
-			gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, "Ass Margin Right");
+			gPropHost->propSetString(paramProps, kOfxPropLabel, 0, utf(_("Margin Right")));
+			gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, utf(_("Ass Margin Right")));
 			gPropHost->propSetDouble(paramProps, kOfxParamPropDefault, 0, 0.0);
 			gPropHost->propSetDouble(paramProps, kOfxParamPropMin, 0, 0.0);
 			gPropHost->propSetDouble(paramProps, kOfxParamPropMax, 0, 100.0);
@@ -859,15 +869,15 @@ public:
 
 			// make ass font properties group
 			gParamHost->paramDefine(paramSet, kOfxParamTypeGroup, "AssFontProperties", &paramProps);
-			gPropHost->propSetString(paramProps, kOfxPropLabel, 0, "ASS Font Properties");
-			gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, "ASS Font Properties");
+			gPropHost->propSetString(paramProps, kOfxPropLabel, 0, utf(_("ASS Font Properties")));
+			gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, utf(_("ASS Font Properties")));
 
 			// make an ass font scale
 			gParamHost->paramDefine(paramSet, kOfxParamTypeDouble, "assFontScale", &paramProps);
 			gPropHost->propSetString(paramProps, kOfxParamPropParent, 0, "AssFontProperties");
 			gPropHost->propSetString(paramProps, kOfxParamPropScriptName, 0, "assFontScale");
-			gPropHost->propSetString(paramProps, kOfxPropLabel, 0, "Font Scale");
-			gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, "ASS Font Scale");
+			gPropHost->propSetString(paramProps, kOfxPropLabel, 0, utf(_("Font Scale")));
+			gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, utf(_("ASS Font Scale")));
 			gPropHost->propSetDouble(paramProps, kOfxParamPropDefault, 0, 1.0);
 			gPropHost->propSetDouble(paramProps, kOfxParamPropMin, 0, 0.1);
 			gPropHost->propSetDouble(paramProps, kOfxParamPropMax, 0, 5.0);
@@ -880,12 +890,12 @@ public:
 			gParamHost->paramDefine(paramSet, kOfxParamTypeChoice, "assFontHints", &paramProps);
 			gPropHost->propSetString(paramProps, kOfxParamPropParent, 0, "AssFontProperties");
 			gPropHost->propSetString(paramProps, kOfxParamPropScriptName, 0, "assFontHints");
-			gPropHost->propSetString(paramProps, kOfxPropLabel, 0, "Font Hinting");
-			gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, "Ass Font Hintint Mode");
-			gPropHost->propSetString(paramProps, kOfxParamPropChoiceOption, 0, "None");
-			gPropHost->propSetString(paramProps, kOfxParamPropChoiceOption, 1, "Light");
-			gPropHost->propSetString(paramProps, kOfxParamPropChoiceOption, 2, "Normal");
-			gPropHost->propSetString(paramProps, kOfxParamPropChoiceOption, 3, "Native");
+			gPropHost->propSetString(paramProps, kOfxPropLabel, 0, utf(_("Font Hinting")));
+			gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, utf(_("Ass Font Hintint Mode")));
+			gPropHost->propSetString(paramProps, kOfxParamPropChoiceOption, 0, utf(_("None")));
+			gPropHost->propSetString(paramProps, kOfxParamPropChoiceOption, 1, utf(_("Light")));
+			gPropHost->propSetString(paramProps, kOfxParamPropChoiceOption, 2, utf(_("Normal")));
+			gPropHost->propSetString(paramProps, kOfxParamPropChoiceOption, 3, utf(_("Native")));
 			gPropHost->propSetInt(paramProps, kOfxParamPropDefault, 0, 0);
 
 
@@ -895,29 +905,29 @@ public:
 			// make using default style
 			gParamHost->paramDefine(paramSet, kOfxParamTypeBoolean, "assUseDefaultStyle", &paramProps);
 			gPropHost->propSetString(paramProps, kOfxParamPropScriptName, 0, "assUseDefaultStyle");
-			gPropHost->propSetString(paramProps, kOfxPropLabel, 0, "Used Default Style");
-			gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, "Used Default Style to override ASS file");
+			gPropHost->propSetString(paramProps, kOfxPropLabel, 0, utf(_("Used Default Style")));
+			gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, utf(_("Used Default Style to override ASS file")));
 			gPropHost->propSetInt(paramProps, kOfxParamPropDefault, 0, 0);
 
 			// make default ass properties group
 			gParamHost->paramDefine(paramSet, kOfxParamTypeGroup, "defaultAssProperties", &paramProps);
-			gPropHost->propSetString(paramProps, kOfxPropLabel, 0, "Default ASS Properties");
-			gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, "Default ASS Properties");
+			gPropHost->propSetString(paramProps, kOfxPropLabel, 0, utf(_("Default ASS Properties")));
+			gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, utf(_("Default ASS Properties")));
 
 			// make an font name parameter
 			gParamHost->paramDefine(paramSet, kOfxParamTypeString, "assDefaultFontName", &paramProps);
 			gPropHost->propSetString(paramProps, kOfxParamPropParent, 0, "defaultAssProperties");
 			gPropHost->propSetString(paramProps, kOfxParamPropScriptName, 0, "assDefaultFontName");
-			gPropHost->propSetString(paramProps, kOfxPropLabel, 0, "Font Name");
-			gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, "Default Font Name");
+			gPropHost->propSetString(paramProps, kOfxPropLabel, 0, utf(_("Font Name")));
+			gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, utf(_("Default Font Name")));
 			gPropHost->propSetString(paramProps, kOfxParamPropDefault, 0, "Tahoma");
 
 			// make an font size parameter
 			gParamHost->paramDefine(paramSet, kOfxParamTypeInteger, "assDefaultFontSize", &paramProps);
 			gPropHost->propSetString(paramProps, kOfxParamPropParent, 0, "defaultAssProperties");
 			gPropHost->propSetString(paramProps, kOfxParamPropScriptName, 0, "assDefaultFontSize");
-			gPropHost->propSetString(paramProps, kOfxPropLabel, 0, "Font Size");
-			gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, "Default Font Size");
+			gPropHost->propSetString(paramProps, kOfxPropLabel, 0, utf(_("Font Size")));
+			gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, utf(_("Default Font Size")));
 			gPropHost->propSetInt(paramProps, kOfxParamPropDefault, 0, 24);
 			gPropHost->propSetInt(paramProps, kOfxParamPropMin, 0, 8);
 			gPropHost->propSetInt(paramProps, kOfxParamPropMax, 0, 256);
@@ -930,8 +940,8 @@ public:
 			gParamHost->paramDefine(paramSet, kOfxParamTypeRGBA, "assDefaultFontColor", &paramProps);
 			gPropHost->propSetString(paramProps, kOfxParamPropParent, 0, "defaultAssProperties");
 			gPropHost->propSetString(paramProps, kOfxParamPropScriptName, 0, "assDefaultFontColor");
-			gPropHost->propSetString(paramProps, kOfxPropLabel, 0, "Font Color");
-			gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, "Default Font Color");
+			gPropHost->propSetString(paramProps, kOfxPropLabel, 0, utf(_("Font Color")));
+			gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, utf(_("Default Font Color")));
 			gPropHost->propSetDouble(paramProps, kOfxParamPropDefault, 0, 0.18);
 			gPropHost->propSetDouble(paramProps, kOfxParamPropDefault, 1, 0.18);
 			gPropHost->propSetDouble(paramProps, kOfxParamPropDefault, 2, 0.18);
@@ -941,8 +951,8 @@ public:
 			gParamHost->paramDefine(paramSet, kOfxParamTypeRGBA, "assDefaultFontColorAlt", &paramProps);
 			gPropHost->propSetString(paramProps, kOfxParamPropParent, 0, "defaultAssProperties");
 			gPropHost->propSetString(paramProps, kOfxParamPropScriptName, 0, "assDefaultFontColorAlt");
-			gPropHost->propSetString(paramProps, kOfxPropLabel, 0, "Alternate Font Color");
-			gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, "Default Alternate Font Color");
+			gPropHost->propSetString(paramProps, kOfxPropLabel, 0, utf(_("Alternate Font Color")));
+			gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, utf(_("Default Alternate Font Color")));
 			gPropHost->propSetDouble(paramProps, kOfxParamPropDefault, 0, 0.18);
 			gPropHost->propSetDouble(paramProps, kOfxParamPropDefault, 1, 0.18);
 			gPropHost->propSetDouble(paramProps, kOfxParamPropDefault, 2, 0.18);
@@ -952,8 +962,8 @@ public:
 			gParamHost->paramDefine(paramSet, kOfxParamTypeRGBA, "assDefaultOutlineColor", &paramProps);
 			gPropHost->propSetString(paramProps, kOfxParamPropParent, 0, "defaultAssProperties");
 			gPropHost->propSetString(paramProps, kOfxParamPropScriptName, 0, "assDefaultOutlineColor");
-			gPropHost->propSetString(paramProps, kOfxPropLabel, 0, "Outline Color");
-			gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, "Default Outline Color");
+			gPropHost->propSetString(paramProps, kOfxPropLabel, 0, utf(_("Outline Color")));
+			gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, utf(_("Default Outline Color")));
 			gPropHost->propSetDouble(paramProps, kOfxParamPropDefault, 0, 1.00);
 			gPropHost->propSetDouble(paramProps, kOfxParamPropDefault, 1, 0.85);
 			gPropHost->propSetDouble(paramProps, kOfxParamPropDefault, 2, 0.00);
@@ -963,8 +973,8 @@ public:
 			gParamHost->paramDefine(paramSet, kOfxParamTypeInteger, "assDefaultOutline", &paramProps);
 			gPropHost->propSetString(paramProps, kOfxParamPropParent, 0, "defaultAssProperties");
 			gPropHost->propSetString(paramProps, kOfxParamPropScriptName, 0, "assDefaultOutline");
-			gPropHost->propSetString(paramProps, kOfxPropLabel, 0, "Outline Width");
-			gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, "Default Outline Width");
+			gPropHost->propSetString(paramProps, kOfxPropLabel, 0, utf(_("Outline Width")));
+			gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, utf(_("Default Outline Width")));
 			gPropHost->propSetInt(paramProps, kOfxParamPropDefault, 0, 2);
 			gPropHost->propSetInt(paramProps, kOfxParamPropMin, 0, 0);
 			gPropHost->propSetInt(paramProps, kOfxParamPropMax, 0, 4);
@@ -976,8 +986,8 @@ public:
 			gParamHost->paramDefine(paramSet, kOfxParamTypeRGBA, "assDefaultBackColor", &paramProps);
 			gPropHost->propSetString(paramProps, kOfxParamPropParent, 0, "defaultAssProperties");
 			gPropHost->propSetString(paramProps, kOfxParamPropScriptName, 0, "assDefaultBackColor");
-			gPropHost->propSetString(paramProps, kOfxPropLabel, 0, "Shadow Color");
-			gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, "Default Shadow Color");
+			gPropHost->propSetString(paramProps, kOfxPropLabel, 0, utf(_("Shadow Color")));
+			gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, utf(_("Default Shadow Color")));
 			gPropHost->propSetDouble(paramProps, kOfxParamPropDefault, 0, 0.50);
 			gPropHost->propSetDouble(paramProps, kOfxParamPropDefault, 1, 0.50);
 			gPropHost->propSetDouble(paramProps, kOfxParamPropDefault, 2, 0.50);
@@ -987,8 +997,8 @@ public:
 			gParamHost->paramDefine(paramSet, kOfxParamTypeInteger, "assDefaultShadow", &paramProps);
 			gPropHost->propSetString(paramProps, kOfxParamPropParent, 0, "defaultAssProperties");
 			gPropHost->propSetString(paramProps, kOfxParamPropScriptName, 0, "assDefaultShadow");
-			gPropHost->propSetString(paramProps, kOfxPropLabel, 0, "Shadow Size");
-			gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, "Default Shadow Size");
+			gPropHost->propSetString(paramProps, kOfxPropLabel, 0, utf(_("Shadow Size")));
+			gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, utf(_("Default Shadow Size")));
 			gPropHost->propSetInt(paramProps, kOfxParamPropDefault, 0, 2);
 			gPropHost->propSetInt(paramProps, kOfxParamPropMin, 0, 0);
 			gPropHost->propSetInt(paramProps, kOfxParamPropMax, 0, 4);
@@ -999,49 +1009,49 @@ public:
 			// make ass font style properties group
 			gParamHost->paramDefine(paramSet, kOfxParamTypeGroup, "AssFontStyleProperties", &paramProps);
 			gPropHost->propSetString(paramProps, kOfxParamPropParent, 0, "defaultAssProperties");
-			gPropHost->propSetString(paramProps, kOfxPropLabel, 0, "Font Style");
-			gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, "Default Font Style Properties");
+			gPropHost->propSetString(paramProps, kOfxPropLabel, 0, utf(_("Font Style")));
+			gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, utf(_("Default Font Style Properties")));
 
 			// make default style with bold
 			gParamHost->paramDefine(paramSet, kOfxParamTypeBoolean, "assDefaultBold", &paramProps);
 			gPropHost->propSetString(paramProps, kOfxParamPropParent, 0, "AssFontStyleProperties");
 			gPropHost->propSetString(paramProps, kOfxParamPropScriptName, 0, "assDefaultBold");
-			gPropHost->propSetString(paramProps, kOfxPropLabel, 0, "Bold");
-			gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, "Default Font Bold Style");
+			gPropHost->propSetString(paramProps, kOfxPropLabel, 0, utf(_("Bold")));
+			gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, utf(_("Default Font Bold Style")));
 			gPropHost->propSetInt(paramProps, kOfxParamPropDefault, 0, 0);
 
 			// make default style with italic
 			gParamHost->paramDefine(paramSet, kOfxParamTypeBoolean, "assDefaultItalic", &paramProps);
 			gPropHost->propSetString(paramProps, kOfxParamPropParent, 0, "AssFontStyleProperties");
 			gPropHost->propSetString(paramProps, kOfxParamPropScriptName, 0, "assDefaultItalic");
-			gPropHost->propSetString(paramProps, kOfxPropLabel, 0, "Italic");
-			gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, "Default Font Italic Style");
+			gPropHost->propSetString(paramProps, kOfxPropLabel, 0, utf(_("Italic")));
+			gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, utf(_("Default Font Italic Style")));
 			gPropHost->propSetInt(paramProps, kOfxParamPropDefault, 0, 0);
 
 			// make default style with underline
 			gParamHost->paramDefine(paramSet, kOfxParamTypeBoolean, "assDefaultUnderline", &paramProps);
 			gPropHost->propSetString(paramProps, kOfxParamPropParent, 0, "AssFontStyleProperties");
 			gPropHost->propSetString(paramProps, kOfxParamPropScriptName, 0, "assDefaultUnderline");
-			gPropHost->propSetString(paramProps, kOfxPropLabel, 0, "Underline");
-			gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, "Default Font Underline Style");
+			gPropHost->propSetString(paramProps, kOfxPropLabel, 0, utf(_("Underline")));
+			gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, utf(_("Default Font Underline Style")));
 			gPropHost->propSetInt(paramProps, kOfxParamPropDefault, 0, 0);
 
 			// make default style with strike out
 			gParamHost->paramDefine(paramSet, kOfxParamTypeBoolean, "assDefaultStrikeOut", &paramProps);
 			gPropHost->propSetString(paramProps, kOfxParamPropParent, 0, "AssFontStyleProperties");
 			gPropHost->propSetString(paramProps, kOfxParamPropScriptName, 0, "assDefaultStrikeOut");
-			gPropHost->propSetString(paramProps, kOfxPropLabel, 0, "StrikeOut");
-			gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, "Default Font StrikeOut Style");
+			gPropHost->propSetString(paramProps, kOfxPropLabel, 0, utf(_("StrikeOut")));
+			gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, utf(_("Default Font StrikeOut Style")));
 			gPropHost->propSetInt(paramProps, kOfxParamPropDefault, 0, 0);
 
 			// make default style with border style
 			gParamHost->paramDefine(paramSet, kOfxParamTypeChoice, "assDefaultBorderStyle", &paramProps);
 			gPropHost->propSetString(paramProps, kOfxParamPropParent, 0, "defaultAssProperties");
 			gPropHost->propSetString(paramProps, kOfxParamPropScriptName, 0, "assDefaultBorderStyle");
-			gPropHost->propSetString(paramProps, kOfxPropLabel, 0, "Border Style");
-			gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, "Default Font Border Style Mode");
-			gPropHost->propSetString(paramProps, kOfxParamPropChoiceOption, 0, "Outline + Drop Shadow");
-			gPropHost->propSetString(paramProps, kOfxParamPropChoiceOption, 1, "Opaque Box");
+			gPropHost->propSetString(paramProps, kOfxPropLabel, 0, utf(_("Border Style")));
+			gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, utf(_("Default Font Border Style Mode")));
+			gPropHost->propSetString(paramProps, kOfxParamPropChoiceOption, 0, utf(_("Outline + Drop Shadow")));
+			gPropHost->propSetString(paramProps, kOfxParamPropChoiceOption, 1, utf(_("Opaque Box")));
 			gPropHost->propSetInt(paramProps, kOfxParamPropDefault, 0, 0);
 		}
 		return kOfxStatOK;
@@ -1407,5 +1417,16 @@ static OfxPlugin RenderAssPlugin =
 static OfxPlugin * GetRenderASS(void)
 {
 	//return RenderASS::GetPlugin();
+	char locale[MAX_PATH];
+	std::string path(&cur_dll_path[0]);
+	path.append("locale");
+	s2c(path, locale);
+
+	setlocale(LC_ALL, "");
+	bindtextdomain(PACKAGE, locale);
+	textdomain(PACKAGE);
+
+	//char* t = _("ASS File");
+
 	return &RenderAssPlugin;
 }

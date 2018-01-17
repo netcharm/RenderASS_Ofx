@@ -73,6 +73,94 @@ int utf2gbk(char *buf, size_t len)
 	return 0;
 }
 
+char* gbk(char *buf)
+{
+	iconv_t cd = iconv_open("GBK", "UTF-8");
+	if (cd == (iconv_t)-1) {
+		perror("获取字符转换描述符失败！\n");
+		return buf;
+	}
+	size_t sz = BUFSIZE * BUFSIZE;
+	char *tmp_str = (char *)malloc(sz);
+	// 不要将原始的指针传进去，那样会改变原始指针的  
+	//size_t inlen = len;
+	size_t inlen = strlen(buf) + 1;
+	size_t outlen = sz;
+	const char *in = buf;
+	char* out = tmp_str;
+	if (tmp_str == NULL) {
+		iconv_close(cd);
+		fprintf(stderr, "分配内存失败！\n");
+		return buf;
+	}
+	memset(tmp_str, 0, sz);
+	if (iconv(cd, &in, &inlen, &out, &outlen) == (size_t)-1) {
+		iconv_close(cd);
+		return buf;
+	}
+	//strcpy_s(buf, MAX_PATH, tmp_str);
+	iconv_close(cd);
+	return tmp_str;
+}
+
+int gbk2utf(char *buf, size_t len)
+{
+	iconv_t cd = iconv_open("UTF-8", "GBK");
+	if (cd == (iconv_t)-1) {
+		perror("获取字符转换描述符失败！\n");
+		return -1;
+	}
+	size_t sz = BUFSIZE * BUFSIZE;
+	char *tmp_str = (char *)malloc(sz);
+	// 不要将原始的指针传进去，那样会改变原始指针的  
+	size_t inlen = len;
+	size_t outlen = sz;
+	const char *in = buf;
+	char* out = tmp_str;
+	if (tmp_str == NULL) {
+		iconv_close(cd);
+		fprintf(stderr, "分配内存失败！\n");
+		return -1;
+	}
+	memset(tmp_str, 0, sz);
+	if (iconv(cd, &in, &inlen, &out, &outlen) == (size_t)-1) {
+		iconv_close(cd);
+		return -1;
+	}
+	strcpy_s(buf, MAX_PATH, tmp_str);
+	iconv_close(cd);
+	return 0;
+}
+
+char* utf(char *buf) {
+	iconv_t cd = iconv_open("UTF-8", "GBK");
+	if (cd == (iconv_t)-1) {
+		perror("获取字符转换描述符失败！\n");
+		return buf;
+	}
+	size_t sz = BUFSIZE * BUFSIZE;
+	char *tmp_str = (char *)malloc(sz);
+	// 不要将原始的指针传进去，那样会改变原始指针的  
+	//size_t inlen = len;
+	size_t inlen = strlen(buf) + 1;
+	size_t outlen = sz;
+	const char *in = buf;
+	char* out = tmp_str;
+	if (tmp_str == NULL) {
+		iconv_close(cd);
+		fprintf(stderr, "分配内存失败！\n");
+		return buf;
+	}
+	memset(tmp_str, 0, sz);
+	if (iconv(cd, &in, &inlen, &out, &outlen) == (size_t)-1) {
+		iconv_close(cd);
+		return buf;
+	}
+	//strcpy_s(buf, MAX_PATH, tmp_str);
+	iconv_close(cd);
+	return tmp_str;
+}
+
 inline unsigned char d2b(double value)
 {
 	return (unsigned char)floor(value);
@@ -104,11 +192,11 @@ void msg_callback(int level, const char *fmt, va_list args, void *) {
 	if (level >= 7) return;
 	char buf[1024];
 #ifdef _WIN32
-	vsprintf_s(buf, sizeof(buf), fmt, args);
+	//vsprintf_s(buf, sizeof(buf), fmt, args);
 #else
 	vsnprintf(buf, sizeof(buf), fmt, args);
 #endif
-
+	vsnprintf(buf, sizeof(buf), fmt, args);
 	//if (level < 2) // warning/error
 	//	LOG_I("subtitle/provider/libass") << buf;
 	//else // verbose

@@ -74,15 +74,23 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
+    <OutDir>$(ProjectDir)_out\$(PlatformTarget)\$(Configuration)\</OutDir>
+    <IntDir>$(OutDir)_inter\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
+    <OutDir>$(ProjectDir)_out\$(PlatformTarget)\$(Configuration)\</OutDir>
+    <IntDir>$(OutDir)_inter\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
+    <OutDir>$(ProjectDir)_out\$(PlatformTarget)\$(Configuration)\</OutDir>
+    <IntDir>$(OutDir)_inter\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
+    <OutDir>$(ProjectDir)_out\$(PlatformTarget)\$(Configuration)\</OutDir>
+    <IntDir>$(OutDir)_inter\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -90,6 +98,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeader>Use</PrecompiledHeader>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\libass-msvc\libass-0.14.0\libass\;$(SolutionDir)..\libass-msvc\freetype-2.6.1\include;$(SolutionDir)..\openfx-master\Include;D:\develop\lib\Image\libpng140b106\;D:\develop\lib\zlib-1.2.5-dll\include;$(SolutionDir)..\libass-msvc\libiconv-1.15-msvc\iconv;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -102,6 +111,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeader>Use</PrecompiledHeader>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\libass-msvc\libass-0.14.0\libass\;$(SolutionDir)..\libass-msvc\freetype-2.6.1\include;$(SolutionDir)..\openfx-master\Include;D:\develop\lib\Image\libpng140b106\;D:\develop\lib\zlib-1.2.5-dll\include;$(SolutionDir)..\libass-msvc\libiconv-1.15-msvc\iconv;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -113,6 +123,7 @@
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>WIN32;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeader>Use</PrecompiledHeader>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\libass-msvc\libass-0.14.0\libass\;$(SolutionDir)..\libass-msvc\freetype-2.6.1\include;$(SolutionDir)..\openfx-master\Include;D:\develop\lib\Image\libpng140b106\;D:\develop\lib\zlib-1.2.5-dll\include;$(SolutionDir)..\libass-msvc\libiconv-1.15-msvc\iconv;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -124,6 +135,7 @@
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeader>Use</PrecompiledHeader>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\libass-msvc\libass-0.14.0\libass\;$(SolutionDir)..\libass-msvc\freetype-2.6.1\include;$(SolutionDir)..\openfx-master\Include;D:\develop\lib\Image\libpng140b106\;D:\develop\lib\zlib-1.2.5-dll\include;$(SolutionDir)..\libass-msvc\libiconv-1.15-msvc\iconv;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -136,13 +148,16 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="OfxRender.Net.h" />
+    <ClInclude Include="common_ofx.h" />
+    <ClInclude Include="Grid.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="Stdafx.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AssemblyInfo.cpp" />
-    <ClCompile Include="OfxRender.Net.cpp" />
+    <ClCompile Include="common_ofx.cpp" />
+    <ClCompile Include="dllmain.cpp" />
+    <ClCompile Include="Grid.cpp" />
     <ClCompile Include="Stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>

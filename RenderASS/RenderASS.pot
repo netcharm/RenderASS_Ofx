@@ -1,0 +1,282 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the RenderASS package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: RenderASS 1.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2018-01-17 20:11+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=CHARSET\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: RenderASS.cpp:86
+msgid "Render ASS Debug"
+msgstr ""
+
+#: RenderASS.cpp:88
+msgid "Render ASS"
+msgstr ""
+
+#: RenderASS.cpp:90
+msgid "ASS/SSA (Advanced Substation Alpha/Substation Alpha) Render Filter"
+msgstr ""
+
+#: RenderASS.cpp:750
+msgid "ASS File"
+msgstr ""
+
+#: RenderASS.cpp:751
+msgid "Loaded ASS File"
+msgstr ""
+
+#: RenderASS.cpp:758
+msgid "ASS Offset"
+msgstr ""
+
+#: RenderASS.cpp:759
+msgid "ASS Time Offset"
+msgstr ""
+
+#: RenderASS.cpp:769 RenderASS.cpp:770
+msgid "ASS Positions"
+msgstr ""
+
+#: RenderASS.cpp:776
+msgid "Spacing"
+msgstr ""
+
+#: RenderASS.cpp:777
+msgid "Ass Spacing level bottom"
+msgstr ""
+
+#: RenderASS.cpp:790
+msgid "Position"
+msgstr ""
+
+#: RenderASS.cpp:791
+msgid "Ass Position level bottom"
+msgstr ""
+
+#: RenderASS.cpp:804
+msgid "Used Margin"
+msgstr ""
+
+#: RenderASS.cpp:805
+msgid "Ass Margin Used"
+msgstr ""
+
+#: RenderASS.cpp:811
+msgid "Margins"
+msgstr ""
+
+#: RenderASS.cpp:812
+msgid "Margin Properties"
+msgstr ""
+
+#: RenderASS.cpp:818
+msgid "Margin Top"
+msgstr ""
+
+#: RenderASS.cpp:819
+msgid "Ass Margin Top"
+msgstr ""
+
+#: RenderASS.cpp:832
+msgid "Margin Bottom"
+msgstr ""
+
+#: RenderASS.cpp:833
+msgid "Ass Margin Bottom"
+msgstr ""
+
+#: RenderASS.cpp:846
+msgid "Margin Left"
+msgstr ""
+
+#: RenderASS.cpp:847
+msgid "Ass Margin Left"
+msgstr ""
+
+#: RenderASS.cpp:860
+msgid "Margin Right"
+msgstr ""
+
+#: RenderASS.cpp:861
+msgid "Ass Margin Right"
+msgstr ""
+
+#: RenderASS.cpp:872 RenderASS.cpp:873
+msgid "ASS Font Properties"
+msgstr ""
+
+#: RenderASS.cpp:879
+msgid "Font Scale"
+msgstr ""
+
+#: RenderASS.cpp:880
+msgid "ASS Font Scale"
+msgstr ""
+
+#: RenderASS.cpp:893
+msgid "Font Hinting"
+msgstr ""
+
+#: RenderASS.cpp:894
+msgid "Ass Font Hintint Mode"
+msgstr ""
+
+#: RenderASS.cpp:895
+msgid "None"
+msgstr ""
+
+#: RenderASS.cpp:896
+msgid "Light"
+msgstr ""
+
+#: RenderASS.cpp:897
+msgid "Normal"
+msgstr ""
+
+#: RenderASS.cpp:898
+msgid "Native"
+msgstr ""
+
+#: RenderASS.cpp:908
+msgid "Used Default Style"
+msgstr ""
+
+#: RenderASS.cpp:909
+msgid "Used Default Style to override ASS file"
+msgstr ""
+
+#: RenderASS.cpp:914 RenderASS.cpp:915
+msgid "Default ASS Properties"
+msgstr ""
+
+#: RenderASS.cpp:921
+msgid "Font Name"
+msgstr ""
+
+#: RenderASS.cpp:922
+msgid "Default Font Name"
+msgstr ""
+
+#: RenderASS.cpp:929
+msgid "Font Size"
+msgstr ""
+
+#: RenderASS.cpp:930
+msgid "Default Font Size"
+msgstr ""
+
+#: RenderASS.cpp:943
+msgid "Font Color"
+msgstr ""
+
+#: RenderASS.cpp:944
+msgid "Default Font Color"
+msgstr ""
+
+#: RenderASS.cpp:954
+msgid "Alternate Font Color"
+msgstr ""
+
+#: RenderASS.cpp:955
+msgid "Default Alternate Font Color"
+msgstr ""
+
+#: RenderASS.cpp:965
+msgid "Outline Color"
+msgstr ""
+
+#: RenderASS.cpp:966
+msgid "Default Outline Color"
+msgstr ""
+
+#: RenderASS.cpp:976
+msgid "Outline Width"
+msgstr ""
+
+#: RenderASS.cpp:977
+msgid "Default Outline Width"
+msgstr ""
+
+#: RenderASS.cpp:989
+msgid "Shadow Color"
+msgstr ""
+
+#: RenderASS.cpp:990
+msgid "Default Shadow Color"
+msgstr ""
+
+#: RenderASS.cpp:1000
+msgid "Shadow Size"
+msgstr ""
+
+#: RenderASS.cpp:1001
+msgid "Default Shadow Size"
+msgstr ""
+
+#: RenderASS.cpp:1012
+msgid "Font Style"
+msgstr ""
+
+#: RenderASS.cpp:1013
+msgid "Default Font Style Properties"
+msgstr ""
+
+#: RenderASS.cpp:1019
+msgid "Bold"
+msgstr ""
+
+#: RenderASS.cpp:1020
+msgid "Default Font Bold Style"
+msgstr ""
+
+#: RenderASS.cpp:1027
+msgid "Italic"
+msgstr ""
+
+#: RenderASS.cpp:1028
+msgid "Default Font Italic Style"
+msgstr ""
+
+#: RenderASS.cpp:1035
+msgid "Underline"
+msgstr ""
+
+#: RenderASS.cpp:1036
+msgid "Default Font Underline Style"
+msgstr ""
+
+#: RenderASS.cpp:1043
+msgid "StrikeOut"
+msgstr ""
+
+#: RenderASS.cpp:1044
+msgid "Default Font StrikeOut Style"
+msgstr ""
+
+#: RenderASS.cpp:1051
+msgid "Border Style"
+msgstr ""
+
+#: RenderASS.cpp:1052
+msgid "Default Font Border Style Mode"
+msgstr ""
+
+#: RenderASS.cpp:1053
+msgid "Outline + Drop Shadow"
+msgstr ""
+
+#: RenderASS.cpp:1054
+msgid "Opaque Box"
+msgstr ""

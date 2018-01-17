@@ -9,9 +9,19 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <malloc.h>
+#include <libgnuintl.h>
 
 #include <ass.h>
 #include "libass_helper.h"
+
+
+/*使用gettext通常使用类似下面的一个带函数的宏定义
+*你完全可以不用，直接使用 gettext(字符串)
+*/
+#define _(S) gettext(S)
+
+/*PACKAGE是本程序最终的名字（运行时输入的命令）*/
+#define PACKAGE "RenderASS"
 
 #define _R(c)  ((c)>>24)
 #define _G(c)  (((c)>>16)&0xFF)
@@ -51,7 +61,10 @@ void generateBitmapImage(const unsigned char *image, int height, int width, char
 	unsigned char padding[3] = { 0, 0, 0 };
 	int paddingSize = (4 - (width*bDepth) % 4) % 4;
 
-	FILE* imageFile = fopen(imageFileName, "wb");
+	//FILE* imageFile = fopen(imageFileName, "wb"); 
+	FILE* imageFile;
+	errno_t err; 
+	err = fopen_s(&imageFile, imageFileName, "wb");
 
 	fwrite(fileHeader, 1, fileHeaderSize, imageFile);
 	fwrite(infoHeader, 1, infoHeaderSize, imageFile);
@@ -223,16 +236,23 @@ bool blend_image(ASS_Image* img, const void* image) {
 
 int main(int args, char** argv) {
 
+	setlocale(LC_ALL, "");
+	bindtextdomain(PACKAGE, "locale");
+	textdomain(PACKAGE);
+
+	printf(_("ASS File"));
+
 	//_fullpath(cur_dll_path, argv[0], sizeof(cur_dll_path));
 	char* buffer;
 	buffer = _getcwd(NULL, 0);
 	strcat(buffer, "\\");
+	//strcat_s(buffer, 1, "\\\0");
 	strcpy_s(cur_dll_path, buffer);
 
 	unsigned int count = bHeight*bWidth*bDepth;
 	const char* buf;
 	buf = (const char*)calloc(count, sizeof(const char));
-
+	
 	AssRender* ass = new AssRender(ASS_HINTING_NONE, 1.0, "UTF-8");
 	ass->LoadAss("test.ass", "UTF-8");
 	ass->SetFPS(25);
@@ -250,7 +270,7 @@ int main(int args, char** argv) {
 			}
 		}
 
-		int c = ass->GetAss((double)i, bWidth, bHeight, bDepth, buf);
+		int c = ass->GetAss((double)i, bWidth, bHeight, bDepth, buf, true);
 
 		if (c > 0) {
 			char bName[MAX_PATH] = "";
@@ -261,7 +281,7 @@ int main(int args, char** argv) {
 	}
 	free((void*)buf);
 
-	std::cout << std::endl <<  "Press enter key exit..." << std::endl;
+	std::cout << std::endl <<  _("Press enter key exit...") << std::endl;
 	getchar();
 	return 0;
 }

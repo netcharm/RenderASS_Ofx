@@ -58,7 +58,11 @@ DWORD GetModulePath(HMODULE hModule, LPTSTR pszBuffer, DWORD dwSize);
 
 char* w2c(const wchar_t* wsp);
 char* w2c(const std::wstring ws);
+bool s2c(const std::string s, char* c);
 int utf2gbk(char *buf, size_t len);
+int gbk2utf(char *buf, size_t len);
+char* gbk(char *buf);
+char* utf(char *buf);
 
 unsigned char d2b(double);
 RGBA color_d2b(RGBAColourD color);

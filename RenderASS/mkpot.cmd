@@ -4,8 +4,9 @@ set GETTEXT=xgettext
 set MSGINIT=msginit
 set MSGFMT=msgfmt
 set MSGMERGE=msgmerge
-set PACKAGE=RenderASS
 set BINDING=locale
+
+set PACKAGE=RenderASS
 
 "%GETTEXT%" --package-name="%PACKAGE%" --package-version=1.0 --default-domain="%PACKAGE%" --c++ -k_ --from-code=utf-8 --output="%PACKAGE%.pot" *.cpp
 

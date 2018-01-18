@@ -23,9 +23,19 @@
 #define _LIBASS_HELPER_
 
 #define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-#include <stdint.h>
+#include <new>
+#include <cstring>
+#include <stdexcept>
+#include <string>
+#include <string.h>
+#include <mbstring.h>
+#include <tchar.h>
+#include <math.h>
+#include <time.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <stdint.h>
+#include <windows.h>
 
 extern "C" {
 #include <ass.h>

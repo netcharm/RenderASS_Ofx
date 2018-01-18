@@ -15,9 +15,9 @@ The main features are
 - basic property usage
 - basic image access and rendering
 */
-#include "common_ofx.h"
-#include "libass_helper.h"
 #include <libgnuintl.h>
+#include "libass_helper.h"
+#include "common_ofx.h"
 
 /*使用gettext通常使用类似下面的一个带函数的宏定义
 *你完全可以不用，直接使用 gettext(字符串)

@@ -115,6 +115,10 @@ private:
 	char fontconf[MAX_PATH];
 
 	double fps = 0;
+	double duration = 0;
+	double frames = 0;
+	double start = 0;
+
 	int renderWidth = 0;
 	int renderHeight = 0;
 	int renderDepth = 0;
@@ -210,6 +214,13 @@ public:
 	bool __stdcall Resize(int width, int height);
 	bool __stdcall ReScale(double scale);
 	bool __stdcall SetFPS(double fr);
+
+	double __stdcall GetDuration(void);
+	double __stdcall GetDuration(double start);
+	double __stdcall GetFrames(void);
+	double __stdcall GetFrames(double times);
+	double __stdcall GetFrames(int framestart);
+	bool __stdcall SetOffset(double offset);
 
 	bool __stdcall LoadAss(const char* assfile, const char *_charset);
 

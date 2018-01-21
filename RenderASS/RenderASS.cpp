@@ -173,6 +173,7 @@ private:
 		gParamHost->paramGetValue(param, &offset);
 		if (offset < 1) offset = 0;
 		if (myData) myData->Offset = (double)offset;
+		if (myData->ass) myData->ass->SetOffset(offset);
 
 
 		gParamHost->paramGetHandle(paramSet, "assUseMargin", &param, 0);
@@ -328,13 +329,20 @@ private:
 			myData->context = eIsGeneral;
 		}
 
+		gEffectHost->clipGetHandle(effect, kOfxImageEffectOutputClipName, &myData->outputClip, 0);
+
 		// cache away clip handles
-		if (myData->context != eIsGenerator)
+		if (myData->context != eIsGenerator) {
 			gEffectHost->clipGetHandle(effect, kOfxImageEffectSimpleSourceClipName, &myData->sourceClip, 0);
-		else
+		} else {
 			myData->sourceClip = NULL;
 
-		gEffectHost->clipGetHandle(effect, kOfxImageEffectOutputClipName, &myData->outputClip, 0);
+			OfxPropertySetHandle effectProps;
+			gEffectHost->clipGetPropertySet(myData->outputClip, &effectProps);
+			gPropHost->propSetInt(effectProps, kOfxImageClipPropContinuousSamples, 0 , 1);
+			double frames = myData->ass->GetFrames();
+			gPropHost->propSetDouble(effectProps, kOfxImageEffectInstancePropEffectDuration, 0, frames);
+		}
 
 		return myData;
 	}
@@ -369,7 +377,8 @@ private:
 				int offset = (int)myData->Offset;
 				gParamHost->paramGetValue(myData->assOffset, &offset);
 				if (offset < 1) offset = 0;
-				if (myData) myData->Offset = (double)offset;				if (myData) myData->Offset = (double)offset;
+				if (myData) myData->Offset = (double)offset;				
+				if (myData->ass) myData->ass->SetOffset(offset);
 			}
 			else if (strcmp(propName, "assUseDefaultStyle") == 0) {
 				int used_defaultstyle = 0;
@@ -544,6 +553,11 @@ private:
 		if (myData) {
 			myData->FPS = fps;
 			if (myData->ass) myData->ass->SetFPS(fps);
+
+			if (myData->context == eIsGenerator) {
+				double frames = myData->ass->GetFrames();
+				gPropHost->propSetDouble(props, kOfxImageEffectInstancePropEffectDuration, 0, frames);
+			}
 		}
 		return(fps);
 	}
@@ -622,6 +636,10 @@ public:
 		if (!propType || !propName) return kOfxStatReplyDefault;
 
 		if (strcmp(propType, kOfxTypeClip) == 0) {
+			if (strcmp(propName, kOfxImageEffectOutputClipName) == 0 && myData->context == eIsGenerator) {
+				double frames = myData->ass->GetFrames();
+				gPropHost->propSetDouble(outArgs, kOfxImageEffectInstancePropEffectDuration, 0, frames);
+			}
 		}
 		else if (strcmp(propType, kOfxTypeParameter) == 0) {
 			return setMyInstanceParam(effect, inArgs, outArgs);
@@ -1138,6 +1156,13 @@ public:
 					if (gHostSupportsMultipleBitDepths)
 						gPropHost->propSetString(outArgs, "OfxImageClipPropDepth_Output", 0, bitDepthStr);
 				} else {
+					// set output has N frames
+					myData->ass->SetFPS(1000);
+					double frames = myData->ass->GetFrames();
+					gPropHost->propSetDouble(outArgs, kOfxImageEffectInstancePropEffectDuration, 0, frames);
+					//gPropHost->propSetInt(outArgs, kOfxImageClipPropContinuousSamples, 0, 1);
+					gPropHost->propSetDouble(outArgs, "OfxImageClipPropDuration_Output", 0, frames);
+
 					// set out output to be the same same as the input, component and bitdepth
 					gPropHost->propSetString(outArgs, "OfxImageClipPropComponents_Output", 0, kOfxBitDepthByte);
 					if (gHostSupportsMultipleBitDepths)
@@ -1170,7 +1195,8 @@ public:
 		double sourceRange[2];
 
 		// get the frame range of the source clip
-		OfxPropertySetHandle props; gEffectHost->clipGetPropertySet(myData->sourceClip, &props);
+		OfxPropertySetHandle props; 
+		gEffectHost->clipGetPropertySet(myData->sourceClip, &props);
 		gPropHost->propGetDoubleN(props, kOfxImageEffectPropFrameRange, 2, sourceRange);
 
 		// set it on the out args

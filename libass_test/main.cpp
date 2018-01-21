@@ -10,7 +10,7 @@
 #include <stdio.h>
 #include <malloc.h>
 #include <libgnuintl.h>
-
+#include <iconv.h>
 #include <ass.h>
 #include "libass_helper.h"
 
@@ -22,6 +22,8 @@
 
 /*PACKAGE是本程序最终的名字（运行时输入的命令）*/
 #define PACKAGE "RenderASS"
+
+#define BUFSIZE 1024
 
 #define _R(c)  ((c)>>24)
 #define _G(c)  (((c)>>16)&0xFF)
@@ -48,6 +50,148 @@ typedef struct OfxRGBAColourB {
 typedef struct OfxRectI {
 	int x1, y1, x2, y2;
 } OfxRectI;
+
+char* w2c(const wchar_t* wsp) {
+	size_t size = wcslen(wsp) * 2 + 2;
+	char * csp = new char[size];
+	size_t c_size;
+	wcstombs_s(&c_size, csp, size, wsp, size);
+	return(csp);
+}
+
+char* w2c(const std::wstring ws) {
+	const wchar_t *wsp = ws.c_str();
+	size_t size = wcslen(wsp) * 2 + 2;
+	char * csp = new char[size];
+	size_t c_size;
+	wcstombs_s(&c_size, csp, size, wsp, size);
+	return(csp);
+}
+
+bool s2c(const std::string s, char* c) {
+	memset(c, 0, sizeof(c));
+	for (unsigned int i = 0; i < s.length(); i++) {
+		c[i] = s[i];
+	}
+	return true;
+}
+
+int utf2gbk(char *buf, size_t len)
+{
+	iconv_t cd = iconv_open("GBK", "UTF-8");
+	if (cd == (iconv_t)-1) {
+		perror("获取字符转换描述符失败！\n");
+		return -1;
+	}
+	size_t sz = BUFSIZE * BUFSIZE;
+	char *tmp_str = (char *)malloc(sz);
+	// 不要将原始的指针传进去，那样会改变原始指针的  
+	size_t inlen = len;
+	size_t outlen = sz;
+	const char *in = buf;
+	char* out = tmp_str;
+	if (tmp_str == NULL) {
+		iconv_close(cd);
+		fprintf(stderr, "分配内存失败！\n");
+		return -1;
+	}
+	memset(tmp_str, 0, sz);
+	if (iconv(cd, &in, &inlen, &out, &outlen) == (size_t)-1) {
+		iconv_close(cd);
+		return -1;
+	}
+	strcpy_s(buf, MAX_PATH, tmp_str);
+	iconv_close(cd);
+	return 0;
+}
+
+char* gbk(char *buf)
+{
+	iconv_t cd = iconv_open("GBK", "UTF-8");
+	if (cd == (iconv_t)-1) {
+		perror("获取字符转换描述符失败！\n");
+		return buf;
+	}
+	size_t sz = BUFSIZE * BUFSIZE;
+	char *tmp_str = (char *)malloc(sz);
+	// 不要将原始的指针传进去，那样会改变原始指针的  
+	//size_t inlen = len;
+	size_t inlen = strlen(buf) + 1;
+	size_t outlen = sz;
+	const char *in = buf;
+	char* out = tmp_str;
+	if (tmp_str == NULL) {
+		iconv_close(cd);
+		fprintf(stderr, "分配内存失败！\n");
+		return buf;
+	}
+	memset(tmp_str, 0, sz);
+	if (iconv(cd, &in, &inlen, &out, &outlen) == (size_t)-1) {
+		iconv_close(cd);
+		return buf;
+	}
+	//strcpy_s(buf, MAX_PATH, tmp_str);
+	iconv_close(cd);
+	return tmp_str;
+}
+
+int gbk2utf(char *buf, size_t len)
+{
+	iconv_t cd = iconv_open("UTF-8", "GBK");
+	if (cd == (iconv_t)-1) {
+		perror("获取字符转换描述符失败！\n");
+		return -1;
+	}
+	size_t sz = BUFSIZE * BUFSIZE;
+	char *tmp_str = (char *)malloc(sz);
+	// 不要将原始的指针传进去，那样会改变原始指针的  
+	size_t inlen = len;
+	size_t outlen = sz;
+	const char *in = buf;
+	char* out = tmp_str;
+	if (tmp_str == NULL) {
+		iconv_close(cd);
+		fprintf(stderr, "分配内存失败！\n");
+		return -1;
+	}
+	memset(tmp_str, 0, sz);
+	if (iconv(cd, &in, &inlen, &out, &outlen) == (size_t)-1) {
+		iconv_close(cd);
+		return -1;
+	}
+	strcpy_s(buf, MAX_PATH, tmp_str);
+	iconv_close(cd);
+	return 0;
+}
+
+char* utf(char *buf) {
+	iconv_t cd = iconv_open("UTF-8", "GBK");
+	if (cd == (iconv_t)-1) {
+		perror("获取字符转换描述符失败！\n");
+		return buf;
+	}
+	size_t sz = BUFSIZE * BUFSIZE;
+	char *tmp_str = (char *)malloc(sz);
+	// 不要将原始的指针传进去，那样会改变原始指针的  
+	//size_t inlen = len;
+	size_t inlen = strlen(buf) + 1;
+	size_t outlen = sz;
+	const char *in = buf;
+	char* out = tmp_str;
+	if (tmp_str == NULL) {
+		iconv_close(cd);
+		fprintf(stderr, "分配内存失败！\n");
+		return buf;
+	}
+	memset(tmp_str, 0, sz);
+	if (iconv(cd, &in, &inlen, &out, &outlen) == (size_t)-1) {
+		iconv_close(cd);
+		return buf;
+	}
+	//strcpy_s(buf, MAX_PATH, tmp_str);
+	iconv_close(cd);
+	return tmp_str;
+}
 
 void generateBitmapImage(const unsigned char *image, int height, int width, char* imageFileName);
 unsigned char* createBitmapFileHeader(int height, int width);

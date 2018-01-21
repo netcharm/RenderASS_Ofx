@@ -520,7 +520,7 @@ bool AssRender::SetDefaultStyle(const char * fontname, int fontsize,
 
 bool AssRender::SetUseDefaultStyle(int used)
 {
-	if (!al || !ar) return false;
+	if (!al || !ar || !at) return false;
 	use_defaultstyle = used;
 
 	if (use_defaultstyle) {
@@ -532,6 +532,7 @@ bool AssRender::SetUseDefaultStyle(int used)
 		ass_set_selective_style_override_enabled(ar, ASS_OVERRIDE_DEFAULT);
 		ass_set_style_overrides(al, NULL);
 	}
+	ass_process_force_style(at);
 
 	return true;
 }
@@ -683,8 +684,53 @@ bool AssRender::SetFPS(double fr)
 {
 	if (fr > 0) {
 		fps = fr;
+		frames = duration * fps / 1000;
 		return true;
 	}
+	return false;
+}
+
+double AssRender::GetDuration(void)
+{
+	if (!al || !ar || !at) return 0.0;
+	long long length = ass_step_sub(at, 0, at->n_events - 2);
+	//long long now = 0;
+	//if (fps && start) now = (long long)(start / fps);
+	//long long length = ass_step_sub(at, now, at->n_events - 2);
+	return (double)length;
+}
+
+double AssRender::GetDuration(double start)
+{
+	if (!al || !ar || !at || !fps) return 0.0;
+	long long length = (long long)(duration - (start / fps * 1000));
+	return (double)length;
+}
+
+double AssRender::GetFrames(void)
+{
+	if (!al || !ar || !at || !fps) return 0.0;
+	return GetFrames(duration);
+}
+
+double AssRender::GetFrames(double times)
+{
+	if (!al || !ar || !at || !fps) return 0.0;
+	double frame = times*fps / 1000.0;
+	return frame;
+}
+
+double AssRender::GetFrames(int framestart)
+{
+	if (!al || !ar || !at || !fps) return 0.0;
+	double frame = frames - framestart;
+	return frame;
+}
+
+bool AssRender::SetOffset(double offset)
+{
+	start = offset;
+	//GetFrames(GetDuration(start));
 	return false;
 }
 
@@ -721,6 +767,9 @@ bool AssRender::LoadAss(const char * assfile, const char *_charset)
 		//resize_read_order_bitmap(at, 8192);
 		//for (int i = 0; i < 2000; i++)
 		//	GetAss((double)i, renderWidth, renderHeight);
+		frames = 0;
+		duration = GetDuration() + 2000;
+		frames = GetFrames(duration);
 
 		return true;
 	}

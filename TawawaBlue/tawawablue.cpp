@@ -479,7 +479,7 @@ public:
 		from Keith Jack's excellent book "Video Demystified" (ISBN 1-878707-09-4).
 		*/
 
-		double offset = 1.0 + strength;
+		double offset = 1.0 - strength;
 		for (int y = renderWindow.y1; y < renderWindow.y2; y++) {
 			if (gEffectHost->abort(instance)) break;
 

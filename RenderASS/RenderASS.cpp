@@ -108,6 +108,22 @@ private:
 	static const int gHostSupportsMultipleBitDepths = false;
 
 	// Convinience wrapper to get private data 
+	static bool setDuration(OfxImageEffectHandle effect) {
+		RenderAssInstanceData *myData = getMyInstanceData(effect);
+
+		if (myData && myData->context == eIsGenerator) {
+			OfxPropertySetHandle effectProps;
+			gEffectHost->clipGetPropertySet(myData->outputClip, &effectProps);
+			// set output has N frames
+			myData->ass->SetFPS(1000);
+			double frames = myData->ass->GetFrames((int)myData->Offset);
+			gPropHost->propSetDouble(effectProps, kOfxImageEffectPropFrameRange, 0, 0);
+			gPropHost->propSetDouble(effectProps, kOfxImageEffectPropFrameRange, 1, frames);
+			return true;
+		}
+		return false;
+	}
+
 	static RenderAssInstanceData * getMyInstanceData(OfxImageEffectHandle effect)
 	{
 		RenderAssInstanceData *myData = (RenderAssInstanceData *)ofxuGetEffectInstanceData(effect);
@@ -336,12 +352,7 @@ private:
 			gEffectHost->clipGetHandle(effect, kOfxImageEffectSimpleSourceClipName, &myData->sourceClip, 0);
 		} else {
 			myData->sourceClip = NULL;
-
-			//OfxPropertySetHandle effectProps;
-			//gEffectHost->clipGetPropertySet(myData->outputClip, &effectProps);
-			//myData->ass->SetFPS(1000);
-			//double frames = myData->ass->GetFrames();
-			//gPropHost->propSetDouble(effectProps, kOfxImageEffectInstancePropEffectDuration, 0, frames);
+			setDuration(effect);
 		}
 
 		return myData;
@@ -371,6 +382,7 @@ private:
 				gParamHost->paramGetValue(myData->assFileName, &fn);
 				if (myData->ass && fn[0] != 0) {
 					myData->ass->LoadAss(fn, "UTF-8");
+					setDuration(effect);
 				}
 			}
 			else if (strcmp(propName, "assOffset") == 0) {
@@ -737,7 +749,7 @@ public:
 //#ifdef _DEBUG
 		gPropHost->propSetString(effectProps, kOfxImageEffectPropSupportedContexts, 1, kOfxImageEffectContextGenerator);
 		//gPropHost->propSetString(effectProps, kOfxImageEffectPropSupportedContexts, 2, kOfxImageEffectContextPaint);
-		//gPropHost->propSetString(effectProps, kOfxImageEffectPropSupportedContexts, 2, kOfxImageEffectContextGeneral);		
+		gPropHost->propSetString(effectProps, kOfxImageEffectPropSupportedContexts, 2, kOfxImageEffectContextGeneral);		
 //#endif // _DEBUG
 
 		return kOfxStatOK;
@@ -1175,12 +1187,9 @@ public:
 					gPropHost->propSetString(outArgs, "OfxImageClipPropComponents_Output", 0, componentStr);
 					if (gHostSupportsMultipleBitDepths)
 						gPropHost->propSetString(outArgs, "OfxImageClipPropDepth_Output", 0, bitDepthStr);
-				} else {
-					// set output has N frames
-					myData->ass->SetFPS(1000);
-					double frames = myData->ass->GetFrames();
-					gPropHost->propSetDouble(outArgs, kOfxImageEffectInstancePropEffectDuration, 0, frames);
-					gPropHost->propSetDouble(outArgs, "OfxImageClipPropDuration_Output", 0, frames);
+				} 
+				else {
+					setDuration(effect);
 
 					// set out output to be the same same as the input, component and bitdepth
 					gPropHost->propSetString(outArgs, "OfxImageClipPropComponents_Output", 0, kOfxBitDepthByte);
@@ -1192,9 +1201,8 @@ public:
 					//gPropHost->propSetString(outArgs, kOfxImageEffectPropPreMultiplication, 0, kOfxImageOpaque);
 					gPropHost->propSetString(outArgs, kOfxImageEffectPropPreMultiplication, 0, kOfxImagePreMultiplied);
 					gPropHost->propSetInt(outArgs, kOfxImageEffectFrameVarying, 0, 1);
-					gPropHost->propSetInt(outArgs, kOfxImageClipPropContinuousSamples, 0, 1);					
+					gPropHost->propSetInt(outArgs, kOfxImageClipPropContinuousSamples, 0, 1);			
 				}
-
 			}
 		}
 		catch (std::exception ex) {
@@ -1211,15 +1219,27 @@ public:
 	{
 		RenderAssInstanceData *myData = getMyInstanceData(effect);
 
-		double sourceRange[2];
+		//double sourceRange[2];
+		OfxRangeD frame;
 
 		// get the frame range of the source clip
 		OfxPropertySetHandle props; 
 		gEffectHost->clipGetPropertySet(myData->sourceClip, &props);
-		gPropHost->propGetDoubleN(props, kOfxImageEffectPropFrameRange, 2, sourceRange);
+		//gPropHost->propGetDoubleN(props, kOfxImageEffectPropFrameRange, 2, sourceRange);
+		gPropHost->propGetDouble(props, kOfxImageEffectPropFrameRange, 0, &frame.min);
+		gPropHost->propGetDouble(props, kOfxImageEffectPropFrameRange, 1, &frame.max);
 
+		if (myData && myData->ass) {
+			double frames = myData->ass->GetFrames((int)myData->Offset);
+			//sourceRange[0] = 0;
+			//sourceRange[1] = frames;
+			frame.min = 0;
+			frame.max = frames;
+		}
 		// set it on the out args
-		gPropHost->propSetDoubleN(outArgs, kOfxImageEffectPropFrameRange, 2, sourceRange);
+		//gPropHost->propSetDoubleN(outArgs, kOfxImageEffectPropFrameRange, 2, sourceRange);
+		gPropHost->propSetDouble(outArgs, kOfxImageEffectPropFrameRange, 0, frame.min);
+		gPropHost->propSetDouble(outArgs, kOfxImageEffectPropFrameRange, 1, frame.max);
 
 		return kOfxStatOK;
 	}

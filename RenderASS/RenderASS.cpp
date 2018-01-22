@@ -584,24 +584,24 @@ private:
 		}
 	}
 
-	static double getProjectTime(OfxImageEffectHandle effect, double t = 0)
+	static Times getProjectTimes(OfxImageEffectHandle effect, double t = 0)
 	{
-		double time_e = t;
-		double time_p = t;
-		double t0 = 0, t1 = 0;
+		Times times;
+		times.Current = t;
+		times.Min = 0;
+		times.Max = 0;
+
 		if (gTimeLineHost2) {
-			OfxStatus ret = gTimeLineHost2->getProjectTime(effect, time_e, &time_p);
-			if (ret == kOfxStatOK) return(time_p);
-			else return(time_e);
+			OfxStatus ret = gTimeLineHost2->getProjectTime(effect, t, &times.Current);
+			gTimeLineHost2->getEffectTrimPoints(effect, &times.Min, &times.Max);
 		}
 		else if (gTimeLineHost1) {
-			OfxStatus ret = gTimeLineHost1->getTime(effect, &time_p);
-			gTimeLineHost1->getTimeBounds(effect, &t0, &t1);
-			if (ret == kOfxStatOK) return(time_p);
-			else return(time_e);
+			OfxStatus ret = gTimeLineHost1->getTime(effect, &times.Current);
+			gTimeLineHost1->getTimeBounds(effect, &times.Min, &times.Max);
 		}
-		return(time_p);
+		return(times);
 	}
+
 	/** @brief Called at load */
 public:
 	////////////////////////////////////////////////////////////////////////////////
@@ -1259,7 +1259,7 @@ public:
 
 		time_p = ofxuGetTime(instance);
 		time = ofxuGetTime(inArgs);
-		//double tp = getProjectTime(instance, time);
+		Times tp = getProjectTimes(instance, time);
 
 		gPropHost->propGetIntN(inArgs, kOfxImageEffectPropRenderWindow, 4, &renderWindow.x1);
 		gPropHost->propGetString(inArgs, kOfxImageEffectPropComponents, 0, &renderDepth);

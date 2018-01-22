@@ -105,6 +105,12 @@ typedef struct OfxTimeLineSuiteV2 {
 	OfxStatus(*gotoEffectTime)(void *instance, double *time);  
 } OfxTimeLineSuiteV2;
 
+struct Times {
+	double Current;
+	double Min;
+	double Max;
+};
+
 char* w2c(const wchar_t* wsp);
 char* w2c(const std::wstring ws);
 bool s2c(const std::string s, char* c);

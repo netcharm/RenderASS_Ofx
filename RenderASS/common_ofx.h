@@ -96,16 +96,13 @@ typedef struct OfxPluginInfo {
 }OfxPluginInfo;
 
 typedef struct OfxTimeLineSuiteV2 {
-
-	OfxStatus(*getProjectTime)(void *instance, double EffectTime, double *ProjectTime);
 	// converts what host displays in it's user interface to local effect time, could be a large number if host project starts at 12:00:00:00)
-
-	OfxStatus(*getEffectTrimPoints)(void *instance, double *InPoint, double *OutPoint);
+	OfxStatus(*getProjectTime)(void *instance, double EffectTime, double *ProjectTime);
 	//  for example in an NLE this refers to In and out point handles of the video track on which the effect is applied, this is in effects local time. This is different then frame range and 0 to Duration.
-
-	OfxStatus(*gotoEffectTime)(void *instance, double *time);  // this is in effects local time, if one asks to go to time -5000, it might not be defined
-															   // because of this not being supported a lot, this is example of wanting to check if function pointer is NULL as means of seeing if supported
-
+	OfxStatus(*getEffectTrimPoints)(void *instance, double *InPoint, double *OutPoint);
+	// this is in effects local time, if one asks to go to time -5000, it might not be defined
+	// because of this not being supported a lot, this is example of wanting to check if function pointer is NULL as means of seeing if supported
+	OfxStatus(*gotoEffectTime)(void *instance, double *time);  
 } OfxTimeLineSuiteV2;
 
 char* w2c(const wchar_t* wsp);
@@ -259,16 +256,21 @@ char* utf(char *buf) {
 }
 
 // pointers to various bits of the host
-OfxHost               *gHost;
-OfxImageEffectSuiteV1 *gEffectHost = 0;
-OfxPropertySuiteV1    *gPropHost = 0;
-OfxParameterSuiteV1   *gParamHost = 0;
-OfxMemorySuiteV1      *gMemoryHost = 0;
-OfxMultiThreadSuiteV1 *gThreadHost = 0;
-OfxMessageSuiteV1     *gMessageSuite = 0;
-OfxInteractSuiteV1    *gInteractHost = 0;
-OfxTimeLineSuiteV1    *gTimeLineHost1 = 0;
-OfxTimeLineSuiteV2    *gTimeLineHost2 = 0;
+OfxHost                           *gHost;
+OfxImageEffectSuiteV1             *gEffectHost = 0;
+OfxPropertySuiteV1                *gPropHost = 0;
+OfxParameterSuiteV1               *gParamHost = 0;
+OfxParametricParameterSuiteV1     *gParametricParameterSuite = 0;
+OfxInteractSuiteV1                *gInteractHost = 0;
+OfxImageEffectOpenGLRenderSuiteV1 *gOpenGLRenderSuite = 0;
+OfxMultiThreadSuiteV1             *gThreadHost = 0;
+OfxMemorySuiteV1                  *gMemoryHost = 0;
+OfxMessageSuiteV1                 *gMessageSuite = 0;
+OfxMessageSuiteV2                 *gMessageSuiteV2 = 0;
+OfxProgressSuiteV1                *gProgressSuiteV1 = 0;
+OfxProgressSuiteV2                *gProgressSuiteV2 = 0;
+OfxTimeLineSuiteV1                *gTimeLineHost1 = 0;
+OfxTimeLineSuiteV2                *gTimeLineHost2 = 0;
 
 // look up a pixel in the image, does bounds checking to see if it is in the image rectangle
 inline OfxRGBAColourB * pixelAddress(OfxRGBAColourB *img, OfxRectI rect, int x, int y, int bytesPerLine) {

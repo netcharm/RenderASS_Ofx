@@ -337,11 +337,11 @@ private:
 		} else {
 			myData->sourceClip = NULL;
 
-			OfxPropertySetHandle effectProps;
-			gEffectHost->clipGetPropertySet(myData->outputClip, &effectProps);
-			gPropHost->propSetInt(effectProps, kOfxImageClipPropContinuousSamples, 0 , 1);
-			double frames = myData->ass->GetFrames();
-			gPropHost->propSetDouble(effectProps, kOfxImageEffectInstancePropEffectDuration, 0, frames);
+			//OfxPropertySetHandle effectProps;
+			//gEffectHost->clipGetPropertySet(myData->outputClip, &effectProps);
+			//myData->ass->SetFPS(1000);
+			//double frames = myData->ass->GetFrames();
+			//gPropHost->propSetDouble(effectProps, kOfxImageEffectInstancePropEffectDuration, 0, frames);
 		}
 
 		return myData;
@@ -389,8 +389,7 @@ private:
 			else if (strcmp(propName, "assDefaultFontName") == 0) {
 				char* fontname = NULL;
 				gParamHost->paramGetValue(myData->assDefaultFontName, &fontname);
-				try
-				{
+				try {
 					if (myData->ass) {
 						char fn[512];
 						memset(fn, 0, 512);
@@ -399,10 +398,7 @@ private:
 						myData->ass->SetDefaultFontName(fn);
 					}
 				}
-				catch (const std::exception&)
-				{
-
-				}
+				catch (const std::exception&) {}
 			}
 			else if (strcmp(propName, "assDefaultFontSize") == 0) {
 				int fsize = 0;
@@ -521,8 +517,7 @@ private:
 				int hints = 0;
 				gParamHost->paramGetValue(myData->assFontHints, &hints);
 				if (myData->ass) {
-					switch (hints)
-					{
+					switch (hints) {
 					case 1:
 						myData->ass->SetHints(ASS_HINTING_LIGHT);
 						break;
@@ -577,6 +572,24 @@ private:
 		}
 	}
 
+	static double getProjectTime(OfxImageEffectHandle effect, double t = 0)
+	{
+		double time_e = t;
+		double time_p = t;
+		double t0 = 0, t1 = 0;
+		if (gTimeLineHost2) {
+			OfxStatus ret = gTimeLineHost2->getProjectTime(effect, time_e, &time_p);
+			if (ret == kOfxStatOK) return(time_p);
+			else return(time_e);
+		}
+		else if (gTimeLineHost1) {
+			OfxStatus ret = gTimeLineHost1->getTime(effect, &time_p);
+			gTimeLineHost1->getTimeBounds(effect, &t0, &t1);
+			if (ret == kOfxStatOK) return(time_p);
+			else return(time_e);
+		}
+		return(time_p);
+	}
 	/** @brief Called at load */
 public:
 	////////////////////////////////////////////////////////////////////////////////
@@ -586,11 +599,18 @@ public:
 		// fetch the host suites out of the global host pointer
 		if (!gHost) return kOfxStatErrMissingHostFeature;
 
-		gEffectHost = (OfxImageEffectSuiteV1 *)gHost->fetchSuite(gHost->host, kOfxImageEffectSuite, 1);
-		gPropHost = (OfxPropertySuiteV1 *)gHost->fetchSuite(gHost->host, kOfxPropertySuite, 1);
-		if (!gEffectHost || !gPropHost)
-			return kOfxStatErrMissingHostFeature;
+		//gEffectHost = (OfxImageEffectSuiteV1 *)gHost->fetchSuite(gHost->host, kOfxImageEffectSuite, 1);
+		//gPropHost = (OfxPropertySuiteV1 *)gHost->fetchSuite(gHost->host, kOfxPropertySuite, 1);
+		//if (!gEffectHost || !gPropHost)
+		//	return kOfxStatErrMissingHostFeature;
 
+		gOpenGLRenderSuite = (OfxImageEffectOpenGLRenderSuiteV1 *)gHost->fetchSuite(gHost->host, kOfxOpenGLRenderSuite, 1);
+		gParametricParameterSuite = (OfxParametricParameterSuiteV1 *)gHost->fetchSuite(gHost->host, kOfxParametricParameterSuite, 1);
+		gMessageSuiteV2 = (OfxMessageSuiteV2 *)gHost->fetchSuite(gHost->host, kOfxMessageSuite, 2);
+		gProgressSuiteV1 = (OfxProgressSuiteV1 *)gHost->fetchSuite(gHost->host, kOfxProgressSuite, 1);
+		gProgressSuiteV2 = (OfxProgressSuiteV2 *)gHost->fetchSuite(gHost->host, kOfxProgressSuite, 2);			
+		gTimeLineHost1 = (OfxTimeLineSuiteV1 *)gHost->fetchSuite(gHost->host, kOfxTimeLineSuite, 1);
+		gTimeLineHost2 = (OfxTimeLineSuiteV2 *)gHost->fetchSuite(gHost->host, kOfxTimeLineSuite, 2);
 		return ofxuFetchHostSuites();
 
 		return kOfxStatOK;
@@ -1138,7 +1158,7 @@ public:
 			// fetch output clip
 			OfxImageClipHandle outputClip;
 			gEffectHost->clipGetHandle(effect, kOfxImageEffectOutputClipName, &outputClip, 0);
-			gEffectHost->clipGetPropertySet(outputClip, &props);
+			gEffectHost->clipGetPropertySet(outputClip, &props);			
 
 			if (myData) {
 				if (myData->context != eIsGenerator) {
@@ -1160,7 +1180,6 @@ public:
 					myData->ass->SetFPS(1000);
 					double frames = myData->ass->GetFrames();
 					gPropHost->propSetDouble(outArgs, kOfxImageEffectInstancePropEffectDuration, 0, frames);
-					//gPropHost->propSetInt(outArgs, kOfxImageClipPropContinuousSamples, 0, 1);
 					gPropHost->propSetDouble(outArgs, "OfxImageClipPropDuration_Output", 0, frames);
 
 					// set out output to be the same same as the input, component and bitdepth
@@ -1172,8 +1191,8 @@ public:
 					//gPropHost->propSetString(outArgs, kOfxImageEffectPropPreMultiplication, 0, kOfxImageUnPreMultiplied);
 					//gPropHost->propSetString(outArgs, kOfxImageEffectPropPreMultiplication, 0, kOfxImageOpaque);
 					gPropHost->propSetString(outArgs, kOfxImageEffectPropPreMultiplication, 0, kOfxImagePreMultiplied);
-					//gPropHost->propSetInt(effectProps, kOfxImageEffectFrameVarying, 0, 1);
 					gPropHost->propSetInt(outArgs, kOfxImageEffectFrameVarying, 0, 1);
+					gPropHost->propSetInt(outArgs, kOfxImageClipPropContinuousSamples, 0, 1);					
 				}
 
 			}
@@ -1220,6 +1239,7 @@ public:
 
 		time_p = ofxuGetTime(instance);
 		time = ofxuGetTime(inArgs);
+		//double tp = getProjectTime(instance, time);
 
 		gPropHost->propGetIntN(inArgs, kOfxImageEffectPropRenderWindow, 4, &renderWindow.x1);
 		gPropHost->propGetString(inArgs, kOfxImageEffectPropComponents, 0, &renderDepth);
@@ -1239,11 +1259,10 @@ public:
 			bool blend = false;
 			RenderAssInstanceData *myData = getMyInstanceData(instance);
 			if (!myData) throw(new NoImageEx());
-			getFrameRange(instance, outputClip);
 			if (myData->Offset < 0.5) time_p = time;
 			else time_p = time + myData->Offset;
-
 			//getFrameRange(instance, outputClip);
+
 			// fetch image to render into from that clip
 			int dstRowBytes;
 			int dstBitDepth;
@@ -1325,7 +1344,6 @@ public:
 		try {
 			// cast to appropriate type
 			OfxImageEffectHandle effect = (OfxImageEffectHandle)handle;
-			if (!effect) return kOfxStatReplyDefault;
 
 			if (strcmp(action, kOfxActionLoad) == 0) {
 				return onLoad();
@@ -1333,7 +1351,9 @@ public:
 			else if (strcmp(action, kOfxActionUnload) == 0) {
 				return onUnLoad();
 			}
-			else if (strcmp(action, kOfxActionDescribe) == 0) {
+			if (!effect) return kOfxStatReplyDefault;
+
+			if (strcmp(action, kOfxActionDescribe) == 0) {
 				return describe(effect);
 			}
 			else if (strcmp(action, kOfxImageEffectActionDescribeInContext) == 0) {
@@ -1349,7 +1369,7 @@ public:
 				return instanceChanged(effect, inArgs, outArgs);
 			}
 			else if (strcmp(action, kOfxImageEffectActionIsIdentity) == 0) {
-				return isIdentity(effect, inArgs, outArgs);
+				//return isIdentity(effect, inArgs, outArgs);
 			}
 			else if (strcmp(action, kOfxImageEffectActionGetClipPreferences) == 0) {
 				return getClipPreferences(effect, inArgs, outArgs);

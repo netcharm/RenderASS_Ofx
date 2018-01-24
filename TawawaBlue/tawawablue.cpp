@@ -37,13 +37,17 @@ The main features are
 // private instance data type
 struct TawawaInstanceData {
 	ContextEnum context;
-	double strength = 0;
+	double strength_r = 0;
+	double strength_g = 0;
+	double strength_b = 0;
 
 	// handles to the clips we deal with
 	OfxImageClipHandle sourceClip;
 	OfxImageClipHandle outputClip;
 
-	OfxParamHandle Strength;
+	OfxParamHandle StrengthR;
+	OfxParamHandle StrengthG;
+	OfxParamHandle StrengthB;
 };
 
 // some flags about the host's behaviour
@@ -98,11 +102,24 @@ private:
 
 		TawawaInstanceData *myData = new TawawaInstanceData;
 
-		gParamHost->paramGetHandle(paramSet, "Strength", &myData->Strength, 0);
-		gParamHost->paramGetHandle(paramSet, "Strength", &param, 0);
-		double Strength = 0;
-		gParamHost->paramGetValue(param, &Strength);
-		myData->strength = Strength / 100;
+		gParamHost->paramGetHandle(paramSet, "StrengthR", &myData->StrengthR, 0);
+		gParamHost->paramGetHandle(paramSet, "StrengthG", &myData->StrengthG, 0);
+		gParamHost->paramGetHandle(paramSet, "StrengthB", &myData->StrengthB, 0);
+
+		gParamHost->paramGetHandle(paramSet, "StrengthR", &param, 0);
+		double StrengthR = 0;
+		gParamHost->paramGetValue(param, &StrengthR);
+		myData->strength_r = 1 - StrengthR / 100;
+
+		gParamHost->paramGetHandle(paramSet, "StrengthG", &param, 0);
+		double StrengthG = 0;
+		gParamHost->paramGetValue(param, &StrengthG);
+		myData->strength_g = 1 - StrengthG / 100;
+
+		gParamHost->paramGetHandle(paramSet, "StrengthB", &param, 0);
+		double StrengthB = 0;
+		gParamHost->paramGetValue(param, &StrengthB);
+		myData->strength_b = 1 - StrengthB / 100;
 
 		char *context = 0;
 
@@ -168,10 +185,10 @@ public:
 		// fetch the host suites out of the global host pointer
 		if (!gHost) return kOfxStatErrMissingHostFeature;
 
-		gEffectHost = (OfxImageEffectSuiteV1 *)gHost->fetchSuite(gHost->host, kOfxImageEffectSuite, 1);
-		gPropHost = (OfxPropertySuiteV1 *)gHost->fetchSuite(gHost->host, kOfxPropertySuite, 1);
-		if (!gEffectHost || !gPropHost)
-			return kOfxStatErrMissingHostFeature;
+		//gEffectHost = (OfxImageEffectSuiteV1 *)gHost->fetchSuite(gHost->host, kOfxImageEffectSuite, 1);
+		//gPropHost = (OfxPropertySuiteV1 *)gHost->fetchSuite(gHost->host, kOfxPropertySuite, 1);
+		//if (!gEffectHost || !gPropHost)
+		//	return kOfxStatErrMissingHostFeature;
 
 		return ofxuFetchHostSuites();
 
@@ -221,11 +238,23 @@ public:
 
 		}
 		else if (strcmp(propType, kOfxTypeParameter) == 0) {
-			if (strcmp(propName, "Strength") == 0) {
-				double Strength = 0;
-				gParamHost->paramGetValue(myData->Strength, &Strength);
-				if (Strength < 0.0001) Strength = 0;
-				myData->strength = Strength / 100;
+			if (strcmp(propName, "StrengthR") == 0) {
+				double StrengthR = 0;
+				gParamHost->paramGetValue(myData->StrengthR, &StrengthR);
+				if (abs(StrengthR) < 0.001) StrengthR = 0;
+				myData->strength_r = 1 - StrengthR / 100;
+			}
+			else if (strcmp(propName, "StrengthG") == 0) {
+				double StrengthG = 0;
+				gParamHost->paramGetValue(myData->StrengthG, &StrengthG);
+				if (abs(StrengthG) < 0.001) StrengthG = 0;
+				myData->strength_g = 1 - StrengthG / 100;
+			}
+			else if (strcmp(propName, "StrengthB") == 0) {
+				double StrengthB = 0;
+				gParamHost->paramGetValue(myData->StrengthB, &StrengthB);
+				if (abs(StrengthB) < 0.001) StrengthB = 0;
+				myData->strength_b = 1 - StrengthB / 100;
 			}
 		}
 		// don't trap any others
@@ -334,11 +363,37 @@ public:
 
 		// set params
 		if (paramSet) {
-			// make ass file name
-			gParamHost->paramDefine(paramSet, kOfxParamTypeDouble, "Strength", &paramProps);
-			gPropHost->propSetString(paramProps, kOfxParamPropScriptName, 0, "Strength");
-			gPropHost->propSetString(paramProps, kOfxPropLabel, 0, "Strength");
-			gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, "Modify Strength");
+			// make Tawawa Blue Strength Red
+			gParamHost->paramDefine(paramSet, kOfxParamTypeDouble, "StrengthR", &paramProps);
+			gPropHost->propSetString(paramProps, kOfxParamPropScriptName, 0, "StrengthR");
+			gPropHost->propSetString(paramProps, kOfxPropLabel, 0, "Strength Red");
+			gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, "Modify Red Strength");
+			gPropHost->propSetDouble(paramProps, kOfxParamPropDefault, 0, 0.0);
+			gPropHost->propSetDouble(paramProps, kOfxParamPropMin, 0, -25.0);
+			gPropHost->propSetDouble(paramProps, kOfxParamPropMax, 0, 25.0);
+			gPropHost->propSetDouble(paramProps, kOfxParamPropDisplayMin, 0, -25.0);
+			gPropHost->propSetDouble(paramProps, kOfxParamPropDisplayMax, 0, 25.0);
+			gPropHost->propSetDouble(paramProps, kOfxParamPropIncrement, 0, 0.1);
+			gPropHost->propSetInt(paramProps, kOfxParamPropDigits, 0, 2);
+
+			// make Tawawa Blue Strength Red
+			gParamHost->paramDefine(paramSet, kOfxParamTypeDouble, "StrengthG", &paramProps);
+			gPropHost->propSetString(paramProps, kOfxParamPropScriptName, 0, "StrengthG");
+			gPropHost->propSetString(paramProps, kOfxPropLabel, 0, "Strength Green");
+			gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, "Modify Green Strength");
+			gPropHost->propSetDouble(paramProps, kOfxParamPropDefault, 0, 0.0);
+			gPropHost->propSetDouble(paramProps, kOfxParamPropMin, 0, -25.0);
+			gPropHost->propSetDouble(paramProps, kOfxParamPropMax, 0, 25.0);
+			gPropHost->propSetDouble(paramProps, kOfxParamPropDisplayMin, 0, -25.0);
+			gPropHost->propSetDouble(paramProps, kOfxParamPropDisplayMax, 0, 25.0);
+			gPropHost->propSetDouble(paramProps, kOfxParamPropIncrement, 0, 0.1);
+			gPropHost->propSetInt(paramProps, kOfxParamPropDigits, 0, 2);
+		
+			// make Tawawa Blue Strength Red
+			gParamHost->paramDefine(paramSet, kOfxParamTypeDouble, "StrengthB", &paramProps);
+			gPropHost->propSetString(paramProps, kOfxParamPropScriptName, 0, "StrengthB");
+			gPropHost->propSetString(paramProps, kOfxPropLabel, 0, "Strength Blue");
+			gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, "Modify Blue Strength");
 			gPropHost->propSetDouble(paramProps, kOfxParamPropDefault, 0, 0.0);
 			gPropHost->propSetDouble(paramProps, kOfxParamPropMin, 0, -25.0);
 			gPropHost->propSetDouble(paramProps, kOfxParamPropMax, 0, 25.0);
@@ -454,7 +509,7 @@ public:
 
 
 	static inline void blend_frame(OfxImageEffectHandle instance,
-		double strength,
+		double* strength,
 		const OfxRectI renderWindow,
 		const void *srcPtr, const OfxRectI srcRect, const int srcRowBytes,
 		const void *dstPtr, const OfxRectI dstRect, const int dstRowBytes) {
@@ -479,7 +534,9 @@ public:
 		from Keith Jack's excellent book "Video Demystified" (ISBN 1-878707-09-4).
 		*/
 
-		double offset = 1.0 - strength;
+		double o_r = strength[0];
+		double o_g = strength[1];
+		double o_b = strength[2];
 		for (int y = renderWindow.y1; y < renderWindow.y2; y++) {
 			if (gEffectHost->abort(instance)) break;
 
@@ -503,9 +560,9 @@ public:
 						G = (unsigned char)Y;
 						B = (unsigned char)(Y > 135 ? 255 : Y + 120);
 
-						int offset_r = (int)((double)R*offset);
-						int offset_g = (int)((double)G*offset);
-						int offset_b = (int)((double)B*offset);
+						int offset_r = (int)((double)R*o_r);
+						int offset_g = (int)((double)G*o_g);
+						int offset_b = (int)((double)B*o_b);
 
 						if (offset_r > 255) R = 255;
 						else if (offset_r < 0) R = 0;
@@ -576,7 +633,7 @@ public:
 
 			TawawaInstanceData *myData = getMyInstanceData(instance);
 			if (!myData) throw(new NoImageEx());
-			double strength = myData->strength;
+			double strength[3] = { myData->strength_r,myData->strength_g,myData->strength_b };
 
 			if (myData->context != eIsGenerator) {
 				// fetch main input clip
@@ -643,7 +700,6 @@ public:
 		try {
 			// cast to appropriate type
 			OfxImageEffectHandle effect = (OfxImageEffectHandle)handle;
-			if (!effect) return kOfxStatReplyDefault;
 
 			if (strcmp(action, kOfxActionLoad) == 0) {
 				return onLoad();
@@ -651,7 +707,9 @@ public:
 			else if (strcmp(action, kOfxActionUnload) == 0) {
 				return onUnLoad();
 			}
-			else if (strcmp(action, kOfxActionDescribe) == 0) {
+			if (!effect) return kOfxStatReplyDefault;
+			
+			if (strcmp(action, kOfxActionDescribe) == 0) {
 				return describe(effect);
 			}
 			else if (strcmp(action, kOfxImageEffectActionDescribeInContext) == 0) {

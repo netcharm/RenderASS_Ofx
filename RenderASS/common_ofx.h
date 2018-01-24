@@ -287,11 +287,19 @@ inline OfxRGBAColourB * pixelAddress(OfxRGBAColourB *img, OfxRectI rect, int x, 
 	return pix;
 }
 
-inline void copy_source(OfxImageEffectHandle instance,
+inline errno_t copy_source(OfxImageEffectHandle instance,
 	const OfxRectI rw,
 	const void *sp, const OfxRectI sr, const int srb,
 	const void *dp, const OfxRectI dr, const int drb) {
 
+	if(sp && dp) 
+		return(memcpy_s(&dp, srb*(sr.y2 - sr.y1), sp, drb*(dr.y2 - dr.y1)));
+	else if (dp) {
+		memset(&dp, 0, drb*(dr.y2 - dr.y1));
+		return 0;
+	}
+	return 1;
+	/*
 	// cast data pointers to 8 bit RGBA
 	OfxRGBAColourB *src = (OfxRGBAColourB *)sp;
 	OfxRGBAColourB *dst = (OfxRGBAColourB *)dp;
@@ -321,6 +329,7 @@ inline void copy_source(OfxImageEffectHandle instance,
 			dstPix++;
 		}
 	}
+	*/
 }
 
 static OfxPlugin * GetRenderASS(void);

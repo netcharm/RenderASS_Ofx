@@ -1306,10 +1306,11 @@ public:
 				sourceImg = ofxuGetImage(sourceClip, time, srcRowBytes, srcBitDepth, srcIsAlpha, srcRect, srcPtr);
 				if (!sourceImg) throw NoImageEx();
 
-				copy_source(instance, renderWindow, srcPtr, srcRect, srcRowBytes, dstPtr, dstRect, dstRowBytes);
+				errno_t err = copy_source(instance, renderWindow, srcPtr, srcRect, srcRowBytes, dstPtr, dstRect, dstRowBytes);
+
 				blend = true;
 			} else {
-				copy_source(instance, renderWindow, NULL, dstRect, 0, dstPtr, dstRect, dstRowBytes);
+				errno_t err = copy_source(instance, renderWindow, NULL, dstRect, 0, dstPtr, dstRect, dstRowBytes);
 				blend = true;
 			}
 

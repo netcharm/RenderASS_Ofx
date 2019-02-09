@@ -14,6 +14,13 @@
 #include <ass.h>
 #include "libass_helper.h"
 
+#using "System.Drawing.dll"
+#using "WindowsBase.dll"
+
+using namespace System;
+using namespace System::Drawing;
+using namespace System::IO;
+using namespace System::Runtime::InteropServices;
 
 /*使用gettext通常使用类似下面的一个带函数的宏定义
 *你完全可以不用，直接使用 gettext(字符串)
@@ -34,7 +41,7 @@ TCHAR cur_dll_path[MAX_PATH] = ""; // hack
 
 const int bDepth = 4; /// red, green, blue
 const int fileHeaderSize = 14;
-const int infoHeaderSize = 40;
+const int infoHeaderSize = 108;
 const int bWidth = 1280;
 const int bHeight = 720;
 
@@ -193,10 +200,13 @@ char* utf(char *buf) {
 	return tmp_str;
 }
 
-void generateBitmapImage(const unsigned char *image, int height, int width, char* imageFileName);
-unsigned char* createBitmapFileHeader(int height, int width);
-unsigned char* createBitmapInfoHeader(int height, int width);
 void changePixelColorOrder(const unsigned char *image, int height, int width);
+unsigned char* createBitmapFileHeader(int height, int width);
+array<unsigned char>^ createBitmapFileHeaderClr(int height, int width);
+unsigned char* createBitmapInfoHeader(int height, int width);
+array<unsigned char>^  createBitmapInfoHeaderClr(int height, int width);
+void generateBitmapImage(const unsigned char *image, int height, int width, char* imageFileName);
+Image^ generateBitmapImageClr(unsigned char *image, int height, int width);
 
 void generateBitmapImage(const unsigned char *image, int height, int width, char* imageFileName) {
 
@@ -221,6 +231,50 @@ void generateBitmapImage(const unsigned char *image, int height, int width, char
 	fclose(imageFile);
 }
 
+Image^ generateBitmapImageClr(unsigned char *image, int height, int width) {
+
+	int lineSize = width*bDepth;
+	int imageSize = lineSize*height;
+	int paddingSize = (4 - (lineSize) % 4) % 4;
+
+	array<unsigned char>^ fileHeader = createBitmapFileHeaderClr(height, width);
+	array<unsigned char>^ infoHeader = createBitmapInfoHeaderClr(height, width);
+	array<unsigned char>^ padding = gcnew array<unsigned char>(3) { 0, 0, 0 };
+
+	array<unsigned char> ^lines = gcnew array<unsigned char>(imageSize);
+	Marshal::Copy((IntPtr)image, lines, 0, imageSize);
+
+	MemoryStream ^ms = gcnew MemoryStream();
+	//ms->Capacity = fileHeader->Length + infoHeader->Length + imageSize + height*paddingSize;
+
+	ms->Write(fileHeader, 0, fileHeader->Length);
+	ms->Write(infoHeader, 0, infoHeader->Length);
+
+	for (int i = 0; i<height; i++) {
+		try {
+			ms->Write(lines, i*lineSize, lineSize);
+			ms->Write(padding, 1, paddingSize);
+		}
+		finally
+		{
+			// Free the unmanaged memory.
+		}	
+	}
+	ms->Seek(0, SeekOrigin::Begin);
+	//Image^ img = Bitmap::FromStream(ms);
+	Bitmap^ img = gcnew Bitmap(ms);
+	//Bitmap^ bmp = gcnew Bitmap(img->Width, img->Height, Imaging::PixelFormat::Format32bppArgb);
+	//Graphics^ g = Graphics::FromImage(bmp);
+	////g->Clear(Color::Transparent);
+	////g->FillRectangle(gcnew SolidBrush(Color::Transparent), 0, 0, bmp->Width, bmp->Height);
+	//g->DrawImage(img, 0, 0);
+	//delete g;
+
+	//Bitmap::Bitmap(ms, true, true);
+	return img;
+	//return Bitmap::Bitmap(ms);
+}
+
 unsigned char* createBitmapFileHeader(int height, int width) {
 	int fileSize = fileHeaderSize + infoHeaderSize + bDepth*height*width;
 
@@ -230,6 +284,27 @@ unsigned char* createBitmapFileHeader(int height, int width) {
 		0,0,0,0, /// reserved
 		0,0,0,0, /// start of pixel array
 	};
+
+	fileHeader[0] = (unsigned char)('B');
+	fileHeader[1] = (unsigned char)('M');
+	fileHeader[2] = (unsigned char)(fileSize);
+	fileHeader[3] = (unsigned char)(fileSize >> 8);
+	fileHeader[4] = (unsigned char)(fileSize >> 16);
+	fileHeader[5] = (unsigned char)(fileSize >> 24);
+	fileHeader[10] = (unsigned char)(fileHeaderSize + infoHeaderSize);
+
+	return fileHeader;
+}
+
+array<unsigned char>^ createBitmapFileHeaderClr(int height, int width) {
+	array<unsigned char>^ fileHeader = gcnew array<unsigned char>(fileHeaderSize) {
+		0,0, /// signature
+		0,0,0,0, /// image file size in bytes
+		0,0,0,0, /// reserved
+		0,0,0,0, /// start of pixel array
+	};
+
+	int fileSize = fileHeaderSize + infoHeaderSize + bDepth*height*width;
 
 	fileHeader[0] = (unsigned char)('B');
 	fileHeader[1] = (unsigned char)('M');
@@ -268,6 +343,67 @@ unsigned char* createBitmapInfoHeader(int height, int width) {
 	infoHeader[11] = (unsigned char)(height >> 24);
 	infoHeader[12] = (unsigned char)(1);
 	infoHeader[14] = (unsigned char)(bDepth * 8);
+
+	return infoHeader;
+}
+
+array<unsigned char>^  createBitmapInfoHeaderClr(int height, int width) {
+	array<unsigned char>^  infoHeader = gcnew array<unsigned char>(infoHeaderSize) {
+		0,0,0,0, /// header size
+		0,0,0,0, /// image width
+		0,0,0,0, /// image height
+		0,0, /// number of color planes
+		0,0, /// bits per pixel
+		0,0,0,0, /// compression
+		0,0,0,0, /// image size
+		0,0,0,0, /// horizontal resolution
+		0,0,0,0, /// vertical resolution
+		0,0,0,0, /// colors in color table
+		0,0,0,0, /// important color count
+		
+			0, 0, 0xFF, 0, /// Red channel bit mask (valid because BI_BITFIELDS is specified)
+			0, 0xFF, 0, 0, /// Green channel bit mask (valid because BI_BITFIELDS is specified) 
+			0xFF, 0, 0, 0, /// Blue channel bit mask (valid because BI_BITFIELDS is specified)
+			0, 0, 0, 0xFF, /// Alpha channel bit mask 	
+			0x20, 0x6E, 0x69, 0x57, /// LCS_WINDOWS_COLOR_SPACE 
+			0, 0, 0, 0, 0, 0, 0, 0, 0, /// CIEXYZTRIPLE Color Space endpoints Unused for LCS "Win " or "sRGB" 
+			0, 0, 0, 0, /// Red Gamma Unused for LCS "Win " or "sRGB"
+			0, 0, 0, 0, /// Green Gamma Unused for LCS "Win " or "sRGB" 
+			0, 0, 0, 0, /// Blue Gamma Unused for LCS "Win " or "sRGB"
+	};
+
+	int lineSize = width*bDepth;
+	int paddingSize = (4 - (lineSize) % 4) % 4;
+	int imageSize = (lineSize+paddingSize)*height;
+
+	infoHeader[0] = (unsigned char)(infoHeaderSize);
+	
+	infoHeader[4] = (unsigned char)(width);
+	infoHeader[5] = (unsigned char)(width >> 8);
+	infoHeader[6] = (unsigned char)(width >> 16);
+	infoHeader[7] = (unsigned char)(width >> 24);
+	
+	infoHeader[8] = (unsigned char)(height);
+	infoHeader[9] = (unsigned char)(height >> 8);
+	infoHeader[10] = (unsigned char)(height >> 16);
+	infoHeader[11] = (unsigned char)(height >> 24);
+	
+	infoHeader[12] = (unsigned char)(1);
+	
+	infoHeader[14] = (unsigned char)(bDepth * 8);
+	
+	infoHeader[16] = (unsigned char)(3);
+	
+	infoHeader[20] = (unsigned char)(imageSize);
+	infoHeader[21] = (unsigned char)(imageSize >> 8);
+	infoHeader[22] = (unsigned char)(imageSize >> 16);
+	infoHeader[23] = (unsigned char)(imageSize >> 32);
+	
+	infoHeader[24] = (unsigned char)(0x13);
+	infoHeader[25] = (unsigned char)(0x0B);
+
+	infoHeader[28] = (unsigned char)(0x13);
+	infoHeader[29] = (unsigned char)(0x0B);
 
 	return infoHeader;
 }
@@ -400,7 +536,7 @@ int main(int args, char** argv) {
 	AssRender* ass = new AssRender(ASS_HINTING_NONE, 1.0, "UTF-8");
 	ass->LoadAss("test.ass", "UTF-8");
 	ass->SetFPS(25);
-	for (int i = 0; i < 50; i++) {
+	for (int i = 0; i < 25; i++) {
 		//memset(buf, 0, count);
 		OfxRGBAColourB *image = (OfxRGBAColourB *)buf;
 
@@ -417,10 +553,16 @@ int main(int args, char** argv) {
 		int c = ass->GetAss((double)i, bWidth, bHeight, bDepth, buf, true);
 
 		if (c > 0) {
-			char bName[MAX_PATH] = "";
-			sprintf(bName, "ass_%06d_%02d.bmp", i + 1, c);
 			changePixelColorOrder((unsigned char *)buf, bHeight, bWidth);
-			generateBitmapImage((unsigned char *)buf, bHeight, bWidth, bName);
+
+			//char bName[MAX_PATH] = "";
+			//sprintf(bName, "ass_%06d_%02d.bmp", i + 1, c);
+			//generateBitmapImage((unsigned char *)buf, bHeight, bWidth, bName);
+
+			char pName[MAX_PATH] = "";
+			sprintf(pName, "ass_%06d_%02d.png", i + 1, c);
+			Image^ img = generateBitmapImageClr((unsigned char *)buf, bHeight, bWidth);
+			img->Save(Marshal::PtrToStringAnsi((IntPtr)(char *)pName), Imaging::ImageFormat::Png);
 		}
 	}
 	free((void*)buf);

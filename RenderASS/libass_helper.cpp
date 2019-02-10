@@ -15,7 +15,34 @@
 #include <math.h>
 #include <png.h>
 
+#include <cstring>
+#include <stdexcept>
+#include <new>
+#include <iostream>
+#include <tchar.h>
+#include <windows.h>
+
+#include <direct.h>
+#include <malloc.h>
+#include <libgnuintl.h>
+#include <iconv.h>
+
 #include "libass_helper.h"
+using namespace System;
+using namespace System::IO;
+using namespace System::Runtime::InteropServices;
+// subtitles_helper/bin/Debug/subtitles_helper.dll
+//#using "subtitles_helper.dll"
+//using namespace SubTitles;
+
+#using "System.Drawing.dll"
+
+using namespace System;
+using namespace System::Drawing;
+using namespace System::IO;
+using namespace System::Runtime::InteropServices;
+
+TCHAR cur_dll_path[MAX_PATH];// = ""; // hack
 
 void msg_callback(int level, const char *fmt, va_list args, void *) {
 	if (level >= 7) return;
@@ -29,6 +56,148 @@ void msg_callback(int level, const char *fmt, va_list args, void *) {
 	//	LOG_I("subtitle/provider/libass") << buf;
 	//else // verbose
 	//	LOG_D("subtitle/provider/libass") << buf;
+}
+
+char* w2c(const wchar_t* wsp) {
+	size_t size = wcslen(wsp) * 2 + 2;
+	char * csp = new char[size];
+	size_t c_size;
+	wcstombs_s(&c_size, csp, size, wsp, size);
+	return(csp);
+}
+
+char* w2c(const std::wstring ws) {
+	const wchar_t *wsp = ws.c_str();
+	size_t size = wcslen(wsp) * 2 + 2;
+	char * csp = new char[size];
+	size_t c_size;
+	wcstombs_s(&c_size, csp, size, wsp, size);
+	return(csp);
+}
+
+bool s2c(const std::string s, char* c) {
+	memset(c, 0, sizeof(c));
+	for (unsigned int i = 0; i < s.length(); i++) {
+		c[i] = s[i];
+	}
+	return true;
+}
+
+int utf2gbk(char *buf, size_t len)
+{
+	iconv_t cd = iconv_open("GBK", "UTF-8");
+	if (cd == (iconv_t)-1) {
+		perror("获取字符转换描述符失败！\n");
+		return -1;
+	}
+	size_t sz = BUFSIZE * BUFSIZE;
+	char *tmp_str = (char *)malloc(sz);
+	// 不要将原始的指针传进去，那样会改变原始指针的  
+	size_t inlen = len;
+	size_t outlen = sz;
+	const char *in = buf;
+	char* out = tmp_str;
+	if (tmp_str == NULL) {
+		iconv_close(cd);
+		fprintf(stderr, "分配内存失败！\n");
+		return -1;
+	}
+	memset(tmp_str, 0, sz);
+	if (iconv(cd, &in, &inlen, &out, &outlen) == (size_t)-1) {
+		iconv_close(cd);
+		return -1;
+	}
+	strcpy_s(buf, MAX_PATH, tmp_str);
+	iconv_close(cd);
+	return 0;
+}
+
+char* gbk(char *buf)
+{
+	iconv_t cd = iconv_open("GBK", "UTF-8");
+	if (cd == (iconv_t)-1) {
+		perror("获取字符转换描述符失败！\n");
+		return buf;
+	}
+	size_t sz = BUFSIZE * BUFSIZE;
+	char *tmp_str = (char *)malloc(sz);
+	// 不要将原始的指针传进去，那样会改变原始指针的  
+	//size_t inlen = len;
+	size_t inlen = strlen(buf) + 1;
+	size_t outlen = sz;
+	const char *in = buf;
+	char* out = tmp_str;
+	if (tmp_str == NULL) {
+		iconv_close(cd);
+		fprintf(stderr, "分配内存失败！\n");
+		return buf;
+	}
+	memset(tmp_str, 0, sz);
+	if (iconv(cd, &in, &inlen, &out, &outlen) == (size_t)-1) {
+		iconv_close(cd);
+		return buf;
+	}
+	//strcpy_s(buf, MAX_PATH, tmp_str);
+	iconv_close(cd);
+	return tmp_str;
+}
+
+int gbk2utf(char *buf, size_t len)
+{
+	iconv_t cd = iconv_open("UTF-8", "GBK");
+	if (cd == (iconv_t)-1) {
+		perror("获取字符转换描述符失败！\n");
+		return -1;
+	}
+	size_t sz = BUFSIZE * BUFSIZE;
+	char *tmp_str = (char *)malloc(sz);
+	// 不要将原始的指针传进去，那样会改变原始指针的  
+	size_t inlen = len;
+	size_t outlen = sz;
+	const char *in = buf;
+	char* out = tmp_str;
+	if (tmp_str == NULL) {
+		iconv_close(cd);
+		fprintf(stderr, "分配内存失败！\n");
+		return -1;
+	}
+	memset(tmp_str, 0, sz);
+	if (iconv(cd, &in, &inlen, &out, &outlen) == (size_t)-1) {
+		iconv_close(cd);
+		return -1;
+	}
+	strcpy_s(buf, MAX_PATH, tmp_str);
+	iconv_close(cd);
+	return 0;
+}
+
+char* utf(char *buf) {
+	iconv_t cd = iconv_open("UTF-8", "GBK");
+	if (cd == (iconv_t)-1) {
+		perror("获取字符转换描述符失败！\n");
+		return buf;
+	}
+	size_t sz = BUFSIZE * BUFSIZE;
+	char *tmp_str = (char *)malloc(sz);
+	// 不要将原始的指针传进去，那样会改变原始指针的  
+	//size_t inlen = len;
+	size_t inlen = strlen(buf) + 1;
+	size_t outlen = sz;
+	const char *in = buf;
+	char* out = tmp_str;
+	if (tmp_str == NULL) {
+		iconv_close(cd);
+		fprintf(stderr, "分配内存失败！\n");
+		return buf;
+	}
+	memset(tmp_str, 0, sz);
+	if (iconv(cd, &in, &inlen, &out, &outlen) == (size_t)-1) {
+		iconv_close(cd);
+		return buf;
+	}
+	//strcpy_s(buf, MAX_PATH, tmp_str);
+	iconv_close(cd);
+	return tmp_str;
 }
 
 RGBA color_d2b(RGBAColourD color)
@@ -757,7 +926,59 @@ bool AssRender::LoadAss(const char * assfile, const char *_charset)
 	if (at) ass_flush_events(at);
 	if (at) ass_free_track(at);
 	at = NULL;
+
+	/*
+	//using namespace System::Runtime::InteropServices;
+	System::String * str = S"Hello world\n";
+	char* str2 = (char*)(void*)Marshal::StringToHGlobalAnsi(str);
+	printf(str2);
+	Marshal::FreeHGlobal(str2);
+	*/
+
+	//String^ assFileName = gcnew String(ass_buf);
+	//Srt ^srt = gcnew Srt();
+	//String^ assContents = srt->Load(assFileName);
+	//
+	//char* str2 = (char*)(void*)Marshal::StringToHGlobalAnsi(assContents);
+	//if (1) {
+	//}
+	//Marshal::FreeHGlobal((IntPtr)str2);
+
 	at = ass_read_file(al, ass_buf, charset);
+	if (!at) {
+		//throw("AssRender: could not read %s", ass_file);
+		return false;
+	}
+	else {
+		//ass_process_force_style(at);
+		//resize_read_order_bitmap(at, 8192);
+		//for (int i = 0; i < 2000; i++)
+		//	GetAss((double)i, renderWidth, renderHeight);
+		frames = 0;
+		duration = GetDuration() + 2000;
+		frames = GetFrames(duration);
+
+		return true;
+	}
+}
+
+bool AssRender::LoadAss(char* ass_buf, int length, const char * _charset)
+{
+	if (!al) return false;
+
+	char ass_path[MAX_PATH];
+
+	char* ap = strrchr(ass_path, '\\');
+	if (ap) ap[0] = 0;
+
+	char charset[128]; // 128 bytes ought to be enough for anyone
+	strcpy_s(charset, _charset);
+
+	if (at) ass_flush_events(at);
+	if (at) ass_free_track(at);
+	at = NULL;
+
+	at = ass_read_memory(al, ass_buf, length, charset);
 	if (!at) {
 		//throw("AssRender: could not read %s", ass_file);
 		return false;

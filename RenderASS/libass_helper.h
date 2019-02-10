@@ -57,7 +57,17 @@ extern "C" {
 #define _A(c)  ((c)&0xFF)
 #endif
 
+#define BUFSIZE 1024
+
 extern TCHAR cur_dll_path[MAX_PATH];
+
+typedef struct OfxRGBAColourB {
+	//unsigned char r, g, b, a;
+	unsigned char b, g, r, a;
+	//unsigned char a, r, g, b;
+	//unsigned char a, b, g, r;
+	//unsigned char a, g, r, b;
+}OfxRGBAColourB;
 
 typedef struct RGBAColourD {
 	double r, g, b, a;
@@ -70,6 +80,10 @@ typedef struct RGBA {
 typedef struct ARECT {
 	int x1, y1, x2, y2;
 } ARECT;
+
+typedef struct OfxRectI {
+	int x1, y1, x2, y2;
+} OfxRectI;
 
 //
 DWORD GetModulePath(HMODULE hModule, LPTSTR pszBuffer, DWORD dwSize);
@@ -196,7 +210,7 @@ public:
 	bool __stdcall SetDefaultStyle(const char * fontname, int fontsize,
 		RGBAColourD color, RGBAColourD coloralt, RGBAColourD outlinecolor, RGBAColourD backcolor,
 		int bold, int italic, int underline, int strikeout,
-		int bordestyle, int outline, int shadow);
+		int borderstyle, int outline, int shadow);
 	bool __stdcall SetUseDefaultStyle(int used);
 
 	bool __stdcall SetSpace(int pixels);
@@ -223,6 +237,7 @@ public:
 	bool __stdcall SetOffset(double offset);
 
 	bool __stdcall LoadAss(const char* assfile, const char *_charset);
+	bool __stdcall LoadAss(char* ass_buf, int length, const char *_charset);
 
 	int __stdcall GetAss(double n, int width, int height, int depth, const void* image, bool blend);
 	ASS_Image* __stdcall GetAss(double n, int width, int height);

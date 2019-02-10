@@ -5,7 +5,7 @@
 #include <time.h>
 #include <string>
 
-TCHAR cur_dll_path[MAX_PATH]; // hack
+TCHAR current_dll_path[MAX_PATH]; // hack
 
 // the point of this win32 api exercise is to get the path of the dll,
 // so we can try to load a fontconfig configuration file from a path
@@ -25,7 +25,7 @@ DWORD GetModulePath(HMODULE hModule, LPTSTR pszBuffer, DWORD dwSize)
 
 BOOL APIENTRY DllMain(HMODULE hModule, DWORD  ul_reason_for_call, LPVOID lpReserved)
 {
-	GetModulePath(hModule, cur_dll_path, MAX_PATH);
+	GetModulePath(hModule, current_dll_path, MAX_PATH);
 	switch (ul_reason_for_call)
 	{
 		case DLL_PROCESS_ATTACH:

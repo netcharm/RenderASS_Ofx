@@ -59,15 +59,15 @@ extern "C" {
 
 #define BUFSIZE 1024
 
+#ifndef cur_dll_path
 extern TCHAR cur_dll_path[MAX_PATH];
+#endif
 
-typedef struct OfxRGBAColourB {
-	//unsigned char r, g, b, a;
-	unsigned char b, g, r, a;
-	//unsigned char a, r, g, b;
-	//unsigned char a, b, g, r;
-	//unsigned char a, g, r, b;
-}OfxRGBAColourB;
+//#ifndef OfxRGBAColourB
+//typedef struct OfxRGBAColourB {
+//	unsigned char b, g, r, a;
+//}OfxRGBAColourB;
+//#endif
 
 typedef struct RGBAColourD {
 	double r, g, b, a;
@@ -81,9 +81,9 @@ typedef struct ARECT {
 	int x1, y1, x2, y2;
 } ARECT;
 
-typedef struct OfxRectI {
-	int x1, y1, x2, y2;
-} OfxRectI;
+//typedef struct OfxRectI {
+//	int x1, y1, x2, y2;
+//} OfxRectI;
 
 //
 DWORD GetModulePath(HMODULE hModule, LPTSTR pszBuffer, DWORD dwSize);

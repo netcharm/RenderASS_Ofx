@@ -30,6 +30,16 @@ using namespace System::Runtime::InteropServices;
 /*PACKAGE是本程序最终的名字（运行时输入的命令）*/
 #define PACKAGE "RenderASS"
 
+#ifndef OfxRGBAColourB
+typedef struct OfxRGBAColourB {
+	unsigned char b, g, r, a;
+}OfxRGBAColourB;
+#endif
+
+typedef struct OfxRectI {
+	int x1, y1, x2, y2;
+} OfxRectI;
+
 const int bDepth = 4; /// red, green, blue
 const int fileHeaderSize = 14;
 const int infoHeaderSize = 108;

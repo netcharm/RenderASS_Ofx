@@ -11,12 +11,12 @@ using namespace System::Security::Permissions;
 // 控制。更改这些特性值可修改
 // 与程序集关联的信息。
 //
-[assembly:AssemblyTitleAttribute(L"OfxRenderNet")];
+[assembly:AssemblyTitleAttribute(L"libassnet")];
 [assembly:AssemblyDescriptionAttribute(L"")];
 [assembly:AssemblyConfigurationAttribute(L"")];
 [assembly:AssemblyCompanyAttribute(L"HP Inc.")];
-[assembly:AssemblyProductAttribute(L"OfxRenderNet")];
-[assembly:AssemblyCopyrightAttribute(L"Copyright (c) HP Inc. 2018")];
+[assembly:AssemblyProductAttribute(L"libassnet")];
+[assembly:AssemblyCopyrightAttribute(L"Copyright (c) HP Inc. 2019")];
 [assembly:AssemblyTrademarkAttribute(L"")];
 [assembly:AssemblyCultureAttribute(L"")];
 

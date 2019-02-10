@@ -42,7 +42,9 @@ using namespace System::Drawing;
 using namespace System::IO;
 using namespace System::Runtime::InteropServices;
 
+//#ifndef cur_dll_path
 TCHAR cur_dll_path[MAX_PATH];// = ""; // hack
+//#endif
 
 void msg_callback(int level, const char *fmt, va_list args, void *) {
 	if (level >= 7) return;

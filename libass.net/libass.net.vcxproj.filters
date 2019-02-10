@@ -15,33 +15,30 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="libass.net.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
     <ClInclude Include="Stdafx.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="resource.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="common_ofx.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="Grid.h">
+    <ClInclude Include="..\RenderASS\libass_helper.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="libass.net.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
     <ClCompile Include="AssemblyInfo.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="Stdafx.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="dllmain.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="Grid.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="common_ofx.cpp">
+    <ClCompile Include="..\RenderASS\libass_helper.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

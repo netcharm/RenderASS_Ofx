@@ -4,10 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace RenderOfx.Net
+namespace libass.net
 {
-    public class RenderAss
+    public class libass_clr
     {
-
     }
 }

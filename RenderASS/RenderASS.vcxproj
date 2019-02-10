@@ -30,6 +30,7 @@
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v140</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
+    <CLRSupport>true</CLRSupport>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
@@ -37,12 +38,14 @@
     <PlatformToolset>v140</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
+    <CLRSupport>true</CLRSupport>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v140</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
+    <CLRSupport>true</CLRSupport>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
@@ -50,6 +53,7 @@
     <PlatformToolset>v140</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
+    <CLRSupport>true</CLRSupport>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -102,7 +106,7 @@
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
-      <MinimalRebuild>true</MinimalRebuild>
+      <MinimalRebuild>false</MinimalRebuild>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -130,14 +134,14 @@ xcopy /D /S /Y "$(ProjectDir)locale" /B "$(OutDir)$(ProjectName).ofx.bundle\Cont
       <SDLCheck>
       </SDLCheck>
       <AdditionalIncludeDirectories>$(SolutionDir)..\libass-msvc\libass-0.14.0\libass\;$(SolutionDir)..\libass-msvc\freetype-2.6.1\include;$(SolutionDir)..\openfx-master\Include;D:\develop\lib\Image\libpng140b106\;D:\develop\lib\zlib-1.2.5-dll\include;$(SolutionDir)..\libass-msvc\libiconv-1.15-msvc\iconv;$(SolutionDir)..\libass-msvc\gettext-0.19.8.1;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
-      <ExceptionHandling>Sync</ExceptionHandling>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <ExceptionHandling>Async</ExceptionHandling>
       <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <StringPooling>true</StringPooling>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
       <FunctionLevelLinking>true</FunctionLevelLinking>
-      <MinimalRebuild>true</MinimalRebuild>
+      <MinimalRebuild>false</MinimalRebuild>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -167,6 +171,7 @@ xcopy /D /S /Y "$(ProjectDir)locale" /B "$(OutDir)$(ProjectName).ofx.bundle\Cont
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(SolutionDir)..\libass-msvc\libass-0.14.0\libass\;$(SolutionDir)..\libass-msvc\freetype-2.6.1\include;$(SolutionDir)..\openfx-master\Include;D:\develop\lib\Image\libpng140b106\;D:\develop\lib\zlib-1.2.5-dll\include;$(SolutionDir)..\libass-msvc\libiconv-1.15-msvc\iconv;$(SolutionDir)..\libass-msvc\gettext-0.19.8.1;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <StringPooling>true</StringPooling>
+      <MinimalRebuild>false</MinimalRebuild>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -197,11 +202,12 @@ xcopy /D /S /Y "$(ProjectDir)locale" /B "$(OutDir)$(ProjectName).ofx.bundle\Cont
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(SolutionDir)..\libass-msvc\libass-0.14.0\libass\;$(SolutionDir)..\libass-msvc\freetype-2.6.1\include;$(SolutionDir)..\openfx-master\Include;D:\develop\lib\Image\libpng140b106\;D:\develop\lib\zlib-1.2.5-dll\include;$(SolutionDir)..\libass-msvc\libiconv-1.15-msvc\iconv;$(SolutionDir)..\libass-msvc\gettext-0.19.8.1;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
-      <ExceptionHandling>Sync</ExceptionHandling>
+      <ExceptionHandling>Async</ExceptionHandling>
       <DisableSpecificWarnings>
       </DisableSpecificWarnings>
       <StringPooling>true</StringPooling>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
+      <MinimalRebuild>false</MinimalRebuild>
     </ClCompile>
     <Link>
       <SubSystem>

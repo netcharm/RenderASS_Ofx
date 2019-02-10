@@ -5,13 +5,13 @@ using System.Runtime.InteropServices;
 // 有关程序集的一般信息由以下
 // 控制。更改这些特性值可修改
 // 与程序集关联的信息。
-[assembly: AssemblyTitle("RenderOfx.Net")]
-[assembly: AssemblyDescription("OpenFX Render Filter")]
+[assembly: AssemblyTitle("libass.net")]
+[assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("NetCharm Studio")]
-[assembly: AssemblyProduct("RenderOfx.Net")]
-[assembly: AssemblyCopyright("Copyright © NetCharm 2018")]
-[assembly: AssemblyTrademark("NetCharm Studio")]
+[assembly: AssemblyCompany("HP Inc.")]
+[assembly: AssemblyProduct("libass.net")]
+[assembly: AssemblyCopyright("Copyright © HP Inc. 2019")]
+[assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
 //将 ComVisible 设置为 false 将使此程序集中的类型
@@ -20,7 +20,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // 如果此项目向 COM 公开，则下列 GUID 用于类型库的 ID
-[assembly: Guid("12146c88-40ce-4a26-9332-1e1f5ddd7888")]
+[assembly: Guid("ed477d62-2929-4c3a-843f-756a2102ffc3")]
 
 // 程序集的版本信息由下列四个值组成: 
 //

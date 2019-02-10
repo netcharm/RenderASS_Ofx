@@ -6,6 +6,7 @@ using namespace System;
 using namespace System::Drawing;
 using namespace System::IO;
 using namespace System::Runtime::InteropServices;
+using namespace System::Windows::Media::Imaging;
 
 #include "libass_helper.h"
 
@@ -26,6 +27,9 @@ namespace libass {
 		int renderDepth = 4;
 		double renderFPS = 25;
 		// TODO:  在此处添加此类的方法。
+		BitmapImage^ BitmapToBitmapImage(Bitmap^ bitmap);
+		WriteableBitmap^ BitmapToWriteableBitmap(Bitmap^ bitmap);
+		BitmapSource^ BitmapToBitmapsource(Bitmap^ bitmap);
 	public:
 		Render(void);
 		Render(ASSHinting hints, double scale, String^ encoding);
@@ -80,8 +84,16 @@ namespace libass {
 		bool LoadAss(String^ contents);
 		bool LoadAss(Stream^ stream);
 
-		Image^ GetAss(double frame);
-		Image^ GetAss(TimeSpan^ time);
-		Image^ GetAss(double frame, int width, int height);
+		Image^ GetAssImage(double frame);
+		Image^ GetAssImage(TimeSpan^ time);
+		Image^ GetAssImage(double frame, int width, int height);
+
+		BitmapImage^ GetAssBitmapImage(double frame);
+		BitmapImage^ GetAssBitmapImage(TimeSpan^ time);
+		BitmapImage^ GetAssBitmapImage(double frame, int width, int height);
+
+		WriteableBitmap^ GetAssWriteableBitmap(double frame);
+		WriteableBitmap^ GetAssWriteableBitmap(TimeSpan^ time);
+		WriteableBitmap^ GetAssWriteableBitmap(double frame, int width, int height);
 	};
 }

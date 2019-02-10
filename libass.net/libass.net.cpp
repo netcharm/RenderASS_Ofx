@@ -172,10 +172,57 @@ Image^ generateBitmapImageClr(unsigned char *image, int width, int height) {
 		}
 	}
 	ms->Seek(0, SeekOrigin::Begin);
-	return gcnew Bitmap(ms);;
+	//Bitmap^ bmp = gcnew Bitmap(ms);
+	//Image^ result = bmp->Clone(RectangleF(0, 0, bmp->Width, bmp->Height), bmp->PixelFormat);
+	//ms->Close();
+	//return result;
+	return gcnew Bitmap(ms);
 }
 
 AssRender* ass;
+
+BitmapImage ^ libass::Render::BitmapToBitmapImage(Bitmap ^ bitmap)
+{
+	// TODO: 在此处插入 return 语句
+	BitmapImage^ wb;
+	if (bitmap) {
+		MemoryStream^ ms = gcnew MemoryStream();
+		bitmap->Save(ms, Imaging::ImageFormat::Png);
+		wb = gcnew BitmapImage();
+		wb->BeginInit();
+		wb->StreamSource = ms;
+		wb->CacheOption = BitmapCacheOption::OnLoad;
+		wb->EndInit();
+		wb->Freeze();
+		ms->Close();
+	}
+	return wb;
+}
+
+WriteableBitmap ^ libass::Render::BitmapToWriteableBitmap(Bitmap ^ bitmap)
+{
+	// TODO: 在此处插入 return 语句
+	WriteableBitmap^ wb;
+	if (bitmap) {
+		MemoryStream^ ms = gcnew MemoryStream();
+		bitmap->Save(ms, Imaging::ImageFormat::Png);
+		wb = gcnew WriteableBitmap(BitmapToBitmapImage(bitmap));
+	}
+	return wb;
+}
+
+BitmapSource ^ libass::Render::BitmapToBitmapsource(Bitmap^ bitmap)
+{
+	BitmapSource^ bitmapSource;
+	if (bitmap) {
+		IntPtr ip = bitmap->GetHbitmap();
+		BitmapSource^ bitmapSource = System::Windows::Interop::Imaging::CreateBitmapSourceFromHBitmap(
+			ip, IntPtr::Zero, System::Windows::Int32Rect::Empty,
+			System::Windows::Media::Imaging::BitmapSizeOptions::FromEmptyOptions());
+		DeleteObject((HGDIOBJ)ip);
+	}
+	return bitmapSource;
+}
 
 libass::Render::Render(void)
 {
@@ -472,23 +519,23 @@ bool libass::Render::LoadAss(Stream ^ stream)
 	return result;
 }
 
-Image ^ libass::Render::GetAss(double frame)
+Image ^ libass::Render::GetAssImage(double frame)
 {
 	// TODO: 在此处插入 return 语句
-	return GetAss(frame, renderWidth, renderHeight);
+	return GetAssImage(frame, renderWidth, renderHeight);
 }
 
 ///
 /// timestamp is timestamp value
 ///
-Image ^ libass::Render::GetAss(TimeSpan^ time)
+Image ^ libass::Render::GetAssImage(TimeSpan^ time)
 {
 	// TODO: 在此处插入 return 语句
 	double frame = time->TotalSeconds*renderFPS;
-	return GetAss(frame, renderWidth, renderHeight);
+	return GetAssImage(frame, renderWidth, renderHeight);
 }
 
-Image ^ libass::Render::GetAss(double frame, int width, int height)
+Image ^ libass::Render::GetAssImage(double frame, int width, int height)
 {
 	Image^ img;
 
@@ -526,4 +573,40 @@ Image ^ libass::Render::GetAss(double frame, int width, int height)
 
 	// TODO: 在此处插入 return 语句
 	return img;
+}
+
+BitmapImage ^ libass::Render::GetAssBitmapImage(double frame)
+{
+	// TODO: 在此处插入 return 语句
+	return BitmapToBitmapImage((Bitmap^)GetAssImage(frame));
+}
+
+BitmapImage ^ libass::Render::GetAssBitmapImage(TimeSpan ^ time)
+{
+	// TODO: 在此处插入 return 语句
+	return BitmapToBitmapImage((Bitmap^)GetAssImage(time));
+}
+
+BitmapImage ^ libass::Render::GetAssBitmapImage(double frame, int width, int height)
+{
+	// TODO: 在此处插入 return 语句
+	return BitmapToBitmapImage((Bitmap^)GetAssImage(frame, width, height));
+}
+
+WriteableBitmap ^ libass::Render::GetAssWriteableBitmap(double frame)
+{
+	// TODO: 在此处插入 return 语句
+	return BitmapToWriteableBitmap((Bitmap^)GetAssImage(frame));
+}
+
+WriteableBitmap ^ libass::Render::GetAssWriteableBitmap(TimeSpan ^ time)
+{
+	// TODO: 在此处插入 return 语句
+	return BitmapToWriteableBitmap((Bitmap^)GetAssImage(time));
+}
+
+WriteableBitmap ^ libass::Render::GetAssWriteableBitmap(double frame, int width, int height)
+{
+	// TODO: 在此处插入 return 语句
+	return BitmapToWriteableBitmap((Bitmap^)GetAssImage(frame, width, height));
 }

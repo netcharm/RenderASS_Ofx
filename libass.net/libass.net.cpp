@@ -404,6 +404,7 @@ bool libass::Render::ReScale(double scale)
 
 bool libass::Render::SetFPS(double fps)
 {
+	renderFPS = fps;
 	return ass->SetFPS(fps);
 }
 
@@ -471,13 +472,23 @@ bool libass::Render::LoadAss(Stream ^ stream)
 	return result;
 }
 
-Image ^ libass::Render::GetAss(int n)
+Image ^ libass::Render::GetAss(double frame)
 {
 	// TODO: 在此处插入 return 语句
-	return GetAss((double)n, renderWidth, renderHeight);
+	return GetAss(frame, renderWidth, renderHeight);
 }
 
-Image ^ libass::Render::GetAss(double n, int width, int height)
+///
+/// timestamp is timestamp value
+///
+Image ^ libass::Render::GetAss(TimeSpan^ time)
+{
+	// TODO: 在此处插入 return 语句
+	double frame = time->TotalSeconds*renderFPS;
+	return GetAss(frame, renderWidth, renderHeight);
+}
+
+Image ^ libass::Render::GetAss(double frame, int width, int height)
 {
 	Image^ img;
 
@@ -501,7 +512,7 @@ Image ^ libass::Render::GetAss(double n, int width, int height)
 		}
 	}
 
-	int c = ass->GetAss(n, renderWidth, renderHeight, renderDepth, buf, true);
+	int c = ass->GetAss(frame, renderWidth, renderHeight, renderDepth, buf, true);
 	if (c > 0) {
 		changePixelColorOrder((unsigned char *)buf, renderWidth, renderHeight);
 		img = generateBitmapImageClr((unsigned char *)buf, renderWidth, renderHeight);

@@ -24,6 +24,7 @@ namespace libass {
 		int renderWidth;
 		int renderHeight;
 		int renderDepth = 4;
+		double renderFPS = 25;
 		// TODO:  在此处添加此类的方法。
 	public:
 		Render(void);
@@ -79,7 +80,8 @@ namespace libass {
 		bool LoadAss(String^ contents);
 		bool LoadAss(Stream^ stream);
 
-		Image^ GetAss(int n);
-		Image^ GetAss(double n, int width, int height);
+		Image^ GetAss(double frame);
+		Image^ GetAss(TimeSpan^ time);
+		Image^ GetAss(double frame, int width, int height);
 	};
 }

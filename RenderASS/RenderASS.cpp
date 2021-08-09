@@ -31,6 +31,7 @@ The main features are
 struct RenderAssInstanceData {
 	ContextEnum context;
 	AssRender * ass;
+	bool pre_blend = false;
 
 	int use_margin = 0;
 	int use_defaultstyle = 0;
@@ -79,6 +80,9 @@ struct RenderAssInstanceData {
 	//OfxParamHandle assDefaultMarginL;
 	//OfxParamHandle assDefaultMarginR;
 	//OfxParamHandle assDefaultMarginV;
+
+	OfxParamHandle assGlobalBlend;
+	OfxParamHandle assGlobalBackColor;
 };
 
 static const char* PluginAuthor = "NetCharm";
@@ -97,7 +101,7 @@ static const char* PluginIdentifier = "cn.netcharm.Ofx.RenderASS";
 static const int Version_Majon = 1;
 static const int Version_Minor = 0;
 static const int Version_Revision = 3;
-static const int Version_BuildNo = 39;
+static const int Version_BuildNo = 40;
 
 //static const int PluginVersion[4] = { Version_Majon, Version_Minor, Version_Revision, Version_BuildNo };
 
@@ -174,6 +178,8 @@ private:
 		gParamHost->paramGetHandle(paramSet, "assDefaultOutline", &myData->assDefaultOutline, 0);
 		gParamHost->paramGetHandle(paramSet, "assDefaultShadow", &myData->assDefaultShadow, 0);
 
+		gParamHost->paramGetHandle(paramSet, "assGlobalBlend", &myData->assGlobalBlend, 0);
+		gParamHost->paramGetHandle(paramSet, "assGlobalBackColor", &myData->assGlobalBackColor, 0);
 
 		myData->ass = new AssRender();
 
@@ -249,7 +255,6 @@ private:
 			}
 		}
 
-
 		gParamHost->paramGetHandle(paramSet, "assUseDefaultStyle", &param, 0);
 		int defaultstyle_enabled = 0;
 		gParamHost->paramGetValue(param, &defaultstyle_enabled);
@@ -324,6 +329,14 @@ private:
 		gParamHost->paramGetValue(param, &fshadow);
 		if (myData->ass) myData->ass->SetDefaultShadow(fshadow);
 
+		// Global setting
+		gParamHost->paramGetHandle(paramSet, "assGlobalBlend", &param, 0);
+		gParamHost->paramGetValue(param, &myData->pre_blend);
+
+		gParamHost->paramGetHandle(paramSet, "assGlobalBackColor", &param, 0);
+		RGBAColourD gbc = { 0, 0, 0, 1 };
+		gParamHost->paramGetValue(param, &gbc.r, &gbc.g, &gbc.b, &gbc.a);
+		if (myData->ass) myData->ass->SetGlobalBackColor(gbc);
 
 		//if (myData && myData->ass)
 		//  myData->ass->SetDefaultStyle(str_fontname, fontsize, fc, fca, fo, fb, fbold, fitalic, funderline, fstrikeout, fborderstyle, foutline, fshadow);
@@ -389,7 +402,7 @@ private:
 				int offset = (int)myData->Offset;
 				gParamHost->paramGetValue(myData->assOffset, &offset);
 				if (offset < 1) offset = 0;
-				if (myData) myData->Offset = (double)offset;				
+				if (myData) myData->Offset = (double)offset;
 				if (myData->ass) myData->ass->SetOffset(offset);
 			}
 			else if (strcmp(propName, "assUseDefaultStyle") == 0) {
@@ -544,6 +557,14 @@ private:
 						break;
 					}
 				}
+			}
+			else if (strcmp(propName, "assGlobalBlend") == 0) {
+				gParamHost->paramGetValue(myData->assGlobalBlend, &myData->pre_blend);
+			}
+			else if (strcmp(propName, "assGlobalBackColor") == 0) {
+				RGBAColourD fc = { 0, 0, 0, 1 };
+				gParamHost->paramGetValue(myData->assGlobalBackColor, &fc.r, &fc.g, &fc.b, &fc.a);
+				if (myData->ass) myData->ass->SetGlobalBackColor(fc);
 			}
 		}
 		return kOfxStatReplyDefault;
@@ -1103,6 +1124,23 @@ public:
 			gPropHost->propSetString(paramProps, kOfxParamPropChoiceOption, 0, utf(_("Outline + Drop Shadow")));
 			gPropHost->propSetString(paramProps, kOfxParamPropChoiceOption, 1, utf(_("Opaque Box")));
 			gPropHost->propSetInt(paramProps, kOfxParamPropDefault, 0, 0);
+
+			// make an rgba global background colour parameter
+			gParamHost->paramDefine(paramSet, kOfxParamTypeBoolean, "assGlobalBlend", &paramProps);
+			gPropHost->propSetString(paramProps, kOfxParamPropScriptName, 0, "assGlobalBlend");
+			gPropHost->propSetString(paramProps, kOfxPropLabel, 0, utf(_("Pre-Blend")));
+			gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, utf(_("Blend Color")));
+			gPropHost->propSetInt(paramProps, kOfxParamPropDefault, 0, 0);
+
+			gParamHost->paramDefine(paramSet, kOfxParamTypeRGBA, "assGlobalBackColor", &paramProps);
+			//gPropHost->propSetString(paramProps, kOfxParamPropParent, 0, "assGlobalBlend");
+			gPropHost->propSetString(paramProps, kOfxParamPropScriptName, 0, "assGlobalBackColor");
+			gPropHost->propSetString(paramProps, kOfxPropLabel, 0, utf(_("Global Background Color")));
+			gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, utf(_("Global Background Color")));
+			gPropHost->propSetDouble(paramProps, kOfxParamPropDefault, 0, 0.50);
+			gPropHost->propSetDouble(paramProps, kOfxParamPropDefault, 1, 0.50);
+			gPropHost->propSetDouble(paramProps, kOfxParamPropDefault, 2, 0.50);
+			gPropHost->propSetDouble(paramProps, kOfxParamPropDefault, 3, 1.00);
 		}
 		return kOfxStatOK;
 	}
@@ -1307,7 +1345,6 @@ public:
 				if (!sourceImg) throw NoImageEx();
 
 				errno_t err = copy_source(instance, renderWindow, srcPtr, srcRect, srcRowBytes, dstPtr, dstRect, dstRowBytes);
-
 				blend = true;
 			} else {
 				errno_t err = copy_source(instance, renderWindow, NULL, dstRect, 0, dstPtr, dstRect, dstRowBytes);
@@ -1315,7 +1352,7 @@ public:
 			}
 
 			if (myData->ass)
-				myData->ass->GetAss((double)time_p, renderWindow.x2 - renderWindow.x1, renderWindow.y2 - renderWindow.y1, colorDepth, dstPtr, blend);
+				myData->ass->GetAss((double)time_p, renderWindow.x2 - renderWindow.x1, renderWindow.y2 - renderWindow.y1, colorDepth, dstPtr, blend && myData->pre_blend);
 		}
 		catch (NoImageEx &) {
 			// if we were interrupted, the failed fetch is fine, just return kOfxStatOK

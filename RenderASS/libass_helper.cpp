@@ -432,6 +432,17 @@ bool AssRender::InitLibass(ASS_Hinting hints, double scale, int width, int heigh
 	return true;
 }
 
+bool AssRender::SetGlobalBackColor(RGBA color)
+{
+	global_backcolor = color;
+	return true;
+}
+
+bool AssRender::SetGlobalBackColor(RGBAColourD color)
+{
+	return SetGlobalBackColor(color_d2b(color));
+}
+
 bool AssRender::SetDefaultFont(const char * fontname, int fontsize)
 {
 	if (!ar) return false;

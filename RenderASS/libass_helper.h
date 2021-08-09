@@ -137,6 +137,8 @@ private:
 	int renderHeight = 0;
 	int renderDepth = 0;
 
+	RGBA global_backcolor = { 0,0,0,255 };
+
 	ASS_Hinting fonthinting = ASS_HINTING_NONE;
 	double fontscale = 1.0;
 
@@ -186,6 +188,10 @@ public:
 	~AssRender();
 
 	double last_time = 0;
+
+	
+	bool __stdcall SetGlobalBackColor(RGBA color);
+	bool __stdcall SetGlobalBackColor(RGBAColourD color);
 
 	bool __stdcall SetDefaultFont(const char * fontname, int fontsize);
 	bool __stdcall SetDefaultFontName(const char * fontname);

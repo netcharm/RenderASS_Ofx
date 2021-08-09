@@ -57,7 +57,7 @@ const char* PluginAuthor = "NetCharm";
 #ifdef _DEBUG
 const char* PluginLabel = "TawawaBlue Debug";
 #else
-const char* PluginLabel = "TawawaBlue ASS";
+const char* PluginLabel = "TawawaBlue";
 #endif
 const char* PluginDescription = "Tawawa Blue Tone";
 #ifdef _DEBUG

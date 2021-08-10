@@ -71,7 +71,9 @@ class NoImageEx {};
 enum ContextEnum {
 	eIsGenerator,
 	eIsFilter,
+	eIsTransition,
 	eIsPaint,
+	eIsRetimer,
 	eIsGeneral
 };
 

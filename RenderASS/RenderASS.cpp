@@ -62,9 +62,13 @@ struct RenderAssInstanceData {
 	OfxParamHandle assDefaultFontName;
 	OfxParamHandle assDefaultFontSize;
 	OfxParamHandle assDefaultFontColor;
+	OfxParamHandle assDefaultFontColorAlpha;
 	OfxParamHandle assDefaultFontColorAlt;
+	OfxParamHandle assDefaultFontColorAltAlpha;
 	OfxParamHandle assDefaultOutlineColor;
+	OfxParamHandle assDefaultOutlineColorAlpha;
 	OfxParamHandle assDefaultBackColor;
+	OfxParamHandle assDefaultBackColorAlpha;
 	OfxParamHandle assDefaultBold;
 	OfxParamHandle assDefaultItalic;
 	OfxParamHandle assDefaultUnderline;
@@ -83,6 +87,7 @@ struct RenderAssInstanceData {
 
 	OfxParamHandle assGlobalBlend;
 	OfxParamHandle assGlobalBackColor;
+	OfxParamHandle assGlobalBackColorAlpha;
 };
 
 static const char* PluginAuthor = "NetCharm";
@@ -167,9 +172,13 @@ private:
 		gParamHost->paramGetHandle(paramSet, "assDefaultFontName", &myData->assDefaultFontName, 0);
 		gParamHost->paramGetHandle(paramSet, "assDefaultFontSize", &myData->assDefaultFontSize, 0);
 		gParamHost->paramGetHandle(paramSet, "assDefaultFontColor", &myData->assDefaultFontColor, 0);
+		gParamHost->paramGetHandle(paramSet, "assDefaultFontColorAlpha", &myData->assDefaultFontColorAlpha, 0);
 		gParamHost->paramGetHandle(paramSet, "assDefaultFontColorAlt", &myData->assDefaultFontColorAlt, 0);
+		gParamHost->paramGetHandle(paramSet, "assDefaultFontColorAltAlpha", &myData->assDefaultFontColorAltAlpha, 0);
 		gParamHost->paramGetHandle(paramSet, "assDefaultOutlineColor", &myData->assDefaultOutlineColor, 0);
+		gParamHost->paramGetHandle(paramSet, "assDefaultOutlineColorAlpha", &myData->assDefaultOutlineColorAlpha, 0);
 		gParamHost->paramGetHandle(paramSet, "assDefaultBackColor", &myData->assDefaultBackColor, 0);
+		gParamHost->paramGetHandle(paramSet, "assDefaultBackColorAlpha", &myData->assDefaultBackColorAlpha, 0);
 		gParamHost->paramGetHandle(paramSet, "assDefaultBold", &myData->assDefaultBold, 0);
 		gParamHost->paramGetHandle(paramSet, "assDefaultItalic", &myData->assDefaultItalic, 0);
 		gParamHost->paramGetHandle(paramSet, "assDefaultUnderline", &myData->assDefaultUnderline, 0);
@@ -180,6 +189,7 @@ private:
 
 		gParamHost->paramGetHandle(paramSet, "assGlobalBlend", &myData->assGlobalBlend, 0);
 		gParamHost->paramGetHandle(paramSet, "assGlobalBackColor", &myData->assGlobalBackColor, 0);
+		gParamHost->paramGetHandle(paramSet, "assGlobalBackColorAlpha", &myData->assGlobalBackColorAlpha, 0);
 
 		myData->ass = new AssRender();
 
@@ -198,44 +208,44 @@ private:
 		if (myData->ass) myData->ass->SetOffset(offset);
 
 
-		gParamHost->paramGetHandle(paramSet, "assUseMargin", &param, 0);
 		int margin_enabled = 0;
+		gParamHost->paramGetHandle(paramSet, "assUseMargin", &param, 0);
 		gParamHost->paramGetValue(param, &margin_enabled);
 		myData->use_margin = margin_enabled;
 		if (myData->ass) myData->ass->SetMargin(margin_enabled);
 
-		gParamHost->paramGetHandle(paramSet, "assMarginT", &param, 0);
 		double margin_t = 0.0;
+		double margin_b = 0.0;
+		double margin_l = 0.0;
+		double margin_r = 0.0;
+		gParamHost->paramGetHandle(paramSet, "assMarginT", &param, 0);
 		gParamHost->paramGetValue(param, &margin_t);
 		gParamHost->paramGetHandle(paramSet, "assMarginB", &param, 0);
-		double margin_b = 0.0;
 		gParamHost->paramGetValue(param, &margin_b);
 		gParamHost->paramGetHandle(paramSet, "assMarginL", &param, 0);
-		double margin_l = 0.0;
 		gParamHost->paramGetValue(param, &margin_l);
 		gParamHost->paramGetHandle(paramSet, "assMarginR", &param, 0);
-		double margin_r = 0.0;
 		gParamHost->paramGetValue(param, &margin_r);
 		if (myData->ass) myData->ass->SetMargin(margin_t, margin_b, margin_l, margin_r);
 
-		gParamHost->paramGetHandle(paramSet, "assSpace", &param, 0);
 		double spacing = 0.0;
+		gParamHost->paramGetHandle(paramSet, "assSpace", &param, 0);
 		gParamHost->paramGetValue(param, &spacing);
 		if (myData->ass) myData->ass->SetSpace(spacing);
 
-		gParamHost->paramGetHandle(paramSet, "assPosition", &param, 0);
 		double position = 0.0;
+		gParamHost->paramGetHandle(paramSet, "assPosition", &param, 0);
 		gParamHost->paramGetValue(param, &position);
 		if (myData->ass) myData->ass->SetSpace(position);
 
 
-		gParamHost->paramGetHandle(paramSet, "assFontScale", &param, 0);
 		double scale = 1.0;
+		gParamHost->paramGetHandle(paramSet, "assFontScale", &param, 0);
 		gParamHost->paramGetValue(param, &scale);
 		if (myData->ass) myData->ass->SetSpace(scale);
 
-		gParamHost->paramGetHandle(paramSet, "assFontHints", &param, 0);
 		int hints = 0;
+		gParamHost->paramGetHandle(paramSet, "assFontHints", &param, 0);
 		gParamHost->paramGetValue(param, &position);
 		if (myData->ass) {
 			switch (hints)
@@ -255,77 +265,85 @@ private:
 			}
 		}
 
-		gParamHost->paramGetHandle(paramSet, "assUseDefaultStyle", &param, 0);
 		int defaultstyle_enabled = 0;
+		gParamHost->paramGetHandle(paramSet, "assUseDefaultStyle", &param, 0);
 		gParamHost->paramGetValue(param, &defaultstyle_enabled);
 		if (myData->ass) myData->ass->SetUseDefaultStyle(defaultstyle_enabled);
 		myData->use_defaultstyle = defaultstyle_enabled;
 
-		gParamHost->paramGetHandle(paramSet, "assDefaultFontName", &param, 0);
 		char* str_fontname;
+		gParamHost->paramGetHandle(paramSet, "assDefaultFontName", &param, 0);
 		gParamHost->paramGetValue(param, &str_fontname);
 		if (myData->ass) myData->ass->SetDefaultFontName(str_fontname);
 
-		gParamHost->paramGetHandle(paramSet, "assDefaultFontSize", &param, 0);
 		int fontsize = 24;
+		gParamHost->paramGetHandle(paramSet, "assDefaultFontSize", &param, 0);
 		gParamHost->paramGetValue(param, &fontsize);
 		if (myData->ass) myData->ass->SetDefaultFontSize(fontsize);
 		//if (myData->ass && fontsize < 256) {
 		//	myData->ass->SetDefaultFont(str_fontname, fontsize);
 		//}
 
-		gParamHost->paramGetHandle(paramSet, "assDefaultFontColor", &param, 0);
 		RGBAColourD fc = { 0, 0, 0, 1 };
+		gParamHost->paramGetHandle(paramSet, "assDefaultFontColor", &param, 0);
 		gParamHost->paramGetValue(param, &fc.r, &fc.g, &fc.b, &fc.a);
+		gParamHost->paramGetHandle(paramSet, "assDefaultFontColorAlpha", &param, 0);
+		gParamHost->paramGetValue(param, &fc.a);
 		if (myData->ass) myData->ass->SetDefaultFontColor(fc);
 
-		gParamHost->paramGetHandle(paramSet, "assDefaultFontColorAlt", &param, 0);
 		RGBAColourD fca = { 1, 1, 1, 1 };
+		gParamHost->paramGetHandle(paramSet, "assDefaultFontColorAlt", &param, 0);
 		gParamHost->paramGetValue(param, &fca.r, &fca.g, &fca.b, &fca.a);
+		gParamHost->paramGetHandle(paramSet, "assDefaultFontColorAltAlpha", &param, 0);
+		gParamHost->paramGetValue(param, &fca.a);
 		if (myData->ass) myData->ass->SetDefaultFontColorAlt(fca);
 
-		gParamHost->paramGetHandle(paramSet, "assDefaultOutlineColor", &param, 0);
 		RGBAColourD fo = { 0, 0, 0, 1 };
+		gParamHost->paramGetHandle(paramSet, "assDefaultOutlineColor", &param, 0);
 		gParamHost->paramGetValue(param, &fo.r, &fo.g, &fo.b, &fo.a);
+		gParamHost->paramGetHandle(paramSet, "assDefaultOutlineColorAlpha", &param, 0);
+		gParamHost->paramGetValue(param, &fo.a);
 		if (myData->ass) myData->ass->SetDefaultOutlineColor(fo);
 
-		gParamHost->paramGetHandle(paramSet, "assDefaultBackColor", &param, 0);
 		RGBAColourD fb = { 0, 0, 0, 1 };
+		gParamHost->paramGetHandle(paramSet, "assDefaultBackColor", &param, 0);
 		gParamHost->paramGetValue(param, &fb.r, &fb.g, &fb.b, &fb.a);
+		gParamHost->paramGetHandle(paramSet, "assDefaultBackColorAlpha", &param, 0);
+		gParamHost->paramGetValue(param, &fb.a);
 		if (myData->ass) myData->ass->SetDefaultBackColor(fb);
 
-		gParamHost->paramGetHandle(paramSet, "assDefaultBold", &param, 0);
 		int fbold = 0;
+		gParamHost->paramGetHandle(paramSet, "assDefaultBold", &param, 0);
 		gParamHost->paramGetValue(param, &fbold);
 		if (myData->ass) myData->ass->SetDefaultBold(fbold);
 
-		gParamHost->paramGetHandle(paramSet, "assDefaultItalic", &param, 0);
 		int fitalic = 0;
+		gParamHost->paramGetHandle(paramSet, "assDefaultItalic", &param, 0);
 		gParamHost->paramGetValue(param, &fitalic);
 		if (myData->ass) myData->ass->SetDefaultItalic(fitalic);
 
-		gParamHost->paramGetHandle(paramSet, "assDefaultUnderline", &param, 0);
 		int funderline = 0;
+		gParamHost->paramGetHandle(paramSet, "assDefaultUnderline", &param, 0);
 		gParamHost->paramGetValue(param, &funderline);
 		if (myData->ass) myData->ass->SetDefaultUnderline(funderline);
 
-		gParamHost->paramGetHandle(paramSet, "assDefaultStrikeOut", &param, 0);
 		int fstrikeout = 0;
+		gParamHost->paramGetHandle(paramSet, "assDefaultStrikeOut", &param, 0);
 		gParamHost->paramGetValue(param, &fstrikeout);
 		if (myData->ass) myData->ass->SetDefaultStrikeOut(fstrikeout);
 
-		gParamHost->paramGetHandle(paramSet, "assDefaultBorderStyle", &param, 0);
 		int fborderstyle = 1;
+		gParamHost->paramGetHandle(paramSet, "assDefaultBorderStyle", &param, 0);
 		gParamHost->paramGetValue(param, &fborderstyle);
 		if (myData->ass) myData->ass->SetDefaultBorderStyle(fborderstyle);
 
-		gParamHost->paramGetHandle(paramSet, "assDefaultOutline", &param, 0);
 		int foutline = 2;
+		gParamHost->paramGetHandle(paramSet, "assDefaultOutline", &param, 0);
 		gParamHost->paramGetValue(param, &foutline);
 		if (myData->ass) myData->ass->SetDefaultOutline(foutline);
 
-		gParamHost->paramGetHandle(paramSet, "assDefaultShadow", &param, 0);
 		int fshadow = 2;
+		gParamHost->paramGetHandle(paramSet, "assDefaultShadow", &param, 0);
 		gParamHost->paramGetValue(param, &fshadow);
 		if (myData->ass) myData->ass->SetDefaultShadow(fshadow);
 
@@ -333,9 +351,11 @@ private:
 		gParamHost->paramGetHandle(paramSet, "assGlobalBlend", &param, 0);
 		gParamHost->paramGetValue(param, &myData->pre_blend);
 
-		gParamHost->paramGetHandle(paramSet, "assGlobalBackColor", &param, 0);
 		RGBAColourD gbc = { 0, 0, 0, 1 };
+		gParamHost->paramGetHandle(paramSet, "assGlobalBackColor", &param, 0);
 		gParamHost->paramGetValue(param, &gbc.r, &gbc.g, &gbc.b, &gbc.a);
+		gParamHost->paramGetHandle(paramSet, "assGlobalBackColorAlpha", &param, 0);
+		gParamHost->paramGetValue(param, &gbc.a);
 		if (myData->ass) myData->ass->SetGlobalBackColor(gbc);
 
 		//if (myData && myData->ass)
@@ -371,9 +391,7 @@ private:
 		return myData;
 	}
 
-	static OfxStatus setMyInstanceParam(OfxImageEffectHandle effect,
-		                                OfxPropertySetHandle inArgs,
-		                                OfxPropertySetHandle outArgs)
+	static OfxStatus setMyInstanceParam(OfxImageEffectHandle effect, OfxPropertySetHandle inArgs, OfxPropertySetHandle outArgs)
 	{
 		//RenderAssInstanceData *myData = new RenderAssInstanceData;
 		RenderAssInstanceData *myData = getMyInstanceData(effect);
@@ -433,21 +451,49 @@ private:
 			else if (strcmp(propName, "assDefaultFontColor") == 0) {
 				RGBAColourD fc = { 0, 0, 0, 1 };
 				gParamHost->paramGetValue(myData->assDefaultFontColor, &fc.r, &fc.g, &fc.b, &fc.a);
+				gParamHost->paramGetValue(myData->assDefaultFontColorAlpha, &fc.a);
+				if (myData->ass) myData->ass->SetDefaultFontColor(fc);
+			}
+			else if (strcmp(propName, "assDefaultFontColorAlpha") == 0) {
+				RGBAColourD fc = { 0, 0, 0, 1 };
+				gParamHost->paramGetValue(myData->assDefaultFontColor, &fc.r, &fc.g, &fc.b, &fc.a);
+				gParamHost->paramGetValue(myData->assDefaultFontColorAlpha, &fc.a);
 				if (myData->ass) myData->ass->SetDefaultFontColor(fc);
 			}
 			else if (strcmp(propName, "assDefaultFontColorAlt") == 0) {
 				RGBAColourD fca = { 0, 0, 0, 1 };
 				gParamHost->paramGetValue(myData->assDefaultFontColorAlt, &fca.r, &fca.g, &fca.b, &fca.a);
+				gParamHost->paramGetValue(myData->assDefaultFontColorAltAlpha, &fca.a);
+				if (myData->ass) myData->ass->SetDefaultFontColorAlt(fca);
+			}
+			else if (strcmp(propName, "assDefaultFontColorAltAlpha") == 0) {
+				RGBAColourD fca = { 0, 0, 0, 1 };
+				gParamHost->paramGetValue(myData->assDefaultFontColorAlt, &fca.r, &fca.g, &fca.b, &fca.a);
+				gParamHost->paramGetValue(myData->assDefaultFontColorAltAlpha, &fca.a);
 				if (myData->ass) myData->ass->SetDefaultFontColorAlt(fca);
 			}
 			else if (strcmp(propName, "assDefaultOutlineColor") == 0) {
 				RGBAColourD fo = { 0, 0, 0, 1 };
 				gParamHost->paramGetValue(myData->assDefaultOutlineColor, &fo.r, &fo.g, &fo.b, &fo.a);
+				gParamHost->paramGetValue(myData->assDefaultOutlineColorAlpha, &fo.a);
+				if (myData->ass) myData->ass->SetDefaultOutlineColor(fo);
+			}
+			else if (strcmp(propName, "assDefaultOutlineColorAlpha") == 0) {
+				RGBAColourD fo = { 0, 0, 0, 1 };
+				gParamHost->paramGetValue(myData->assDefaultOutlineColor, &fo.r, &fo.g, &fo.b, &fo.a);
+				gParamHost->paramGetValue(myData->assDefaultOutlineColorAlpha, &fo.a);
 				if (myData->ass) myData->ass->SetDefaultOutlineColor(fo);
 			}
 			else if (strcmp(propName, "assDefaultBackColor") == 0) {
 				RGBAColourD fb = { 0, 0, 0, 1 };
 				gParamHost->paramGetValue(myData->assDefaultBackColor, &fb.r, &fb.g, &fb.b, &fb.a);
+				gParamHost->paramGetValue(myData->assDefaultBackColorAlpha, &fb.a);
+				if (myData->ass) myData->ass->SetDefaultBackColor(fb);
+			}
+			else if (strcmp(propName, "assDefaultBackColorAlpha") == 0) {
+				RGBAColourD fb = { 0, 0, 0, 1 };
+				gParamHost->paramGetValue(myData->assDefaultBackColor, &fb.r, &fb.g, &fb.b, &fb.a);
+				gParamHost->paramGetValue(myData->assDefaultBackColorAlpha, &fb.a);
 				if (myData->ass) myData->ass->SetDefaultBackColor(fb);
 			}
 			else if (strcmp(propName, "assDefaultBold") == 0) {
@@ -564,6 +610,13 @@ private:
 			else if (strcmp(propName, "assGlobalBackColor") == 0) {
 				RGBAColourD fc = { 0, 0, 0, 1 };
 				gParamHost->paramGetValue(myData->assGlobalBackColor, &fc.r, &fc.g, &fc.b, &fc.a);
+				gParamHost->paramGetValue(myData->assGlobalBackColorAlpha, &fc.a);
+				if (myData->ass) myData->ass->SetGlobalBackColor(fc);
+			}
+			else if (strcmp(propName, "assGlobalBackColorAlpha") == 0) {
+				RGBAColourD fc = { 0, 0, 0, 1 };
+				gParamHost->paramGetValue(myData->assGlobalBackColor, &fc.r, &fc.g, &fc.b, &fc.a);
+				gParamHost->paramGetValue(myData->assGlobalBackColorAlpha, &fc.a);
 				if (myData->ass) myData->ass->SetGlobalBackColor(fc);
 			}
 		}
@@ -655,7 +708,7 @@ public:
 		return kOfxStatOK;
 	}
 
-	//  instance construction
+	// instance construction
 	static OfxStatus createInstance(OfxImageEffectHandle effect) 
 	{
 		// make my private instance data
@@ -669,9 +722,7 @@ public:
 
 	////////////////////////////////////////////////////////////////////////////////
 	// function called when the instance has been changed by anything
-	static OfxStatus instanceChanged(OfxImageEffectHandle effect,
-			                         OfxPropertySetHandle inArgs,
-			                         OfxPropertySetHandle outArgs) 
+	static OfxStatus instanceChanged(OfxImageEffectHandle effect, OfxPropertySetHandle inArgs, OfxPropertySetHandle outArgs) 
 	{
 		// see why it changed
 		char *changeReason;
@@ -716,9 +767,7 @@ public:
 		return kOfxStatOK;
 	}
 
-	static OfxStatus syncData(OfxImageEffectHandle effect, 
-		                      OfxPropertySetHandle inArgs, 
-		                      OfxPropertySetHandle outArgs)
+	static OfxStatus syncData(OfxImageEffectHandle effect, OfxPropertySetHandle inArgs, OfxPropertySetHandle outArgs)
 	{
 		return kOfxStatOK;
 	}
@@ -765,19 +814,19 @@ public:
 		gPropHost->propSetString(effectProps, kOfxPropPluginDescription, 0, utf(_(PluginDescription)));
 		
 		// define the contexts we can be used in
-		gPropHost->propSetString(effectProps, kOfxImageEffectPropSupportedContexts, 0, kOfxImageEffectContextFilter);
+		gPropHost->propSetString(effectProps, kOfxImageEffectPropSupportedContexts, 0, kOfxImageEffectContextGenerator);
 
 //#ifdef _DEBUG
-		gPropHost->propSetString(effectProps, kOfxImageEffectPropSupportedContexts, 1, kOfxImageEffectContextGenerator);
+		//gPropHost->propSetString(effectProps, kOfxImageEffectPropSupportedContexts, 1, kOfxImageEffectContextFilter);
 		//gPropHost->propSetString(effectProps, kOfxImageEffectPropSupportedContexts, 2, kOfxImageEffectContextPaint);
-		gPropHost->propSetString(effectProps, kOfxImageEffectPropSupportedContexts, 2, kOfxImageEffectContextGeneral);		
+		//gPropHost->propSetString(effectProps, kOfxImageEffectPropSupportedContexts, 2, kOfxImageEffectContextGeneral);		
 //#endif // _DEBUG
 
 		return kOfxStatOK;
 	}
 
-	//  describe the plugin in context
-	static OfxStatus describeInContext(OfxImageEffectHandle  effect, OfxPropertySetHandle inArgs)
+	// describe the plugin in context
+	static OfxStatus describeInContext(OfxImageEffectHandle effect, OfxPropertySetHandle inArgs)
 	{
 		OfxPropertySetHandle props;
 		// define the single output clip in both contexts
@@ -969,7 +1018,6 @@ public:
 			gPropHost->propSetString(paramProps, kOfxParamPropChoiceOption, 3, utf(_("Native")));
 			gPropHost->propSetInt(paramProps, kOfxParamPropDefault, 0, 0);
 
-
 			/*
 			*  Default ASS Font Setings
 			*/
@@ -1018,6 +1066,19 @@ public:
 			gPropHost->propSetDouble(paramProps, kOfxParamPropDefault, 2, 0.18);
 			gPropHost->propSetDouble(paramProps, kOfxParamPropDefault, 3, 0.90);
 
+			gParamHost->paramDefine(paramSet, kOfxParamTypeDouble, "assDefaultFontColorAlpha", &paramProps);
+			gPropHost->propSetString(paramProps, kOfxParamPropParent, 0, "defaultAssProperties");
+			gPropHost->propSetString(paramProps, kOfxParamPropScriptName, 0, "assDefaultFontColorAlpha");
+			gPropHost->propSetString(paramProps, kOfxPropLabel, 0, utf(_("Font Color Alpha")));
+			gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, utf(_("Default Font Color Alpha")));
+			gPropHost->propSetDouble(paramProps, kOfxParamPropDefault, 0, 0.9);
+			gPropHost->propSetDouble(paramProps, kOfxParamPropMin, 0, 0.0);
+			gPropHost->propSetDouble(paramProps, kOfxParamPropMax, 0, 1.0);
+			gPropHost->propSetDouble(paramProps, kOfxParamPropDisplayMin, 0, 0.0);
+			gPropHost->propSetDouble(paramProps, kOfxParamPropDisplayMax, 0, 1.0);
+			gPropHost->propSetDouble(paramProps, kOfxParamPropIncrement, 0, 0.05);
+			gPropHost->propSetInt(paramProps, kOfxParamPropDigits, 0, 2);
+
 			// make an rgba font alt colour parameter
 			gParamHost->paramDefine(paramSet, kOfxParamTypeRGBA, "assDefaultFontColorAlt", &paramProps);
 			gPropHost->propSetString(paramProps, kOfxParamPropParent, 0, "defaultAssProperties");
@@ -1029,6 +1090,19 @@ public:
 			gPropHost->propSetDouble(paramProps, kOfxParamPropDefault, 2, 0.18);
 			gPropHost->propSetDouble(paramProps, kOfxParamPropDefault, 3, 0.90);
 
+			gParamHost->paramDefine(paramSet, kOfxParamTypeDouble, "assDefaultFontColorAltAlpha", &paramProps);
+			gPropHost->propSetString(paramProps, kOfxParamPropParent, 0, "defaultAssProperties");
+			gPropHost->propSetString(paramProps, kOfxParamPropScriptName, 0, "assDefaultFontColorAltAlpha");
+			gPropHost->propSetString(paramProps, kOfxPropLabel, 0, utf(_("Alt Font Color Alpha")));
+			gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, utf(_("Default Alternate Font Color Alpha")));
+			gPropHost->propSetDouble(paramProps, kOfxParamPropDefault, 0, 0.9);
+			gPropHost->propSetDouble(paramProps, kOfxParamPropMin, 0, 0.0);
+			gPropHost->propSetDouble(paramProps, kOfxParamPropMax, 0, 1.0);
+			gPropHost->propSetDouble(paramProps, kOfxParamPropDisplayMin, 0, 0.0);
+			gPropHost->propSetDouble(paramProps, kOfxParamPropDisplayMax, 0, 1.0);
+			gPropHost->propSetDouble(paramProps, kOfxParamPropIncrement, 0, 0.05);
+			gPropHost->propSetInt(paramProps, kOfxParamPropDigits, 0, 2);
+
 			// make an rgba font outline colour parameter
 			gParamHost->paramDefine(paramSet, kOfxParamTypeRGBA, "assDefaultOutlineColor", &paramProps);
 			gPropHost->propSetString(paramProps, kOfxParamPropParent, 0, "defaultAssProperties");
@@ -1039,6 +1113,19 @@ public:
 			gPropHost->propSetDouble(paramProps, kOfxParamPropDefault, 1, 0.85);
 			gPropHost->propSetDouble(paramProps, kOfxParamPropDefault, 2, 0.00);
 			gPropHost->propSetDouble(paramProps, kOfxParamPropDefault, 3, 0.75);
+
+			gParamHost->paramDefine(paramSet, kOfxParamTypeDouble, "assDefaultOutlineColorAlpha", &paramProps);
+			gPropHost->propSetString(paramProps, kOfxParamPropParent, 0, "defaultAssProperties");
+			gPropHost->propSetString(paramProps, kOfxParamPropScriptName, 0, "assDefaultOutlineColorAlpha");
+			gPropHost->propSetString(paramProps, kOfxPropLabel, 0, utf(_("Outline Color Alpha")));
+			gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, utf(_("Default Outline Color Alpha")));
+			gPropHost->propSetDouble(paramProps, kOfxParamPropDefault, 0, 0.75);
+			gPropHost->propSetDouble(paramProps, kOfxParamPropMin, 0, 0.0);
+			gPropHost->propSetDouble(paramProps, kOfxParamPropMax, 0, 1.0);
+			gPropHost->propSetDouble(paramProps, kOfxParamPropDisplayMin, 0, 0.0);
+			gPropHost->propSetDouble(paramProps, kOfxParamPropDisplayMax, 0, 1.0);
+			gPropHost->propSetDouble(paramProps, kOfxParamPropIncrement, 0, 0.05);
+			gPropHost->propSetInt(paramProps, kOfxParamPropDigits, 0, 2);
 
 			// make an outline size parameter
 			gParamHost->paramDefine(paramSet, kOfxParamTypeInteger, "assDefaultOutline", &paramProps);
@@ -1063,6 +1150,19 @@ public:
 			gPropHost->propSetDouble(paramProps, kOfxParamPropDefault, 1, 0.50);
 			gPropHost->propSetDouble(paramProps, kOfxParamPropDefault, 2, 0.50);
 			gPropHost->propSetDouble(paramProps, kOfxParamPropDefault, 3, 0.50);
+
+			gParamHost->paramDefine(paramSet, kOfxParamTypeDouble, "assDefaultBackColorAlpha", &paramProps);
+			gPropHost->propSetString(paramProps, kOfxParamPropParent, 0, "defaultAssProperties");
+			gPropHost->propSetString(paramProps, kOfxParamPropScriptName, 0, "assDefaultBackColorAlpha");
+			gPropHost->propSetString(paramProps, kOfxPropLabel, 0, utf(_("Shadow Color Alpha")));
+			gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, utf(_("Default Shadow Color Alpha")));
+			gPropHost->propSetDouble(paramProps, kOfxParamPropDefault, 0, 0.5);
+			gPropHost->propSetDouble(paramProps, kOfxParamPropMin, 0, 0.0);
+			gPropHost->propSetDouble(paramProps, kOfxParamPropMax, 0, 1.0);
+			gPropHost->propSetDouble(paramProps, kOfxParamPropDisplayMin, 0, 0.0);
+			gPropHost->propSetDouble(paramProps, kOfxParamPropDisplayMax, 0, 1.0);
+			gPropHost->propSetDouble(paramProps, kOfxParamPropIncrement, 0, 0.05);
+			gPropHost->propSetInt(paramProps, kOfxParamPropDigits, 0, 2);
 
 			// make an shadow size parameter
 			gParamHost->paramDefine(paramSet, kOfxParamTypeInteger, "assDefaultShadow", &paramProps);
@@ -1125,30 +1225,47 @@ public:
 			gPropHost->propSetString(paramProps, kOfxParamPropChoiceOption, 1, utf(_("Opaque Box")));
 			gPropHost->propSetInt(paramProps, kOfxParamPropDefault, 0, 0);
 
+			// make default ass properties group
+			gParamHost->paramDefine(paramSet, kOfxParamTypeGroup, "assGlobalProperties", &paramProps);
+			gPropHost->propSetString(paramProps, kOfxPropLabel, 0, utf(_("Global ASS Properties")));
+			gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, utf(_("Global ASS Properties")));
+
 			// make an rgba global background colour parameter
 			gParamHost->paramDefine(paramSet, kOfxParamTypeBoolean, "assGlobalBlend", &paramProps);
+			gPropHost->propSetString(paramProps, kOfxParamPropParent, 0, "assGlobalProperties");
 			gPropHost->propSetString(paramProps, kOfxParamPropScriptName, 0, "assGlobalBlend");
 			gPropHost->propSetString(paramProps, kOfxPropLabel, 0, utf(_("Pre-Blend")));
 			gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, utf(_("Blend Color")));
-			gPropHost->propSetInt(paramProps, kOfxParamPropDefault, 0, 0);
+			gPropHost->propSetInt(paramProps, kOfxParamPropDefault, 0, 1);
 
 			gParamHost->paramDefine(paramSet, kOfxParamTypeRGBA, "assGlobalBackColor", &paramProps);
-			//gPropHost->propSetString(paramProps, kOfxParamPropParent, 0, "assGlobalBlend");
+			gPropHost->propSetString(paramProps, kOfxParamPropParent, 0, "assGlobalProperties");
 			gPropHost->propSetString(paramProps, kOfxParamPropScriptName, 0, "assGlobalBackColor");
-			gPropHost->propSetString(paramProps, kOfxPropLabel, 0, utf(_("Global Background Color")));
-			gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, utf(_("Global Background Color")));
+			gPropHost->propSetString(paramProps, kOfxPropLabel, 0, utf(_("Background Color")));
+			gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, utf(_("Background Color")));
 			gPropHost->propSetDouble(paramProps, kOfxParamPropDefault, 0, 0.50);
 			gPropHost->propSetDouble(paramProps, kOfxParamPropDefault, 1, 0.50);
 			gPropHost->propSetDouble(paramProps, kOfxParamPropDefault, 2, 0.50);
 			gPropHost->propSetDouble(paramProps, kOfxParamPropDefault, 3, 1.00);
+
+			gParamHost->paramDefine(paramSet, kOfxParamTypeDouble, "assGlobalBackColorAlpha", &paramProps);
+			gPropHost->propSetString(paramProps, kOfxParamPropParent, 0, "assGlobalProperties");
+			gPropHost->propSetString(paramProps, kOfxParamPropScriptName, 0, "assGlobalBackColorAlpha");
+			gPropHost->propSetString(paramProps, kOfxPropLabel, 0, utf(_("Background Color Alpha")));
+			gPropHost->propSetString(paramProps, kOfxParamPropHint, 0, utf(_("Default Background Color Alpha")));
+			gPropHost->propSetDouble(paramProps, kOfxParamPropDefault, 0, 1.0);
+			gPropHost->propSetDouble(paramProps, kOfxParamPropMin, 0, 0.0);
+			gPropHost->propSetDouble(paramProps, kOfxParamPropMax, 0, 1.0);
+			gPropHost->propSetDouble(paramProps, kOfxParamPropDisplayMin, 0, 0.0);
+			gPropHost->propSetDouble(paramProps, kOfxParamPropDisplayMax, 0, 1.0);
+			gPropHost->propSetDouble(paramProps, kOfxParamPropIncrement, 0, 0.05);
+			gPropHost->propSetInt(paramProps, kOfxParamPropDigits, 0, 2);
 		}
 		return kOfxStatOK;
 	}
 
 	// are the settings of the effect performing an identity operation
-	static OfxStatus isIdentity(OfxImageEffectHandle effect,
-			                    OfxPropertySetHandle inArgs,
-			                    OfxPropertySetHandle outArgs)
+	static OfxStatus isIdentity(OfxImageEffectHandle effect, OfxPropertySetHandle inArgs, OfxPropertySetHandle outArgs)
 	{
 		// retrieve any instance data associated with this effect
 		RenderAssInstanceData *myData = getMyInstanceData(effect);
@@ -1192,9 +1309,7 @@ public:
 	}
 
 	// Set our clip preferences
-	static OfxStatus getClipPreferences(OfxImageEffectHandle effect, 
-		                                OfxPropertySetHandle inArgs, 
-		                                OfxPropertySetHandle outArgs)
+	static OfxStatus getClipPreferences(OfxImageEffectHandle effect, OfxPropertySetHandle inArgs, OfxPropertySetHandle outArgs)
 	{
 		try {
 			// retrieve any instance data associated with this effect
@@ -1253,7 +1368,7 @@ public:
 	// Tells the host how many frames we can fill, only called in the general context.
 	// This is actually redundant as this is the default behaviour, but for illustrative
 	// purposes.
-	static OfxStatus getTimeDomain(OfxImageEffectHandle  effect, OfxPropertySetHandle /*inArgs*/, OfxPropertySetHandle outArgs)
+	static OfxStatus getTimeDomain(OfxImageEffectHandle effect, OfxPropertySetHandle /*inArgs*/, OfxPropertySetHandle outArgs)
 	{
 		RenderAssInstanceData *myData = getMyInstanceData(effect);
 
@@ -1283,9 +1398,7 @@ public:
 	}
 
 	// the process code that the host sees
-	static OfxStatus render(OfxImageEffectHandle instance,
-		                    OfxPropertySetHandle inArgs,
-		                    OfxPropertySetHandle /*outArgs*/)
+	static OfxStatus render(OfxImageEffectHandle instance, OfxPropertySetHandle inArgs, OfxPropertySetHandle /*outArgs*/)
 	{
 		// get the render window and the time from the inArgs
 		OfxTime time;
@@ -1347,6 +1460,7 @@ public:
 				errno_t err = copy_source(instance, renderWindow, srcPtr, srcRect, srcRowBytes, dstPtr, dstRect, dstRowBytes);
 				blend = true;
 			} else {
+				colorDepth = 4;
 				errno_t err = copy_source(instance, renderWindow, NULL, dstRect, 0, dstPtr, dstRect, dstRowBytes);
 				blend = true;
 			}
@@ -1371,9 +1485,7 @@ public:
 		return status;
 	}
 
-	static OfxStatus renderSeqBegin(OfxImageEffectHandle instance,
-								    OfxPropertySetHandle inArgs,
-		                            OfxPropertySetHandle /*outArgs*/)
+	static OfxStatus renderSeqBegin(OfxImageEffectHandle instance, OfxPropertySetHandle inArgs, OfxPropertySetHandle /*outArgs*/)
 	{
 		//if (myData->ass != NULL) {
 		//	myData->ass->~AssRender();
@@ -1381,9 +1493,7 @@ public:
 		return kOfxStatOK;
 	}
 
-	static OfxStatus renderSeqEnd(OfxImageEffectHandle instance,
-		OfxPropertySetHandle inArgs,
-		OfxPropertySetHandle /*outArgs*/)
+	static OfxStatus renderSeqEnd(OfxImageEffectHandle instance, OfxPropertySetHandle inArgs, OfxPropertySetHandle /*outArgs*/)
 	{
 		//if (myData->ass != NULL) {
 		//	myData->ass->~AssRender();
@@ -1393,9 +1503,7 @@ public:
 
 	////////////////////////////////////////////////////////////////////////////////
 	// The main entry point function
-	static OfxStatus pluginMain(const char *action, const void *handle, 
-		                        OfxPropertySetHandle inArgs, 
-		                        OfxPropertySetHandle outArgs)
+	static OfxStatus pluginMain(const char *action, const void *handle, OfxPropertySetHandle inArgs, OfxPropertySetHandle outArgs)
 	{
 		if (!action) return kOfxStatReplyDefault;
 
@@ -1501,7 +1609,6 @@ public:
 		};
 		return &plugin;
 	}
-
 
 };
 
